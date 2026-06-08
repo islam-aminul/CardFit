@@ -34,13 +34,20 @@ import kotlin.math.roundToInt
 internal const val SOURCE_MAX_DIM = 2000
 internal const val PRINT_JPEG_QUALITY = 92
 
-/** Decode a source image, downsampled so its largest side is <= [maxDim] px to bound memory. */
+/**
+ * Decode a source image, downsampled so its largest side is <= [maxDim] px to bound memory.
+ *
+ * Reads the bytes once and decodes with [BitmapFactory.decodeByteArray]. This is deliberately NOT
+ * `openInputStream` + `decodeStream`: that combination can return null over some ContentResolver
+ * streams even for valid images (a long-standing `decodeStream` quirk). Decoding from a byte array
+ * is reliable for both `file://` and `content://` sources.
+ */
 internal fun decodeSampledBitmap(context: Context, uriString: String, maxDim: Int = SOURCE_MAX_DIM): Bitmap? {
-    val uri = uriString.toUri()
+    val bytes = readAllBytes(context, uriString) ?: return null
+    if (bytes.isEmpty()) return null
+
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-    context.contentResolver.openInputStream(uri)?.use {
-        BitmapFactory.decodeStream(it, null, bounds)
-    } ?: return null
+    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
     val w = bounds.outWidth
     val h = bounds.outHeight
     if (w <= 0 || h <= 0) return null
@@ -49,9 +56,13 @@ internal fun decodeSampledBitmap(context: Context, uriString: String, maxDim: In
     while (max(w, h) / sample > maxDim) sample *= 2
 
     val opts = BitmapFactory.Options().apply { inSampleSize = sample }
-    return context.contentResolver.openInputStream(uri)?.use {
-        BitmapFactory.decodeStream(it, null, opts)
-    }
+    return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
+}
+
+private fun readAllBytes(context: Context, uriString: String): ByteArray? = try {
+    context.contentResolver.openInputStream(uriString.toUri())?.use { it.readBytes() }
+} catch (e: Exception) {
+    null
 }
 
 /** Paint for drawing card images; applies a saturation-0 ColorMatrix when [grayscale]. */

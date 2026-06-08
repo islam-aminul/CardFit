@@ -51,6 +51,7 @@ fun PreviewScreen(
     val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     val previewBytes by exportViewModel.previewBytes.collectAsStateWithLifecycle()
+    val previewFailed by exportViewModel.previewFailed.collectAsStateWithLifecycle()
     val uiState by exportViewModel.uiState.collectAsStateWithLifecycle()
     val pendingShare by exportViewModel.pendingShare.collectAsStateWithLifecycle()
 
@@ -110,8 +111,9 @@ fun PreviewScreen(
             return@ScreenScaffold
         }
 
-        previewBytes?.let { bytes ->
-            AsyncImage(
+        val bytes = previewBytes
+        when {
+            bytes != null -> AsyncImage(
                 model = bytes,
                 contentDescription = "Output preview",
                 contentScale = ContentScale.Fit,
@@ -120,7 +122,12 @@ fun PreviewScreen(
                     .height(280.dp)
                     .clip(RoundedCornerShape(8.dp)),
             )
-        } ?: Text("Generating preview…")
+            previewFailed -> Text(
+                "Couldn't render a preview from this scan. Try re-scanning the card.",
+                color = MaterialTheme.colorScheme.error,
+            )
+            else -> Text("Generating preview…")
+        }
 
         Text("Card: ${session.cardType.name}", style = MaterialTheme.typography.bodyMedium)
         Text("Name: ${state.name.ifBlank { "(document)" }}", style = MaterialTheme.typography.bodyMedium)

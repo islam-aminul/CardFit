@@ -45,13 +45,21 @@ class ExportViewModel(application: Application) : AndroidViewModel(application) 
     private val _previewBytes = MutableStateFlow<ByteArray?>(null)
     val previewBytes: StateFlow<ByteArray?> = _previewBytes.asStateFlow()
 
+    /** True once a preview attempt finished without producing an image. */
+    private val _previewFailed = MutableStateFlow(false)
+    val previewFailed: StateFlow<Boolean> = _previewFailed.asStateFlow()
+
     private val _pendingShare = MutableStateFlow<List<ShareItem>?>(null)
     val pendingShare: StateFlow<List<ShareItem>?> = _pendingShare.asStateFlow()
 
     fun generatePreview(session: ScanSession, configs: List<RenderConfig>) {
         val config = configs.firstOrNull() ?: return
         viewModelScope.launch {
-            _previewBytes.value = runCatching { exporter.preview(session, config) }.getOrNull()
+            _previewFailed.value = false
+            _previewBytes.value = null
+            val bytes = runCatching { exporter.preview(session, config) }.getOrNull()
+            _previewBytes.value = bytes
+            _previewFailed.value = bytes == null
         }
     }
 

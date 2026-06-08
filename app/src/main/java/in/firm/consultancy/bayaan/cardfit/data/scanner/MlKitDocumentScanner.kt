@@ -50,7 +50,13 @@ class MlKitDocumentScanner(private val appContext: Context) : Scanner {
                 true
             } ?: false
 
-            if (copied) Uri.fromFile(dest).toString() else null
+            // Treat an empty copy as a failure so the user retakes instead of hitting a broken export.
+            if (copied && dest.length() > 0L) {
+                Uri.fromFile(dest).toString()
+            } else {
+                dest.delete()
+                null
+            }
         }
 
     private companion object {
