@@ -1,0 +1,80 @@
+package `in`.firm.consultancy.bayaan.cardfit.domain
+
+import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputFormat
+import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputMode
+
+/**
+ * Filename construction from CLAUDE.md section 9.
+ *
+ * Template: `{nameSlug}-{cardTypeSlug}-{purpose}-{yyMMdd}-{HHmm}.{ext}`
+ * Examples: `aminul-islam-pan-upload-260608-1430.jpeg`, `aminul-islam-pan-print-260608-1430.pdf`.
+ */
+
+/**
+ * The wall-clock instant a file is generated, decomposed into local components. Passed in so the
+ * builder stays pure (no clock dependency). [year] is the full year (e.g. 2026).
+ */
+data class FileTimestamp(
+    val year: Int,
+    val month: Int, // 1..12
+    val day: Int, // 1..31
+    val hour: Int, // 0..23
+    val minute: Int, // 0..59
+    val second: Int, // 0..59
+)
+
+object FilenameBuilder {
+
+    fun purposeOf(mode: OutputMode): String = when (mode) {
+        OutputMode.PRINT -> "print"
+        OutputMode.UPLOAD -> "upload"
+    }
+
+    fun extOf(format: OutputFormat): String = when (format) {
+        OutputFormat.PDF -> "pdf"
+        OutputFormat.JPEG -> "jpeg"
+    }
+
+    /**
+     * Build a unique filename.
+     *
+     * @param name raw holder name; slugified internally (empty -> `document`).
+     * @param exists predicate that reports whether a candidate filename already exists; used for
+     *   collision suffixing. Defaults to "nothing exists".
+     *
+     * Collision strategy (section 9): if `base.ext` exists, append `-{ss}` (the seconds); if that
+     * still exists, append an incrementing `-2`, `-3`, ... to the seconds-qualified name.
+     */
+    fun build(
+        name: String,
+        cardTypeSlug: String,
+        mode: OutputMode,
+        format: OutputFormat,
+        timestamp: FileTimestamp,
+        exists: (String) -> Boolean = { false },
+    ): String {
+        val nameSlug = Slug.slugify(name)
+        val purpose = purposeOf(mode)
+        val ext = extOf(format)
+
+        val datePart = pad2(timestamp.year % 100) + pad2(timestamp.month) + pad2(timestamp.day)
+        val timePart = pad2(timestamp.hour) + pad2(timestamp.minute)
+        val base = "$nameSlug-$cardTypeSlug-$purpose-$datePart-$timePart"
+
+        val first = "$base.$ext"
+        if (!exists(first)) return first
+
+        val ss = pad2(timestamp.second)
+        val withSeconds = "$base-$ss.$ext"
+        if (!exists(withSeconds)) return withSeconds
+
+        var n = 2
+        while (true) {
+            val candidate = "$base-$ss-$n.$ext"
+            if (!exists(candidate)) return candidate
+            n++
+        }
+    }
+
+    private fun pad2(value: Int): String = if (value < 10) "0$value" else value.toString()
+}

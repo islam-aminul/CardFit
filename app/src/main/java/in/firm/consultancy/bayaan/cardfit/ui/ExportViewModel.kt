@@ -1,0 +1,107 @@
+package `in`.firm.consultancy.bayaan.cardfit.ui
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import `in`.firm.consultancy.bayaan.cardfit.data.AndroidFileSaver
+import `in`.firm.consultancy.bayaan.cardfit.data.export.ExportedFile
+import `in`.firm.consultancy.bayaan.cardfit.data.export.Exporter
+import `in`.firm.consultancy.bayaan.cardfit.data.export.ShareItem
+import `in`.firm.consultancy.bayaan.cardfit.data.render.AndroidJpegRenderer
+import `in`.firm.consultancy.bayaan.cardfit.data.render.AndroidPdfRenderer
+import `in`.firm.consultancy.bayaan.cardfit.domain.FileTimestamp
+import `in`.firm.consultancy.bayaan.cardfit.domain.model.RenderConfig
+import `in`.firm.consultancy.bayaan.cardfit.domain.model.ScanSession
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.util.Calendar
+
+sealed interface ExportUiState {
+    data object Idle : ExportUiState
+    data object Working : ExportUiState
+    data class Saved(val files: List<ExportedFile>) : ExportUiState
+    data class Failed(val message: String) : ExportUiState
+}
+
+/**
+ * Drives preview generation and export/share for the Preview screen. Holds the Android-backed
+ * renderers + saver (so [AppViewModel] stays pure). Re-running [save]/[share] re-exports from the
+ * same [ScanSession] — supporting "return to Configure and re-export without re-scanning".
+ */
+class ExportViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val exporter = Exporter(
+        pdfRenderer = AndroidPdfRenderer(application),
+        jpegRenderer = AndroidJpegRenderer(application),
+        fileSaver = AndroidFileSaver(application),
+        clock = ::now,
+    )
+
+    private val _uiState = MutableStateFlow<ExportUiState>(ExportUiState.Idle)
+    val uiState: StateFlow<ExportUiState> = _uiState.asStateFlow()
+
+    private val _previewBytes = MutableStateFlow<ByteArray?>(null)
+    val previewBytes: StateFlow<ByteArray?> = _previewBytes.asStateFlow()
+
+    private val _pendingShare = MutableStateFlow<List<ShareItem>?>(null)
+    val pendingShare: StateFlow<List<ShareItem>?> = _pendingShare.asStateFlow()
+
+    fun generatePreview(session: ScanSession, configs: List<RenderConfig>) {
+        val config = configs.firstOrNull() ?: return
+        viewModelScope.launch {
+            _previewBytes.value = runCatching { exporter.preview(session, config) }.getOrNull()
+        }
+    }
+
+    fun save(session: ScanSession, name: String, configs: List<RenderConfig>) {
+        if (configs.isEmpty()) return
+        viewModelScope.launch {
+            _uiState.value = ExportUiState.Working
+            _uiState.value = try {
+                ExportUiState.Saved(exporter.export(session, name, configs))
+            } catch (e: Exception) {
+                ExportUiState.Failed(e.message ?: "Couldn't save the file(s).")
+            }
+        }
+    }
+
+    fun share(session: ScanSession, name: String, configs: List<RenderConfig>) {
+        if (configs.isEmpty()) return
+        viewModelScope.launch {
+            _uiState.value = ExportUiState.Working
+            try {
+                _pendingShare.value = exporter.prepareShare(session, name, configs)
+                _uiState.value = ExportUiState.Idle
+            } catch (e: Exception) {
+                _uiState.value = ExportUiState.Failed(e.message ?: "Couldn't prepare the file(s) to share.")
+            }
+        }
+    }
+
+    fun shareHandled() {
+        _pendingShare.value = null
+    }
+
+    fun clearResult() {
+        _uiState.value = ExportUiState.Idle
+    }
+
+    /** Surface an error raised outside the export coroutine (e.g. a denied storage permission). */
+    fun reportError(message: String) {
+        _uiState.value = ExportUiState.Failed(message)
+    }
+
+    private fun now(): FileTimestamp {
+        val c = Calendar.getInstance()
+        return FileTimestamp(
+            year = c.get(Calendar.YEAR),
+            month = c.get(Calendar.MONTH) + 1,
+            day = c.get(Calendar.DAY_OF_MONTH),
+            hour = c.get(Calendar.HOUR_OF_DAY),
+            minute = c.get(Calendar.MINUTE),
+            second = c.get(Calendar.SECOND),
+        )
+    }
+}

@@ -1,0 +1,4 @@
+<resources>
+    <!-- Base theme for the single Activity. Compose/Material3 supplies the actual UI styling. -->
+    <style name="Theme.CardFit" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
