@@ -29,8 +29,13 @@ class FakeScanner : Scanner {
     }
 }
 
-class FakeOcr(var lines: List<String> = emptyList()) : Ocr {
+class FakeOcr(
+    var lines: List<String> = emptyList(),
+    var layer: `in`.firm.consultancy.bayaan.cardfit.domain.OcrTextLayer =
+        `in`.firm.consultancy.bayaan.cardfit.domain.OcrTextLayer(0, 0, emptyList()),
+) : Ocr {
     override suspend fun recognize(imageUri: String): List<String> = lines
+    override suspend fun recognizeLayer(imageUri: String) = layer
 }
 
 class FakePdfRenderer(var output: ByteArray = ByteArray(4)) : PdfRenderer {

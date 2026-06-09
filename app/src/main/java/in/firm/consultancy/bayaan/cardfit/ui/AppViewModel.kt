@@ -29,6 +29,7 @@ data class AppState(
     val grayscale: Boolean = false,
     val cropMarks: Boolean = false,
     val maxFileSizeKb: Int? = null,
+    val searchableText: Boolean = false, // PDF only (Phase 11)
     val name: String = "",
 )
 
@@ -87,6 +88,7 @@ class AppViewModel : ViewModel() {
     fun setGrayscale(value: Boolean) = _state.update { it.copy(grayscale = value) }
     fun setCropMarks(value: Boolean) = _state.update { it.copy(cropMarks = value) }
     fun setMaxFileSizeKb(value: Int?) = _state.update { it.copy(maxFileSizeKb = value) }
+    fun setSearchableText(value: Boolean) = _state.update { it.copy(searchableText = value) }
     fun setName(name: String) = _state.update { it.copy(name = name) }
 
     fun reset() = _state.update { AppState() }
@@ -106,6 +108,8 @@ class AppViewModel : ViewModel() {
                 grayscale = s.grayscale,
                 cropMarks = mode == OutputMode.PRINT && s.cropMarks,
                 maxFileSizeKb = if (mode == OutputMode.UPLOAD) s.maxFileSizeKb else null,
+                // Text layer is a PDF-only feature.
+                searchableText = s.searchableText && s.format == OutputFormat.PDF,
             )
         }
     }

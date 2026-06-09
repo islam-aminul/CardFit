@@ -45,6 +45,7 @@ data class RenderConfig(
     val grayscale: Boolean,
     val cropMarks: Boolean, // print only
     val maxFileSizeKb: Int?, // upload only
+    val searchableText: Boolean = false, // PDF only: embed an invisible OCR text layer (Phase 11)
 )
 
 /** [imageUri] is the URI string of the corrected, cropped side (see note above). */

@@ -21,6 +21,12 @@ import kotlinx.coroutines.flow.Flow
 interface Ocr {
     /** Recognized text lines for the given image, in reading order. Empty when nothing is found. */
     suspend fun recognize(imageUri: String): List<String>
+
+    /**
+     * Recognized elements with pixel bounding boxes plus the source image's pixel dimensions, for
+     * building the searchable-PDF text layer (Phase 11). Empty layer when nothing is found.
+     */
+    suspend fun recognizeLayer(imageUri: String): `in`.firm.consultancy.bayaan.cardfit.domain.OcrTextLayer
 }
 
 /**
@@ -67,6 +73,7 @@ data class UserPrefs(
     val defaultGrayscale: Boolean = false,
     val defaultMaxFileSizeKb: Int? = null,
     val lastName: String = "",
+    val searchableText: Boolean = false, // Phase 11: persisted searchable-PDF preference
 )
 
 interface Prefs {

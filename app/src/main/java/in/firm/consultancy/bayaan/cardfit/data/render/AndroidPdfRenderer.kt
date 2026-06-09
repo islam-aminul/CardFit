@@ -8,10 +8,16 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.pdf.PdfDocument
+import `in`.firm.consultancy.bayaan.cardfit.data.Ocr
 import `in`.firm.consultancy.bayaan.cardfit.data.PdfRenderer
 import `in`.firm.consultancy.bayaan.cardfit.data.RenderedOutput
+import `in`.firm.consultancy.bayaan.cardfit.domain.OcrTextLayer
 import `in`.firm.consultancy.bayaan.cardfit.domain.PageLayout
+import `in`.firm.consultancy.bayaan.cardfit.domain.TextLayerFilter
 import `in`.firm.consultancy.bayaan.cardfit.domain.Units
+import `in`.firm.consultancy.bayaan.cardfit.domain.mapImageRectToPage
+import `in`.firm.consultancy.bayaan.cardfit.domain.PtRect
+import `in`.firm.consultancy.bayaan.cardfit.domain.model.CardType
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputMode
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.RenderConfig
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.ScanSession
@@ -28,8 +34,17 @@ import kotlin.math.roundToInt
  *    optional 0.3pt corner crop-mark ticks just outside each card.
  *  - UPLOAD: FIT_WIDTH layout composed to a single bitmap, JPEG-compressed under the size cap (with
  *    a small overhead margin for PDF structure), embedded into the page.
+ *
+ * When [RenderConfig.searchableText] is set, an invisible (alpha-0) but real, selectable/searchable
+ * OCR text layer is drawn over each side (Phase 11). OCR runs on each placed side on a background
+ * dispatcher, and the recognized elements pass through [TextLayerFilter] (the masking hook) before
+ * being written — raw OCR is never embedded directly.
  */
-class AndroidPdfRenderer(private val context: Context) : PdfRenderer {
+class AndroidPdfRenderer(
+    private val context: Context,
+    private val ocr: Ocr,
+    private val textFilter: TextLayerFilter,
+) : PdfRenderer {
 
     override suspend fun render(session: ScanSession, config: RenderConfig): RenderedOutput =
         withContext(Dispatchers.Default) {
@@ -37,6 +52,16 @@ class AndroidPdfRenderer(private val context: Context) : PdfRenderer {
                 ?: error("Could not read the front image")
             val back = session.back?.let { decodeSampledBitmap(context, it.imageUri) }
             val sides = listOfNotNull(front, back)
+
+            // OCR each placed side (front, then back) for the optional text layer. Off the main
+            // thread via recognizeLayer; never logged.
+            val sideUris = listOfNotNull(session.front?.imageUri, session.back?.imageUri)
+            val ocrLayers: List<OcrTextLayer> = if (config.searchableText) {
+                sideUris.map { ocr.recognizeLayer(it) }
+            } else {
+                emptyList()
+            }
+
             try {
                 val layout = planLayout(session, config, sides)
                 val paint = cardPaint(config.grayscale)
@@ -44,9 +69,9 @@ class AndroidPdfRenderer(private val context: Context) : PdfRenderer {
                 val pageHeightPt = Units.mmToPoints(layout.pageHeightMm).roundToInt().coerceAtLeast(1)
 
                 if (config.mode == OutputMode.UPLOAD) {
-                    renderUploadPdf(layout, sides, paint, config, pageWidthPt, pageHeightPt)
+                    renderUploadPdf(layout, sides, paint, config, pageWidthPt, pageHeightPt, ocrLayers, session.cardType)
                 } else {
-                    renderPrintPdf(layout, sides, paint, config, pageWidthPt, pageHeightPt)
+                    renderPrintPdf(layout, sides, paint, config, pageWidthPt, pageHeightPt, ocrLayers, session.cardType)
                 }
             } finally {
                 front.recycle()
@@ -61,6 +86,8 @@ class AndroidPdfRenderer(private val context: Context) : PdfRenderer {
         config: RenderConfig,
         pageWidthPt: Int,
         pageHeightPt: Int,
+        ocrLayers: List<OcrTextLayer>,
+        cardType: CardType,
     ): RenderedOutput {
         val document = PdfDocument()
         val pageInfo = PdfDocument.PageInfo.Builder(pageWidthPt, pageHeightPt, 1).create()
@@ -80,6 +107,8 @@ class AndroidPdfRenderer(private val context: Context) : PdfRenderer {
             if (config.cropMarks) drawCropMarks(canvas, dst)
         }
 
+        drawTextLayer(canvas, layout, ocrLayers, cardType)
+
         document.finishPage(page)
         val out = ByteArrayOutputStream()
         document.writeTo(out)
@@ -94,6 +123,8 @@ class AndroidPdfRenderer(private val context: Context) : PdfRenderer {
         config: RenderConfig,
         pageWidthPt: Int,
         pageHeightPt: Int,
+        ocrLayers: List<OcrTextLayer>,
+        cardType: CardType,
     ): RenderedOutput {
         var cachedDpi = -1
         var cached: Bitmap? = null
@@ -143,6 +174,7 @@ class AndroidPdfRenderer(private val context: Context) : PdfRenderer {
                 page.canvas.drawColor(Color.WHITE)
                 val dst = RectF(0f, 0f, pageWidthPt.toFloat(), pageHeightPt.toFloat())
                 page.canvas.drawBitmap(baked, null, dst, Paint(Paint.FILTER_BITMAP_FLAG))
+                drawTextLayer(page.canvas, layout, ocrLayers, cardType)
                 document.finishPage(page)
                 val out = ByteArrayOutputStream()
                 document.writeTo(out)
@@ -178,5 +210,53 @@ class AndroidPdfRenderer(private val context: Context) : PdfRenderer {
         // Bottom-right
         canvas.drawLine(rect.right + gap, rect.bottom, rect.right + gap + len, rect.bottom, mark)
         canvas.drawLine(rect.right, rect.bottom + gap, rect.right, rect.bottom + gap + len, mark)
+    }
+
+    /**
+     * Draw the invisible OCR text layer for each placed side. Each side maps its own boxes into its
+     * own layout rect (in points) via [mapImageRectToPage], so text aligns with that side's picture.
+     * Elements pass through [textFilter] first (masking hook). Drawing real text (alpha-0) keeps it
+     * selectable/searchable while invisible.
+     */
+    private fun drawTextLayer(
+        canvas: Canvas,
+        layout: PageLayout,
+        ocrLayers: List<OcrTextLayer>,
+        cardType: CardType,
+    ) {
+        if (ocrLayers.isEmpty()) return
+        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.TRANSPARENT // alpha 0: real text in the content stream, but invisible
+        }
+        layout.cards.forEachIndexed { i, rect ->
+            val layer = ocrLayers.getOrNull(i) ?: return@forEachIndexed
+            if (layer.imageWidthPx <= 0 || layer.imageHeightPx <= 0) return@forEachIndexed
+            val sideRect = PtRect(
+                left = mmToPtF(rect.xMm).toDouble(),
+                top = mmToPtF(rect.yMm).toDouble(),
+                right = mmToPtF(rect.xMm + rect.widthMm).toDouble(),
+                bottom = mmToPtF(rect.yMm + rect.heightMm).toDouble(),
+            )
+            for (element in textFilter.filter(layer.elements, cardType)) {
+                val mapped = mapImageRectToPage(element.box, layer.imageWidthPx, layer.imageHeightPx, sideRect)
+                drawInvisibleText(canvas, element.text, mapped, textPaint)
+            }
+        }
+    }
+
+    /** Draw [text] as real (selectable) but invisible glyphs, sized/stretched to fill [rect]. */
+    private fun drawInvisibleText(canvas: Canvas, text: String, rect: PtRect, paint: Paint) {
+        val height = rect.height.toFloat()
+        val width = rect.width.toFloat()
+        if (height <= 0f || width <= 0f || text.isEmpty()) return
+
+        paint.textScaleX = 1f
+        paint.textSize = height
+        val measured = paint.measureText(text)
+        if (measured > 0f) {
+            paint.textScaleX = (width / measured).coerceIn(0.05f, 20f)
+        }
+        // Baseline near the bottom of the mapped box so the run sits over the visible word.
+        canvas.drawText(text, rect.left.toFloat(), rect.bottom.toFloat(), paint)
     }
 }

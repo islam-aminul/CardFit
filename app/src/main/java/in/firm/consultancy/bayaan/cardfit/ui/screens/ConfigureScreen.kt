@@ -17,6 +17,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,10 +28,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputFormat
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputMode
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.PaperSize
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.SettingsViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 
 private enum class Purpose(val label: String, val modes: Set<OutputMode>) {
@@ -50,12 +53,24 @@ fun ConfigureScreen(
     viewModel: AppViewModel,
     onNext: () -> Unit,
     onBack: () -> Unit,
+    settingsViewModel: SettingsViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val uploadSelected = OutputMode.UPLOAD in state.selectedModes
     val printSelected = OutputMode.PRINT in state.selectedModes
+    val isPdf = state.format == OutputFormat.PDF
 
     var maxSizeText by remember { mutableStateOf(state.maxFileSizeKb?.toString().orEmpty()) }
+
+    // Seed the in-flow searchable-text flag once from the persisted DataStore preference.
+    val persistedSearchable by settingsViewModel.searchableText.collectAsStateWithLifecycle()
+    var seededSearchable by remember { mutableStateOf(false) }
+    LaunchedEffect(persistedSearchable) {
+        if (!seededSearchable) {
+            viewModel.setSearchableText(persistedSearchable)
+            seededSearchable = true
+        }
+    }
 
     val currentPurpose = Purpose.entries.firstOrNull { it.modes == state.selectedModes }
 
@@ -95,6 +110,26 @@ fun ConfigureScreen(
                 )
             }
         }
+
+        // --- Searchable text (PDF only) ---
+        ToggleRow(
+            label = "Searchable text (selectable & copyable)",
+            checked = state.searchableText && isPdf,
+            enabled = isPdf,
+            onCheckedChange = { value ->
+                viewModel.setSearchableText(value)
+                settingsViewModel.setSearchableText(value)
+            },
+        )
+        Text(
+            text = if (isPdf) {
+                "Embeds the recognized text into the PDF as a hidden layer; the document looks identical."
+            } else {
+                "JPEG can't carry a text layer — choose PDF to enable."
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
 
         // --- Grayscale (always available) ---
         ToggleRow(
@@ -150,14 +185,22 @@ private fun ToggleRow(
     label: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label)
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        Text(
+            text = label,
+            color = if (enabled) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+        )
+        Switch(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
     }
 }
 

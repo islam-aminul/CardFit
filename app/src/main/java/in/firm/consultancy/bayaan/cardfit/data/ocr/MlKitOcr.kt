@@ -7,6 +7,9 @@ import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import `in`.firm.consultancy.bayaan.cardfit.data.Ocr
+import `in`.firm.consultancy.bayaan.cardfit.domain.BoxPx
+import `in`.firm.consultancy.bayaan.cardfit.domain.OcrElement
+import `in`.firm.consultancy.bayaan.cardfit.domain.OcrTextLayer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -36,6 +39,30 @@ class MlKitOcr(private val appContext: Context) : Ocr, Closeable {
         } catch (e: Exception) {
             // Stay fully usable on any OCR failure: no suggestion, manual entry still works.
             emptyList()
+        }
+    }
+
+    override suspend fun recognizeLayer(imageUri: String): OcrTextLayer = withContext(Dispatchers.IO) {
+        try {
+            val image = InputImage.fromFilePath(appContext, imageUri.toUri())
+            val text = recognizer.processAwait(image)
+            // The InputImage is upright; its width/height are the pixel space the boxes use.
+            val width = image.width
+            val height = image.height
+            val elements = buildList {
+                for (block in text.textBlocks) {
+                    for (line in block.lines) {
+                        for (element in line.elements) {
+                            val b = element.boundingBox ?: continue
+                            if (element.text.isBlank()) continue
+                            add(OcrElement(element.text, BoxPx(b.left, b.top, b.right, b.bottom)))
+                        }
+                    }
+                }
+            }
+            OcrTextLayer(imageWidthPx = width, imageHeightPx = height, elements = elements)
+        } catch (e: Exception) {
+            OcrTextLayer(imageWidthPx = 0, imageHeightPx = 0, elements = emptyList())
         }
     }
 

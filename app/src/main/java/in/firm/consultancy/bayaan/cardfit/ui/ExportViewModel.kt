@@ -7,9 +7,11 @@ import `in`.firm.consultancy.bayaan.cardfit.data.AndroidFileSaver
 import `in`.firm.consultancy.bayaan.cardfit.data.export.ExportedFile
 import `in`.firm.consultancy.bayaan.cardfit.data.export.Exporter
 import `in`.firm.consultancy.bayaan.cardfit.data.export.ShareItem
+import `in`.firm.consultancy.bayaan.cardfit.data.ocr.MlKitOcr
 import `in`.firm.consultancy.bayaan.cardfit.data.render.AndroidJpegRenderer
 import `in`.firm.consultancy.bayaan.cardfit.data.render.AndroidPdfRenderer
 import `in`.firm.consultancy.bayaan.cardfit.domain.FileTimestamp
+import `in`.firm.consultancy.bayaan.cardfit.domain.PassThroughTextFilter
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.RenderConfig
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.ScanSession
 import kotlinx.coroutines.Dispatchers
@@ -34,8 +36,11 @@ sealed interface ExportUiState {
  */
 class ExportViewModel(application: Application) : AndroidViewModel(application) {
 
+    // Used by the PDF renderer for the optional searchable text layer; closed in onCleared.
+    private val ocr = MlKitOcr(application)
+
     private val exporter = Exporter(
-        pdfRenderer = AndroidPdfRenderer(application),
+        pdfRenderer = AndroidPdfRenderer(application, ocr, PassThroughTextFilter),
         jpegRenderer = AndroidJpegRenderer(application),
         fileSaver = AndroidFileSaver(application),
         clock = ::now,
@@ -117,6 +122,10 @@ class ExportViewModel(application: Application) : AndroidViewModel(application) 
             val dir = File(getApplication<Application>().filesDir, "scans")
             if (dir.exists()) dir.deleteRecursively()
         }
+    }
+
+    override fun onCleared() {
+        ocr.close()
     }
 
     private fun now(): FileTimestamp {
