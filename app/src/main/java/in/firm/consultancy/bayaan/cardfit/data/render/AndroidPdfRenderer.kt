@@ -61,6 +61,13 @@ class AndroidPdfRenderer(
             } else {
                 emptyList()
             }
+            // Diagnostic only — element COUNTS, never any recognized text (privacy).
+            android.util.Log.d(
+                "CardFitTextLayer",
+                "searchable=${config.searchableText} sides=${ocrLayers.size} " +
+                    "elements=${ocrLayers.sumOf { it.elements.size }} " +
+                    "dims=${ocrLayers.joinToString { "${it.imageWidthPx}x${it.imageHeightPx}" }}",
+            )
 
             try {
                 val layout = planLayout(session, config, sides)
@@ -226,7 +233,10 @@ class AndroidPdfRenderer(
     ) {
         if (ocrLayers.isEmpty()) return
         val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.TRANSPARENT // alpha 0: real text in the content stream, but invisible
+            // Minimal NON-ZERO alpha (~0.4%): the PDF backend culls fully-transparent text (alpha 0)
+            // so no glyphs/font are emitted; alpha 1 keeps the text real and selectable while staying
+            // visually imperceptible.
+            color = Color.argb(1, 0, 0, 0)
         }
         layout.cards.forEachIndexed { i, rect ->
             val layer = ocrLayers.getOrNull(i) ?: return@forEachIndexed
