@@ -46,6 +46,7 @@ fun PreviewScreen(
     viewModel: AppViewModel,
     onBack: () -> Unit,
     onEditConfig: () -> Unit,
+    onStartFresh: () -> Unit,
     exportViewModel: ExportViewModel = viewModel(),
 ) {
     val context = LocalContext.current
@@ -104,6 +105,14 @@ fun PreviewScreen(
         }
     }
 
+    // Fully reset the document (cached images, OCR name, render settings) and return to the start.
+    fun startFresh() {
+        exportViewModel.resetForNewSession()
+        exportViewModel.discardScans()
+        viewModel.reset()
+        onStartFresh()
+    }
+
     ScreenScaffold(title = "Preview & export") {
         if (session == null) {
             Text("No card scanned yet.")
@@ -151,6 +160,16 @@ fun PreviewScreen(
         OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
 
         ExportStatus(uiState)
+
+        // After a successful save, make sure the user is never stranded.
+        if (uiState is ExportUiState.Saved) {
+            Button(onClick = { startFresh() }, modifier = Modifier.fillMaxWidth()) {
+                Text("New Scan")
+            }
+            OutlinedButton(onClick = { startFresh() }, modifier = Modifier.fillMaxWidth()) {
+                Text("Home")
+            }
+        }
     }
 }
 

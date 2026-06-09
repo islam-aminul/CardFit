@@ -12,10 +12,12 @@ import `in`.firm.consultancy.bayaan.cardfit.data.render.AndroidPdfRenderer
 import `in`.firm.consultancy.bayaan.cardfit.domain.FileTimestamp
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.RenderConfig
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.ScanSession
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.File
 import java.util.Calendar
 
 sealed interface ExportUiState {
@@ -99,6 +101,22 @@ class ExportViewModel(application: Application) : AndroidViewModel(application) 
     /** Surface an error raised outside the export coroutine (e.g. a denied storage permission). */
     fun reportError(message: String) {
         _uiState.value = ExportUiState.Failed(message)
+    }
+
+    /** Clear all export/preview/share UI state for a fresh document. */
+    fun resetForNewSession() {
+        _uiState.value = ExportUiState.Idle
+        _previewBytes.value = null
+        _previewFailed.value = false
+        _pendingShare.value = null
+    }
+
+    /** Delete the cached scanned-side images so nothing leaks into the next document. */
+    fun discardScans() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val dir = File(getApplication<Application>().filesDir, "scans")
+            if (dir.exists()) dir.deleteRecursively()
+        }
     }
 
     private fun now(): FileTimestamp {

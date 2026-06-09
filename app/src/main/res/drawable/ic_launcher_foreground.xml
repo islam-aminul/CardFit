@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive icon foreground: an ORIGINAL, generic stylized ID-card motif (rounded card with a photo
+  box and abstract text bars). No real emblem, logo, hologram, or seal. Content sits within the
+  72dp safe zone.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Card body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M29,36 H79 A7,7 0 0 1 86,43 V65 A7,7 0 0 1 79,72 H29 A7,7 0 0 1 22,65 V43 A7,7 0 0 1 29,36 Z" />
+    <!-- Photo placeholder -->
+    <path
+        android:fillColor="#90CAF9"
+        android:pathData="M28,44 h16 v22 h-16 z" />
+    <!-- Abstract text bars -->
+    <path
+        android:fillColor="#1E88E5"
+        android:pathData="M50,46 h30 v3 h-30 z M50,53 h30 v3 h-30 z M50,60 h22 v3 h-22 z" />
+</vector>

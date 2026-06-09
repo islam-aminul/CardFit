@@ -70,6 +70,10 @@ fun CardFitNavGraph(
                     // Return to Configure to re-export from the same ScanSession (no re-scan).
                     navController.popBackStack(Routes.CONFIGURE, inclusive = false)
                 },
+                onStartFresh = {
+                    // Back to the start (card-type) as a clean slate; the session is already reset.
+                    navController.popBackStack(Routes.CARD_TYPE, inclusive = false)
+                },
             )
         }
         composable(Routes.SETTINGS) {

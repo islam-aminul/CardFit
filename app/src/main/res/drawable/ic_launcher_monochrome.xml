@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Monochrome (themed icon) layer: the card silhouette; the system applies its own tint. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#000000"
+        android:pathData="M29,36 H79 A7,7 0 0 1 86,43 V65 A7,7 0 0 1 79,72 H29 A7,7 0 0 1 22,65 V43 A7,7 0 0 1 29,36 Z" />
+    <path
+        android:fillColor="#000000"
+        android:fillType="evenOdd"
+        android:pathData="M50,46 h30 v3 h-30 z M50,53 h30 v3 h-30 z M50,60 h22 v3 h-22 z" />
+</vector>

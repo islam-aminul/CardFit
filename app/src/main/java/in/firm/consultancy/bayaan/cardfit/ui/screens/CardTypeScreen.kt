@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +18,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -37,6 +39,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.shape.RoundedCornerShape
+import `in`.firm.consultancy.bayaan.cardfit.domain.Defaults
+import `in`.firm.consultancy.bayaan.cardfit.domain.DimensionUnit
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.CardType
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.CardArtwork
@@ -144,11 +148,27 @@ private fun CustomSizeDialog(
     onDismiss: () -> Unit,
     onConfirm: (widthMm: Double, heightMm: Double) -> Unit,
 ) {
-    var widthText by remember { mutableStateOf("85.6") }
-    var heightText by remember { mutableStateOf("54.0") }
+    // Internal math stays in mm; the UI converts at the boundary. Defaults = CR-80 in cm.
+    var unit by remember { mutableStateOf(DimensionUnit.CM) }
+    var widthText by remember { mutableStateOf("8.56") }
+    var heightText by remember { mutableStateOf("5.4") }
+
     val width = widthText.toDoubleOrNull()
     val height = heightText.toDoubleOrNull()
-    val valid = width != null && width > 0.0 && height != null && height > 0.0
+    val widthMm = width?.let { unit.toMm(it) }
+    val heightMm = height?.let { unit.toMm(it) }
+
+    fun inBounds(mm: Double?): Boolean =
+        mm != null && mm >= Defaults.CUSTOM_MIN_MM && mm <= Defaults.CUSTOM_MAX_MM
+    val valid = inBounds(widthMm) && inBounds(heightMm)
+
+    fun switchUnit(target: DimensionUnit) {
+        if (target == unit) return
+        // Preserve the physical size: re-express the current numbers in the new unit.
+        width?.let { widthText = formatNumber(target.fromMm(unit.toMm(it))) }
+        height?.let { heightText = formatNumber(target.fromMm(unit.toMm(it))) }
+        unit = target
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -157,11 +177,22 @@ private fun CustomSizeDialog(
             Column {
                 Text("Enter the physical size of your card.")
                 Spacer(Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DimensionUnit.entries.forEach { u ->
+                        FilterChip(
+                            selected = unit == u,
+                            onClick = { switchUnit(u) },
+                            label = { Text(u.label) },
+                        )
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
                     value = widthText,
                     onValueChange = { widthText = it },
-                    label = { Text("Width (mm)") },
+                    label = { Text("Width (${unit.label})") },
                     singleLine = true,
+                    isError = widthText.isNotBlank() && !inBounds(widthMm),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -169,16 +200,23 @@ private fun CustomSizeDialog(
                 OutlinedTextField(
                     value = heightText,
                     onValueChange = { heightText = it },
-                    label = { Text("Height (mm)") },
+                    label = { Text("Height (${unit.label})") },
                     singleLine = true,
+                    isError = heightText.isNotBlank() && !inBounds(heightMm),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Allowed: ${formatNumber(unit.fromMm(Defaults.CUSTOM_MIN_MM))}–" +
+                        "${formatNumber(unit.fromMm(Defaults.CUSTOM_MAX_MM))} ${unit.label}.",
+                    style = MaterialTheme.typography.bodySmall,
                 )
             }
         },
         confirmButton = {
             TextButton(
-                onClick = { if (valid) onConfirm(width!!, height!!) },
+                onClick = { if (valid) onConfirm(widthMm!!, heightMm!!) },
                 enabled = valid,
             ) { Text("Use size") }
         },
@@ -186,6 +224,12 @@ private fun CustomSizeDialog(
             TextButton(onClick = onDismiss) { Text("Cancel") }
         },
     )
+}
+
+/** Round to 2 decimals and drop a trailing ".0" for tidy display. */
+private fun formatNumber(value: Double): String {
+    val rounded = Math.round(value * 100.0) / 100.0
+    return if (rounded % 1.0 == 0.0) rounded.toLong().toString() else rounded.toString()
 }
 
 private fun labelFor(type: CardType): String = when (type) {

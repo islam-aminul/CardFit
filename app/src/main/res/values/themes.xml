@@ -1,4 +1,11 @@
 <resources>
     <!-- Base theme for the single Activity. Compose/Material3 supplies the actual UI styling. -->
     <style name="Theme.CardFit" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!--
+      The Google OSS Licenses activities extend AppCompatActivity and require a Theme.AppCompat
+      descendant; our app theme is not AppCompat, so we give those activities this theme via a
+      manifest override (appcompat is already on the classpath transitively — no new dependency).
+    -->
+    <style name="Theme.CardFit.OssLicenses" parent="Theme.AppCompat.DayNight.DarkActionBar" />
 </resources>

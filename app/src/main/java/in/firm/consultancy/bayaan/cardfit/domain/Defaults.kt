@@ -18,4 +18,8 @@ object Defaults {
 
     /** Effective DPI below which a card is considered no longer legible. */
     const val READABILITY_FLOOR_DPI: Int = 150
+
+    /** Sensible bounds (in mm) for a user-entered custom card size. */
+    const val CUSTOM_MIN_MM: Double = 20.0
+    const val CUSTOM_MAX_MM: Double = 300.0
 }
