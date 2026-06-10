@@ -18,6 +18,7 @@ data class SideClassification(
 )
 
 /** User control over sizing. AUTOMATIC uses detection (Phase 12). */
+@kotlinx.serialization.Serializable
 enum class SizeOverride { AUTOMATIC, FORCE_CR80, CUSTOM }
 
 /** The resolved sizing strategy for a session. */

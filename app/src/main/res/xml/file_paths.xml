@@ -2,4 +2,6 @@
 <paths>
     <!-- Share copies live in cacheDir/shared and are exposed only via FileProvider grants. -->
     <cache-path name="shared" path="shared/" />
+    <!-- Camera-capture targets live in cacheDir/camera, written by the camera app via a grant. -->
+    <cache-path name="camera" path="camera/" />
 </paths>

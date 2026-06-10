@@ -15,14 +15,15 @@ object Slug {
 
     /**
      * lowercase -> NFD normalize -> drop diacritics -> collapse runs of non `[a-z0-9]` to a single
-     * `-` -> trim leading/trailing `-`. Empty result becomes `document`.
+     * `-` -> trim leading/trailing `-`. An empty result becomes [emptyFallback] (default `document`;
+     * the photo flow passes `photo`).
      */
-    fun slugify(input: String): String {
+    fun slugify(input: String, emptyFallback: String = "document"): String {
         val lowered = input.lowercase()
         val decomposed = Normalizer.normalize(lowered, Normalizer.Form.NFD)
         val withoutDiacritics = COMBINING_MARKS.replace(decomposed, "")
         val hyphenated = NON_ALNUM_RUN.replace(withoutDiacritics, "-")
         val trimmed = hyphenated.trim('-')
-        return trimmed.ifEmpty { "document" }
+        return trimmed.ifEmpty { emptyFallback }
     }
 }

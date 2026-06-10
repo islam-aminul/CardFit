@@ -1,39 +1,78 @@
 package `in`.firm.consultancy.bayaan.cardfit.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.launch
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.PhotoViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.TaskViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.CardTypeScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.ConfigureScreen
+import `in`.firm.consultancy.bayaan.cardfit.ui.screens.HomeScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.NameScreen
+import `in`.firm.consultancy.bayaan.cardfit.ui.screens.PhotoEditScreen
+import `in`.firm.consultancy.bayaan.cardfit.ui.screens.PhotoExportScreen
+import `in`.firm.consultancy.bayaan.cardfit.ui.screens.PhotoSizeScreen
+import `in`.firm.consultancy.bayaan.cardfit.ui.screens.PhotoSourceScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.PreviewScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.ScanScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.SettingsScreen
+import `in`.firm.consultancy.bayaan.cardfit.ui.screens.TaskDetailScreen
+import `in`.firm.consultancy.bayaan.cardfit.ui.screens.TaskListScreen
 
-/** Route constants for the screen graph (CLAUDE.md section 11). */
+/** Route constants for the screen graph (CLAUDE.md sections 11 + Phase 13). */
 object Routes {
+    const val HOME = "home"
+    // Document (ID-card) flow.
     const val CARD_TYPE = "card_type"
     const val SCAN = "scan"
     const val CONFIGURE = "configure"
     const val NAME = "name"
     const val PREVIEW = "preview"
+    // Photo flow.
+    const val PHOTO_SOURCE = "photo_source"
+    const val PHOTO_EDIT = "photo_edit"
+    const val PHOTO_SIZE = "photo_size"
+    const val PHOTO_EXPORT = "photo_export"
+    // Task flow (Phase 14). Adding an entry reuses the document/photo flows under task-scoped routes.
+    const val TASK_LIST = "task_list"
+    const val TASK_DETAIL = "task_detail"
+    const val TASK_CARD_TYPE = "task_card_type"
+    const val TASK_SCAN = "task_scan"
+    const val TASK_PHOTO_SOURCE = "task_photo_source"
+    const val TASK_PHOTO_EDIT = "task_photo_edit"
+    const val TASK_PHOTO_SIZE = "task_photo_size"
     const val SETTINGS = "settings"
 }
 
 /**
- * The end-to-end navigation graph. The [AppViewModel] is obtained once here and shared by every
- * destination (activity-scoped), so the ScanSession survives navigation between steps.
+ * The end-to-end navigation graph. [AppViewModel] (document flow) and [PhotoViewModel] (photo flow)
+ * are each obtained once here and shared by their destinations (activity-scoped), so each flow's
+ * session survives navigation between its steps.
  */
 @Composable
 fun CardFitNavGraph(
     navController: NavHostController = rememberNavController(),
     appViewModel: AppViewModel = viewModel(),
+    photoViewModel: PhotoViewModel = viewModel(),
+    taskViewModel: TaskViewModel = viewModel(),
 ) {
-    NavHost(navController = navController, startDestination = Routes.CARD_TYPE) {
+    NavHost(navController = navController, startDestination = Routes.HOME) {
+        composable(Routes.HOME) {
+            HomeScreen(
+                onChooseDocument = { navController.navigate(Routes.CARD_TYPE) },
+                onChoosePhoto = { navController.navigate(Routes.PHOTO_SOURCE) },
+                onChooseTasks = { navController.navigate(Routes.TASK_LIST) },
+                onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+            )
+        }
+
+        // --- document flow ---
         composable(Routes.CARD_TYPE) {
             CardTypeScreen(
                 viewModel = appViewModel,
@@ -66,16 +105,117 @@ fun CardFitNavGraph(
             PreviewScreen(
                 viewModel = appViewModel,
                 onBack = { navController.popBackStack() },
-                onEditConfig = {
-                    // Return to Configure to re-export from the same ScanSession (no re-scan).
-                    navController.popBackStack(Routes.CONFIGURE, inclusive = false)
-                },
-                onStartFresh = {
-                    // Back to the start (card-type) as a clean slate; the session is already reset.
-                    navController.popBackStack(Routes.CARD_TYPE, inclusive = false)
-                },
+                onEditConfig = { navController.popBackStack(Routes.CONFIGURE, inclusive = false) },
+                onStartFresh = { navController.popBackStack(Routes.HOME, inclusive = false) },
             )
         }
+
+        // --- photo flow ---
+        composable(Routes.PHOTO_SOURCE) {
+            PhotoSourceScreen(
+                viewModel = photoViewModel,
+                onPicked = { navController.navigate(Routes.PHOTO_EDIT) },
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable(Routes.PHOTO_EDIT) {
+            PhotoEditScreen(
+                viewModel = photoViewModel,
+                onNext = { navController.navigate(Routes.PHOTO_SIZE) },
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable(Routes.PHOTO_SIZE) {
+            PhotoSizeScreen(
+                viewModel = photoViewModel,
+                onNext = { navController.navigate(Routes.PHOTO_EXPORT) },
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable(Routes.PHOTO_EXPORT) {
+            PhotoExportScreen(
+                viewModel = photoViewModel,
+                onBack = { navController.popBackStack() },
+                onStartFresh = { navController.popBackStack(Routes.HOME, inclusive = false) },
+            )
+        }
+
+        // --- task flow ---
+        composable(Routes.TASK_LIST) {
+            TaskListScreen(
+                viewModel = taskViewModel,
+                onOpenTask = { navController.navigate(Routes.TASK_DETAIL) },
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable(Routes.TASK_DETAIL) {
+            TaskDetailScreen(
+                viewModel = taskViewModel,
+                onAddDocument = { navController.navigate(Routes.TASK_CARD_TYPE) },
+                onAddPhoto = { navController.navigate(Routes.TASK_PHOTO_SOURCE) },
+                onBack = { navController.popBackStack(Routes.TASK_LIST, inclusive = false) },
+            )
+        }
+
+        // Task: add a scanned document (reuses the card-type + scan screens).
+        composable(Routes.TASK_CARD_TYPE) {
+            CardTypeScreen(
+                viewModel = appViewModel,
+                onNext = { navController.navigate(Routes.TASK_SCAN) },
+                onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+            )
+        }
+        composable(Routes.TASK_SCAN) {
+            val scope = rememberCoroutineScope()
+            ScanScreen(
+                viewModel = appViewModel,
+                onNext = {
+                    val s = appViewModel.state.value
+                    val session = s.session
+                    scope.launch {
+                        if (session != null) taskViewModel.addDocumentEntry(session, s.sizeOverride)
+                        appViewModel.reset()
+                        navController.popBackStack(Routes.TASK_DETAIL, inclusive = false)
+                    }
+                },
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        // Task: add an edited photo (reuses the photo source/edit/size screens).
+        composable(Routes.TASK_PHOTO_SOURCE) {
+            PhotoSourceScreen(
+                viewModel = photoViewModel,
+                onPicked = { navController.navigate(Routes.TASK_PHOTO_EDIT) },
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable(Routes.TASK_PHOTO_EDIT) {
+            PhotoEditScreen(
+                viewModel = photoViewModel,
+                onNext = { navController.navigate(Routes.TASK_PHOTO_SIZE) },
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable(Routes.TASK_PHOTO_SIZE) {
+            val scope = rememberCoroutineScope()
+            PhotoSizeScreen(
+                viewModel = photoViewModel,
+                onNext = {
+                    val size = photoViewModel.state.value.resolvedSize
+                    scope.launch {
+                        val uri = photoViewModel.produceEditedImage()
+                        if (uri != null && size != null) {
+                            taskViewModel.addPhotoEntry(uri, size.widthMm, size.heightMm)
+                        }
+                        photoViewModel.reset()
+                        navController.popBackStack(Routes.TASK_DETAIL, inclusive = false)
+                    }
+                },
+                onBack = { navController.popBackStack() },
+            )
+        }
+
         composable(Routes.SETTINGS) {
             SettingsScreen(onBack = { navController.popBackStack() })
         }
