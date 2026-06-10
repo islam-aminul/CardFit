@@ -6,8 +6,10 @@ import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputMode
 /**
  * Filename construction from CLAUDE.md section 9.
  *
- * Template: `{nameSlug}-{cardTypeSlug}-{purpose}-{yyMMdd}-{HHmm}.{ext}`
- * Examples: `aminul-islam-pan-upload-260608-1430.jpeg`, `aminul-islam-pan-print-260608-1430.pdf`.
+ * Template: `{nameSlug}-{cardTypeSlug}-{paperSlug}-{purpose}-{yyMMdd}-{HHmm}.{ext}`
+ * Examples: `aminul-islam-pan-a4-upload-260608-1430.jpeg`, `aminul-islam-pan-a5-print-260608-1430.pdf`.
+ *
+ * (The paper slug was added in Phase 13 so multi-paper exports produce distinct, readable names.)
  */
 
 /**
@@ -48,6 +50,7 @@ object FilenameBuilder {
     fun build(
         name: String,
         cardTypeSlug: String,
+        paperSlug: String,
         mode: OutputMode,
         format: OutputFormat,
         timestamp: FileTimestamp,
@@ -59,7 +62,7 @@ object FilenameBuilder {
 
         val datePart = pad2(timestamp.year % 100) + pad2(timestamp.month) + pad2(timestamp.day)
         val timePart = pad2(timestamp.hour) + pad2(timestamp.minute)
-        val base = "$nameSlug-$cardTypeSlug-$purpose-$datePart-$timePart"
+        val base = "$nameSlug-$cardTypeSlug-$paperSlug-$purpose-$datePart-$timePart"
 
         val first = "$base.$ext"
         if (!exists(first)) return first

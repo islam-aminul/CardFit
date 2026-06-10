@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -20,6 +21,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -59,25 +63,37 @@ fun PreviewScreen(
     val session = state.session
     val configs = viewModel.renderConfigs()
 
+    val scrollState = rememberScrollState()
+    // Becomes true after a successful Save or Share, to reveal + scroll to New Scan / Home.
+    var finishActionsVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(uiState) {
+        if (uiState is ExportUiState.Saved) finishActionsVisible = true
+    }
+    LaunchedEffect(finishActionsVisible) {
+        if (finishActionsVisible) scrollState.animateScrollTo(scrollState.maxValue)
+    }
+
     // (Re)generate the preview whenever the session or render settings change.
     LaunchedEffect(
         session,
         state.selectedModes,
-        state.paper,
-        state.format,
+        state.selectedPapers,
+        state.selectedFormats,
         state.grayscale,
         state.maxFileSizeKb,
+        state.sizeOverride,
     ) {
         if (session != null && configs.isNotEmpty()) {
             exportViewModel.generatePreview(session, configs)
         }
     }
 
-    // Launch the share sheet once files are prepared.
+    // Launch the share sheet once files are prepared, then surface the finish actions.
     LaunchedEffect(pendingShare) {
         val items = pendingShare ?: return@LaunchedEffect
         launchShare(context, items)
         exportViewModel.shareHandled()
+        finishActionsVisible = true
     }
 
     fun doSave() {
@@ -113,7 +129,7 @@ fun PreviewScreen(
         onStartFresh()
     }
 
-    ScreenScaffold(title = "Preview & export") {
+    ScreenScaffold(title = "Preview & export", scrollState = scrollState) {
         if (session == null) {
             Text("No card scanned yet.")
             OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
@@ -161,8 +177,8 @@ fun PreviewScreen(
 
         ExportStatus(uiState)
 
-        // After a successful save, make sure the user is never stranded.
-        if (uiState is ExportUiState.Saved) {
+        // After a successful save OR share, make sure the user is never stranded (auto-scrolled to).
+        if (finishActionsVisible) {
             Button(onClick = { startFresh() }, modifier = Modifier.fillMaxWidth()) {
                 Text("New Scan")
             }

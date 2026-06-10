@@ -46,10 +46,17 @@ data class RenderConfig(
     val cropMarks: Boolean, // print only
     val maxFileSizeKb: Int?, // upload only
     val searchableText: Boolean = false, // PDF only: embed an invisible OCR text layer (Phase 11)
+    // Sizing override for aspect-ratio detection (Phase 12); resolved against the scanned sides.
+    val sizeOverride: `in`.firm.consultancy.bayaan.cardfit.domain.SizeOverride =
+        `in`.firm.consultancy.bayaan.cardfit.domain.SizeOverride.AUTOMATIC,
 )
 
-/** [imageUri] is the URI string of the corrected, cropped side (see note above). */
-data class ScannedSide(val imageUri: String)
+/**
+ * [imageUri] is the URI string of the corrected, cropped side (see note above). [widthPx]/[heightPx]
+ * are the cropped image's pixel dimensions, used for aspect-ratio classification (Phase 12); they
+ * default to 0 (unknown) for callers that don't need classification.
+ */
+data class ScannedSide(val imageUri: String, val widthPx: Int = 0, val heightPx: Int = 0)
 
 data class ScanSession(
     val cardType: CardType,

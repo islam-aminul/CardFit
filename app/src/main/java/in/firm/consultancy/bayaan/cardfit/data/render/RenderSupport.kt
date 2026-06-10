@@ -18,6 +18,7 @@ import `in`.firm.consultancy.bayaan.cardfit.domain.model.ScanSession
 import `in`.firm.consultancy.bayaan.cardfit.domain.LayoutCalculator
 import `in`.firm.consultancy.bayaan.cardfit.domain.LayoutPlanner
 import `in`.firm.consultancy.bayaan.cardfit.domain.PageLayout
+import `in`.firm.consultancy.bayaan.cardfit.domain.SideInfo
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.RenderConfig
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -94,14 +95,23 @@ internal fun centerCropSrcRect(src: Bitmap, dstWidth: Float, dstHeight: Float): 
 
 /** Plan + calculate the page layout for a session/config given the decoded sides. */
 internal fun planLayout(session: ScanSession, config: RenderConfig, sides: List<Bitmap>): PageLayout {
-    val frontAspect = sides[0].width.toDouble() / sides[0].height.toDouble()
-    val backAspect = if (sides.size > 1) sides[1].width.toDouble() / sides[1].height.toDouble() else null
+    // Prefer the cropped sides' recorded pixel dimensions (used for aspect classification); fall back
+    // to the decoded bitmap dimensions (same aspect) if unknown.
+    val scanned = listOfNotNull(session.front, session.back)
+    val sideInfos = sides.mapIndexed { i, bmp ->
+        val s = scanned.getOrNull(i)
+        if (s != null && s.widthPx > 0 && s.heightPx > 0) {
+            SideInfo(s.widthPx, s.heightPx)
+        } else {
+            SideInfo(bmp.width, bmp.height)
+        }
+    }
     val input = LayoutPlanner.plan(
         cardType = session.cardType,
         mode = config.mode,
         paper = config.paper,
-        frontAspect = frontAspect,
-        backAspect = backAspect,
+        sides = sideInfos,
+        sizeOverride = config.sizeOverride,
         customWidthMm = session.customWidthMm,
         customHeightMm = session.customHeightMm,
     )

@@ -17,7 +17,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     val searchableText: StateFlow<Boolean> = prefs.prefs
         .map { it.searchableText }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
 
     fun setSearchableText(value: Boolean) {
         viewModelScope.launch {

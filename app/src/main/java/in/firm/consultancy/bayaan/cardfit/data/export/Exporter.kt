@@ -42,6 +42,7 @@ class Exporter(
             val fileName = FilenameBuilder.build(
                 name = name,
                 cardTypeSlug = session.cardType.slug,
+                paperSlug = config.paper.name.lowercase(),
                 mode = config.mode,
                 format = config.format,
                 timestamp = clock(),
@@ -63,6 +64,7 @@ class Exporter(
             val fileName = FilenameBuilder.build(
                 name = name,
                 cardTypeSlug = session.cardType.slug,
+                paperSlug = config.paper.name.lowercase(),
                 mode = config.mode,
                 format = config.format,
                 timestamp = clock(),

@@ -26,7 +26,7 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
 
-    ScreenScaffold(title = "Settings & About") {
+    ScreenScaffold(title = "About") {
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),

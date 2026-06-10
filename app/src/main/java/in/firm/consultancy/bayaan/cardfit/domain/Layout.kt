@@ -44,6 +44,12 @@ data class LayoutInput(
     val cardHeightMm: Double? = null,
     val gapMm: Double = Defaults.CARD_GAP_MM,
     val marginMm: Double = Defaults.UPLOAD_MARGIN_MM,
+    // Phase 12: exact per-side sizes (mm) for ACTUAL_SIZE — lets front/back differ by orientation.
+    // When null, [cardWidthMm]/[cardHeightMm] are used for every side.
+    val perSideSizesMm: List<Pair<Double, Double>>? = null,
+    // Phase 12: for ACTUAL_SIZE, crop the canvas tightly to the content (upload) instead of
+    // centring on the full page (print).
+    val cropToContent: Boolean = false,
 )
 
 /**
@@ -68,21 +74,40 @@ object LayoutCalculator {
     }
 
     /**
-     * Each card drawn at its exact physical mm size; centred horizontally; the whole stack centred
-     * vertically on the full page.
+     * Each card drawn at its exact physical mm size (per-side sizes when given, e.g. CR-80 fronts and
+     * backs captured in different orientations). Sides are centred horizontally and stacked with a
+     * gap. With [LayoutInput.cropToContent] the canvas is cropped tightly to the stack + margins
+     * (upload); otherwise the stack is centred vertically on the full page (print).
      */
     private fun actualSize(input: LayoutInput): PageLayout {
-        val w = requireNotNull(input.cardWidthMm) { "ACTUAL_SIZE requires cardWidthMm" }
-        val h = requireNotNull(input.cardHeightMm) { "ACTUAL_SIZE requires cardHeightMm" }
         val n = input.cards.size
-        val stackHeight = n * h + (n - 1) * input.gapMm
-        val topY = (input.pageHeightMm - stackHeight) / 2.0
-        val x = (input.pageWidthMm - w) / 2.0
-
-        val rects = (0 until n).map { i ->
-            LayoutRect(x, topY + i * (h + input.gapMm), w, h)
+        val sizes: List<Pair<Double, Double>> = input.perSideSizesMm ?: run {
+            val w = requireNotNull(input.cardWidthMm) { "ACTUAL_SIZE requires cardWidthMm" }
+            val h = requireNotNull(input.cardHeightMm) { "ACTUAL_SIZE requires cardHeightMm" }
+            List(n) { w to h }
         }
-        return PageLayout(input.pageWidthMm, input.pageHeightMm, rects)
+        require(sizes.size == n) { "perSideSizesMm must have one entry per side" }
+
+        val stackHeight = sizes.sumOf { it.second } + (n - 1) * input.gapMm
+        val maxWidth = sizes.maxOf { it.first }
+
+        return if (input.cropToContent) {
+            val canvasWidth = maxWidth + 2 * input.marginMm
+            val canvasHeight = stackHeight + 2 * input.marginMm
+            var y = input.marginMm
+            val rects = sizes.map { (w, h) ->
+                val x = input.marginMm + (maxWidth - w) / 2.0
+                LayoutRect(x, y, w, h).also { y += h + input.gapMm }
+            }
+            PageLayout(canvasWidth, canvasHeight, rects)
+        } else {
+            var y = (input.pageHeightMm - stackHeight) / 2.0
+            val rects = sizes.map { (w, h) ->
+                val x = (input.pageWidthMm - w) / 2.0
+                LayoutRect(x, y, w, h).also { y += h + input.gapMm }
+            }
+            PageLayout(input.pageWidthMm, input.pageHeightMm, rects)
+        }
     }
 
     /**
@@ -106,34 +131,34 @@ object LayoutCalculator {
     }
 
     /**
-     * Scale the image(s) to fit within the page minus margins, aspect preserved, and centre.
-     * Generalised to 1 or 2 cards: width-fit each card, then if the stack is taller than the
-     * available height, scale every card down uniformly so the stack (cards + gaps) fits exactly.
+     * Fit-to-AREA (Phase 12, print NON_STANDARD): scale the ENTIRE vertical stack — every side at its
+     * own aspect ratio, plus the gaps — to fit the printable area (page minus margins), then centre
+     * on the full page. The reference stack fills the usable width; the uniform scale is
+     * `min(usableWidth / stackWidth, usableHeight / stackHeight)` (here stackWidth == usableWidth, so
+     * the scale only shrinks when the stack would be too tall). This keeps portrait cards from
+     * overflowing the page, unlike a plain fit-to-width.
      */
     private fun fitPage(input: LayoutInput): PageLayout {
         val availW = input.pageWidthMm - 2 * input.marginMm
         val availH = input.pageHeightMm - 2 * input.marginMm
         val n = input.cards.size
 
-        var widths = input.cards.map { availW }
-        var heights = input.cards.map { availW / it.aspectRatio }
-
+        // Reference layout: each side fills the usable width.
+        val refHeights = input.cards.map { availW / it.aspectRatio }
         val gapsTotal = (n - 1) * input.gapMm
-        val cardsHeight = heights.sum()
-        val availForCards = availH - gapsTotal
-        if (cardsHeight > availForCards) {
-            val scale = availForCards / cardsHeight
-            widths = widths.map { it * scale }
-            heights = heights.map { it * scale }
-        }
+        val refStackHeight = refHeights.sum() + gapsTotal
 
-        val stackHeight = heights.sum() + gapsTotal
+        // Uniform scale of the whole stack (cards + gaps); never upscale beyond full width.
+        val scale = minOf(1.0, availH / refStackHeight)
+        val scaledWidth = availW * scale
+        val scaledHeights = refHeights.map { it * scale }
+        val scaledGap = input.gapMm * scale
+
+        val stackHeight = scaledHeights.sum() + (n - 1) * scaledGap
         var y = (input.pageHeightMm - stackHeight) / 2.0
-        val rects = ArrayList<LayoutRect>(n)
-        for (i in 0 until n) {
-            val x = (input.pageWidthMm - widths[i]) / 2.0
-            rects.add(LayoutRect(x, y, widths[i], heights[i]))
-            y += heights[i] + input.gapMm
+        val x = (input.pageWidthMm - scaledWidth) / 2.0
+        val rects = scaledHeights.map { h ->
+            LayoutRect(x, y, scaledWidth, h).also { y += h + scaledGap }
         }
         return PageLayout(input.pageWidthMm, input.pageHeightMm, rects)
     }

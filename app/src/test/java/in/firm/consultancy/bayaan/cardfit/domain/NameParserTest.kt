@@ -104,6 +104,23 @@ class NameParserTest {
         assertEquals("JOHN DOE", NameParser.parse(CardType.EPIC, lines))
     }
 
+    @Test
+    fun epic_titleContainingElector_doesNotStealTheName() {
+        // Old paper voter cards have this title; it has "elector" but must NOT be matched.
+        val lines = listOf(
+            "ELECTOR PHOTO IDENTITY CARD",
+            "Election Commission of India",
+            "Elector's Name : JOHN DOE",
+            "Father's Name : RICHARD",
+        )
+        assertEquals("JOHN DOE", NameParser.parse(CardType.EPIC, lines))
+    }
+
+    @Test
+    fun epic_inlineElectorsName_withColonSpacing() {
+        assertEquals("JANE DOE", NameParser.parse(CardType.EPIC, listOf("Elector's Name :", "JANE DOE")))
+    }
+
     // ---------- card types without a parser ----------
 
     @Test

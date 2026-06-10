@@ -23,9 +23,16 @@ class FakeScanner : Scanner {
     override fun startScanIntent(activity: Activity): Task<IntentSender> =
         throw UnsupportedOperationException("Launching is not exercised in JVM tests")
 
-    override suspend fun persistFirstPage(resultIntent: Intent?, slot: ScanSlot): String? {
+    override suspend fun persistFirstPage(
+        resultIntent: Intent?,
+        slot: ScanSlot,
+    ): `in`.firm.consultancy.bayaan.cardfit.domain.model.ScannedSide {
         persisted += slot
-        return "content://fake/${slot.name.lowercase()}"
+        return `in`.firm.consultancy.bayaan.cardfit.domain.model.ScannedSide(
+            imageUri = "content://fake/${slot.name.lowercase()}",
+            widthPx = 856,
+            heightPx = 540,
+        )
     }
 }
 

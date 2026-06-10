@@ -9,9 +9,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -36,20 +33,15 @@ fun NameScreen(
     val suggestion by nameViewModel.suggestion.collectAsStateWithLifecycle()
     val session = state.session
 
-    var prefilled by remember { mutableStateOf(false) }
-
     LaunchedEffect(session?.front?.imageUri) {
         if (session != null) nameViewModel.suggestFrom(session)
     }
 
-    // Pre-fill ONCE, and only into a still-empty field — keep it a suggestion, never a finalization.
+    // Apply each new OCR suggestion: it replaces a blank or previously auto-filled name (so a new
+    // scan that detects nothing clears the stale name), but never overwrites text the user typed.
     LaunchedEffect(suggestion) {
         val ready = suggestion as? NameSuggestion.Ready ?: return@LaunchedEffect
-        val name = ready.name
-        if (!prefilled && name != null && state.name.isBlank()) {
-            viewModel.setName(name)
-            prefilled = true
-        }
+        viewModel.applyNameSuggestion(ready.name)
     }
 
     ScreenScaffold(title = "Name on file") {

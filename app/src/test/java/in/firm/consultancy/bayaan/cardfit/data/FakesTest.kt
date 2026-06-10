@@ -30,8 +30,8 @@ class FakesTest {
     @Test
     fun scanner_persistsPerSlot() = runTest {
         val scanner = FakeScanner()
-        assertEquals("content://fake/front", scanner.persistFirstPage(null, ScanSlot.FRONT))
-        assertEquals("content://fake/back", scanner.persistFirstPage(null, ScanSlot.BACK))
+        assertEquals("content://fake/front", scanner.persistFirstPage(null, ScanSlot.FRONT)?.imageUri)
+        assertEquals("content://fake/back", scanner.persistFirstPage(null, ScanSlot.BACK)?.imageUri)
         assertEquals(listOf(ScanSlot.FRONT, ScanSlot.BACK), scanner.persisted)
     }
 

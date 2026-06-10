@@ -40,9 +40,9 @@ class ExporterTest {
         val files = exporter.export(session, "Aminul Islam", listOf(printPdf(), uploadJpeg()))
 
         assertEquals(2, files.size)
-        assertEquals("aminul-islam-pan-print-260608-1430.pdf", files[0].fileName)
-        assertEquals("aminul-islam-pan-upload-260608-1430.jpeg", files[1].fileName)
-        assertEquals("content://saved/aminul-islam-pan-print-260608-1430.pdf", files[0].savedLocation)
+        assertEquals("aminul-islam-pan-a4-print-260608-1430.pdf", files[0].fileName)
+        assertEquals("aminul-islam-pan-a4-upload-260608-1430.jpeg", files[1].fileName)
+        assertEquals("content://saved/aminul-islam-pan-a4-print-260608-1430.pdf", files[0].savedLocation)
         assertEquals(2, saver.saved.size)
         assertEquals("application/pdf", saver.saved[0].mimeType)
         assertEquals("image/jpeg", saver.saved[1].mimeType)
@@ -52,15 +52,15 @@ class ExporterTest {
     fun emptyNameBecomesDocument() = runTest {
         val (exporter, _) = exporter()
         val files = exporter.export(session, "", listOf(uploadJpeg()))
-        assertEquals("document-pan-upload-260608-1430.jpeg", files[0].fileName)
+        assertEquals("document-pan-a4-upload-260608-1430.jpeg", files[0].fileName)
     }
 
     @Test
     fun collisionInDownloads_appendsSeconds() = runTest {
-        val saver = FakeFileSaver().apply { seedExisting("aminul-islam-pan-print-260608-1430.pdf") }
+        val saver = FakeFileSaver().apply { seedExisting("aminul-islam-pan-a4-print-260608-1430.pdf") }
         val (exporter, _) = exporter(saver)
         val files = exporter.export(session, "Aminul Islam", listOf(printPdf()))
-        assertEquals("aminul-islam-pan-print-260608-1430-05.pdf", files[0].fileName)
+        assertEquals("aminul-islam-pan-a4-print-260608-1430-05.pdf", files[0].fileName)
     }
 
     @Test

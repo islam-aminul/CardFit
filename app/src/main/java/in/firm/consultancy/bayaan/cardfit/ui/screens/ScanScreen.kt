@@ -62,13 +62,13 @@ fun ScanScreen(
     ) { result ->
         when (result.resultCode) {
             Activity.RESULT_OK -> scope.launch {
-                val uri = scanner.persistFirstPage(result.data, currentSlot)
-                if (uri == null) {
+                val side = scanner.persistFirstPage(result.data, currentSlot)
+                if (side == null) {
                     errorMessage = "Couldn't read the scanned page. Please try again."
                 } else {
                     when (currentSlot) {
-                        ScanSlot.FRONT -> viewModel.setFront(ScannedSide(uri))
-                        ScanSlot.BACK -> viewModel.setBack(ScannedSide(uri))
+                        ScanSlot.FRONT -> viewModel.setFront(side)
+                        ScanSlot.BACK -> viewModel.setBack(side)
                     }
                 }
             }
@@ -115,7 +115,11 @@ fun ScanScreen(
     }
 
     ScreenScaffold(title = "Scan card") {
-        Text("Capture the front of the card. The back is optional.")
+        // Hide the helper text once the front is captured, to free vertical space for Next on
+        // small (≈5") screens.
+        if (session?.front == null) {
+            Text("Capture the front of the card. The back is optional.")
+        }
 
         SideSection(
             label = "Front",

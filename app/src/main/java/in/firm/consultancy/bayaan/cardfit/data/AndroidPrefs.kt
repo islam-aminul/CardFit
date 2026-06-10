@@ -21,12 +21,12 @@ class AndroidPrefs(private val context: Context) : Prefs {
     private val searchableKey = booleanPreferencesKey("searchable_text")
 
     override val prefs: Flow<UserPrefs> = context.cardFitDataStore.data.map { stored ->
-        UserPrefs(searchableText = stored[searchableKey] ?: false)
+        UserPrefs(searchableText = stored[searchableKey] ?: true)
     }
 
     override suspend fun update(transform: (UserPrefs) -> UserPrefs) {
         context.cardFitDataStore.edit { stored ->
-            val current = UserPrefs(searchableText = stored[searchableKey] ?: false)
+            val current = UserPrefs(searchableText = stored[searchableKey] ?: true)
             val updated = transform(current)
             stored[searchableKey] = updated.searchableText
         }

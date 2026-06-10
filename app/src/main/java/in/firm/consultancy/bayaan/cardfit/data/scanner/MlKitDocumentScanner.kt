@@ -4,8 +4,10 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
+import android.graphics.BitmapFactory
 import android.net.Uri
 import com.google.android.gms.tasks.Task
+import `in`.firm.consultancy.bayaan.cardfit.domain.model.ScannedSide
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
@@ -43,7 +45,7 @@ class MlKitDocumentScanner(private val appContext: Context) : Scanner {
     override fun startScanIntent(activity: Activity): Task<IntentSender> =
         client.getStartScanIntent(activity)
 
-    override suspend fun persistFirstPage(resultIntent: Intent?, slot: ScanSlot): String? =
+    override suspend fun persistFirstPage(resultIntent: Intent?, slot: ScanSlot): ScannedSide? =
         withContext(Dispatchers.IO) {
             val result = GmsDocumentScanningResult.fromActivityResultIntent(resultIntent)
                 ?: return@withContext null
@@ -61,12 +63,19 @@ class MlKitDocumentScanner(private val appContext: Context) : Scanner {
             } ?: false
 
             // Treat an empty copy as a failure so the user retakes instead of hitting a broken export.
-            if (copied && dest.length() > 0L) {
-                Uri.fromFile(dest).toString()
-            } else {
+            if (!copied || dest.length() <= 0L) {
                 dest.delete()
-                null
+                return@withContext null
             }
+
+            // Read pixel dimensions (bounds only — no full decode) for aspect-ratio classification.
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(dest.absolutePath, bounds)
+            ScannedSide(
+                imageUri = Uri.fromFile(dest).toString(),
+                widthPx = bounds.outWidth.coerceAtLeast(0),
+                heightPx = bounds.outHeight.coerceAtLeast(0),
+            )
         }
 
     private companion object {

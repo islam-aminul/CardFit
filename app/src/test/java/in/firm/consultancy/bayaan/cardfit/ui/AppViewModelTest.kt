@@ -1,7 +1,9 @@
 package `in`.firm.consultancy.bayaan.cardfit.ui
 
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.CardType
+import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputFormat
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputMode
+import `in`.firm.consultancy.bayaan.cardfit.domain.model.PaperSize
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.ScannedSide
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -106,14 +108,35 @@ class AppViewModelTest {
     }
 
     @Test
-    fun setModes_both_producesTwoConfigs() {
+    fun multiSelect_producesCartesianProduct() {
         val vm = vm()
         vm.selectCardType(CardType.PAN)
-        vm.setModes(setOf(OutputMode.PRINT, OutputMode.UPLOAD))
-        assertEquals(2, vm.renderConfigs().size)
-        vm.setModes(setOf(OutputMode.UPLOAD))
-        assertEquals(setOf(OutputMode.UPLOAD), vm.state.value.selectedModes)
-        assertEquals(1, vm.renderConfigs().size)
+        vm.toggleMode(OutputMode.PRINT)
+        vm.toggleMode(OutputMode.UPLOAD)
+        vm.togglePaper(PaperSize.A5) // A4 (default) + A5
+        vm.toggleFormat(OutputFormat.JPEG) // PDF (default) + JPEG
+        // 2 modes x 2 papers x 2 formats = 8 files
+        assertEquals(8, vm.renderConfigs().size)
+    }
+
+    @Test
+    fun togglePaper_cappedAtMax() {
+        val vm = vm() // default A4
+        vm.togglePaper(PaperSize.A5)
+        vm.togglePaper(PaperSize.LETTER) // ignored: already at max 2
+        assertEquals(setOf(PaperSize.A4, PaperSize.A5), vm.state.value.selectedPapers)
+        vm.togglePaper(PaperSize.A4) // remove one, frees a slot
+        vm.togglePaper(PaperSize.LETTER)
+        assertEquals(setOf(PaperSize.A5, PaperSize.LETTER), vm.state.value.selectedPapers)
+    }
+
+    @Test
+    fun toggleFormat_addsAndRemoves() {
+        val vm = vm() // default PDF
+        vm.toggleFormat(OutputFormat.JPEG)
+        assertEquals(setOf(OutputFormat.PDF, OutputFormat.JPEG), vm.state.value.selectedFormats)
+        vm.toggleFormat(OutputFormat.PDF)
+        assertEquals(setOf(OutputFormat.JPEG), vm.state.value.selectedFormats)
     }
 
     @Test
@@ -121,6 +144,25 @@ class AppViewModelTest {
         val vm = vm()
         vm.selectCardType(CardType.PAN)
         assertTrue(vm.renderConfigs().isEmpty())
+    }
+
+    @Test
+    fun applyNameSuggestion_replacesAutoFilled_clearsOnNone_keepsManual() {
+        val vm = vm()
+        vm.selectCardType(CardType.PAN)
+
+        // First scan detects a name -> fills the blank field.
+        vm.applyNameSuggestion("John")
+        assertEquals("John", vm.state.value.name)
+
+        // Second scan detects nothing -> clears the stale auto-filled name (the bug fix).
+        vm.applyNameSuggestion(null)
+        assertEquals("", vm.state.value.name)
+
+        // A manual edit is never overwritten by a later suggestion.
+        vm.setName("Mike")
+        vm.applyNameSuggestion("Alex")
+        assertEquals("Mike", vm.state.value.name)
     }
 
     @Test

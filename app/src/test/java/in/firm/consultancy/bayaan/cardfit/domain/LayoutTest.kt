@@ -174,7 +174,7 @@ class LayoutTest {
     }
 
     @Test
-    fun fitPage_twoTallCards_scaledToFitWithGap() {
+    fun fitPage_twoTallCards_uniformScaleIncludingGap_noOverflow() {
         val aspect = 0.7
         val result = LayoutCalculator.calculate(
             LayoutInput(
@@ -184,15 +184,100 @@ class LayoutTest {
                 cards = listOf(CardImage(aspect), CardImage(aspect)),
             ),
         )
-        // width-fit h = 198/0.7 = 282.857 each; sum = 565.714 + gap 8 > availH 285
-        // availForCards = 285 - 8 = 277; both equal -> each height = 138.5
-        val h = 138.5
-        val scale = 277.0 / (2 * (198.0 / aspect))
-        val w = 198.0 * scale
+        // Reference stack (each at usable width 198): refH = 198/0.7 each; refStack = 2*refH + gap 8.
+        // Uniform scale = availH(285) / refStack scales EVERYTHING (cards AND gap).
+        val availW = 198.0
+        val gap = 8.0
+        val refH = availW / aspect
+        val refStack = 2 * refH + gap
+        val scale = 285.0 / refStack
+        val w = availW * scale
+        val h = refH * scale
+        val sGap = gap * scale
         val x = (210.0 - w) / 2.0
-        // stack height = 2*138.5 + 8 = 285 -> topY = (297-285)/2 = 6
-        assertRect(LayoutRect(x, 6.0, w, h), result.cards[0])
-        assertRect(LayoutRect(x, 6.0 + h + 8.0, w, h), result.cards[1])
+        val stackH = 2 * h + sGap
+        assertEquals(285.0, stackH, tol) // fills usable height exactly, no overflow
+        val topY = (297.0 - stackH) / 2.0
+        assertRect(LayoutRect(x, topY, w, h), result.cards[0])
+        assertRect(LayoutRect(x, topY + h + sGap, w, h), result.cards[1])
+        // bottom of stack stays on the page
+        assertTrue(topY >= 0.0 && topY + stackH <= 297.0)
+    }
+
+    @Test
+    fun fitPage_a5_landscapeAndPortrait_noOverflow() {
+        val a5 = PaperSize.A5
+        for (aspect in listOf(1.585, 0.7, 1.3)) {
+            for (cards in listOf(listOf(CardImage(aspect)), listOf(CardImage(aspect), CardImage(aspect)))) {
+                val r = LayoutCalculator.calculate(
+                    LayoutInput(FitMode.FIT_PAGE, a5.widthMm, a5.heightMm, cards),
+                )
+                r.cards.forEach { c ->
+                    assertTrue("x in bounds", c.xMm >= -tol && c.xMm + c.widthMm <= a5.widthMm + tol)
+                    assertTrue("y in bounds", c.yMm >= -tol && c.yMm + c.heightMm <= a5.heightMm + tol)
+                }
+                // horizontally centred (all sides share the same width here)
+                val c0 = r.cards[0]
+                assertEquals((a5.widthMm - c0.widthMm) / 2.0, c0.xMm, tol)
+            }
+        }
+    }
+
+    // ---------- ACTUAL_SIZE: per-side sizes + crop-to-content (Phase 12) ----------
+
+    @Test
+    fun actualSize_perSideSizes_differentOrientations_centeredOnFullPage() {
+        val result = LayoutCalculator.calculate(
+            LayoutInput(
+                fitMode = FitMode.ACTUAL_SIZE,
+                pageWidthMm = a4.widthMm,
+                pageHeightMm = a4.heightMm,
+                cards = listOf(CardImage(cr80Aspect), CardImage(1.0 / cr80Aspect)),
+                perSideSizesMm = listOf(85.6 to 54.0, 54.0 to 85.6),
+            ),
+        )
+        // stack height = 54 + 8 + 85.6 = 147.6; topY = (297-147.6)/2 = 74.7
+        assertRect(LayoutRect((210.0 - 85.6) / 2.0, 74.7, 85.6, 54.0), result.cards[0])
+        assertRect(LayoutRect((210.0 - 54.0) / 2.0, 74.7 + 54.0 + 8.0, 54.0, 85.6), result.cards[1])
+        assertEquals(297.0, result.pageHeightMm, tol)
+    }
+
+    @Test
+    fun actualSize_cropToContent_tightCanvas() {
+        val result = LayoutCalculator.calculate(
+            LayoutInput(
+                fitMode = FitMode.ACTUAL_SIZE,
+                pageWidthMm = a4.widthMm,
+                pageHeightMm = a4.heightMm,
+                cards = listOf(CardImage(cr80Aspect), CardImage(cr80Aspect)),
+                perSideSizesMm = listOf(85.6 to 54.0, 85.6 to 54.0),
+                cropToContent = true,
+            ),
+        )
+        // canvas = content + margins(6): width = 85.6 + 12 = 97.6; height = (54+8+54) + 12 = 128
+        assertEquals(97.6, result.pageWidthMm, tol)
+        assertEquals(128.0, result.pageHeightMm, tol)
+        assertRect(LayoutRect(6.0, 6.0, 85.6, 54.0), result.cards[0])
+        assertRect(LayoutRect(6.0, 6.0 + 54.0 + 8.0, 85.6, 54.0), result.cards[1])
+    }
+
+    @Test
+    fun actualSize_twoCr80Portrait_fitsA5_noOverflow() {
+        // Spec check: two CR-80 portrait cards (54 x 85.6) stack ~179.2 mm < A5 height 210 mm.
+        val a5 = PaperSize.A5
+        val result = LayoutCalculator.calculate(
+            LayoutInput(
+                fitMode = FitMode.ACTUAL_SIZE,
+                pageWidthMm = a5.widthMm,
+                pageHeightMm = a5.heightMm,
+                cards = listOf(CardImage(1.0 / cr80Aspect), CardImage(1.0 / cr80Aspect)),
+                perSideSizesMm = listOf(54.0 to 85.6, 54.0 to 85.6),
+            ),
+        )
+        val stackHeight = 85.6 + 8.0 + 85.6 // 179.2
+        val topY = (a5.heightMm - stackHeight) / 2.0
+        assertEquals(15.4, topY, tol)
+        assertTrue(topY >= 0.0 && topY + stackHeight <= a5.heightMm)
     }
 
     // ---------- guards ----------
