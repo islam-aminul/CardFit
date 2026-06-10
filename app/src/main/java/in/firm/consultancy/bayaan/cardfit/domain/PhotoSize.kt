@@ -10,6 +10,7 @@ package `in`.firm.consultancy.bayaan.cardfit.domain
  *  - Visa 2 x 2 inch, quoted as 51 x 51 mm
  *  - Stamp 20 x 25 mm
  */
+@kotlinx.serialization.Serializable
 enum class PhotoSize(
     val slug: String,
     val label: String,

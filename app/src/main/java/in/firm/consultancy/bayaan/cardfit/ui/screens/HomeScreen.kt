@@ -24,6 +24,7 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 fun HomeScreen(
     onChooseDocument: () -> Unit,
     onChoosePhoto: () -> Unit,
+    onChooseTasks: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
     ScreenScaffold(title = "CardFit") {
@@ -43,6 +44,11 @@ fun HomeScreen(
             title = "Photo",
             subtitle = "Crop, enhance, and size a passport / visa / stamp photo.",
             onClick = onChoosePhoto,
+        )
+        HomeTile(
+            title = "Tasks",
+            subtitle = "Collect several people's documents into one application set.",
+            onClick = onChooseTasks,
         )
 
         Spacer(Modifier.height(8.dp))

@@ -11,6 +11,7 @@ package `in`.firm.consultancy.bayaan.cardfit.domain.model
 
 enum class FitMode { ACTUAL_SIZE, FIT_WIDTH, FIT_PAGE }
 
+@kotlinx.serialization.Serializable
 enum class CardType(
     val widthMm: Double?,
     val heightMm: Double?,

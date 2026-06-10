@@ -326,6 +326,19 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Process the current source at full resolution, persist the edited image, and return its URI —
+     * used by task mode to capture this photo as a task entry. Returns null if there's nothing to do.
+     */
+    suspend fun produceEditedImage(): String? {
+        val s = _state.value
+        val uri = s.sourceUri ?: return null
+        val edited = processor.process(uri, s.editParams(), EXPORT_MAX_DIM) ?: return null
+        val out = exporter.persistEdited(edited)
+        edited.recycle()
+        return out
+    }
+
     fun shareHandled() { _pendingShare.value = null }
     fun clearExportResult() { _exportState.value = PhotoExportState.Idle }
 

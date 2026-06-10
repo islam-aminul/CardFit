@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     // No org.jetbrains.kotlin.android: AGP 9.0+ compiles Kotlin via built-in Kotlin support.
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.oss.licenses)
 }
 
@@ -63,6 +64,8 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.exifinterface)
     implementation(libs.kotlinx.coroutines.android)
+    // Task metadata persistence (Apache-2.0; on-device JSON only).
+    implementation(libs.kotlinx.serialization.json)
 
     // On-device ML Kit (no network / no INTERNET permission required).
     implementation(libs.mlkit.document.scanner)
