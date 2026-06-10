@@ -67,6 +67,9 @@ dependencies {
     // On-device ML Kit (no network / no INTERNET permission required).
     implementation(libs.mlkit.document.scanner)
     implementation(libs.mlkit.text.recognition)
+    // On-device subject segmentation for opt-in photo background removal (model served by Play
+    // services; no INTERNET permission required).
+    implementation(libs.mlkit.subject.segmentation)
 
     implementation(libs.play.services.oss.licenses)
     implementation(libs.coil.compose)

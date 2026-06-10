@@ -79,5 +79,42 @@ object FilenameBuilder {
         }
     }
 
+    /**
+     * Build a unique filename for the Phase 13 photo flow.
+     *
+     * Template: `{nameSlug}-photo-{purpose}-{yyMMdd}-{HHmm}.{ext}` where purpose ∈ {print, upload}
+     * and ext ∈ {pdf, jpeg}. The name is optional: an empty/blank name slugifies to `photo`
+     * (e.g. `photo-photo-upload-260608-1430.jpeg`). Collision suffixing matches [build].
+     */
+    fun buildPhoto(
+        name: String,
+        mode: OutputMode,
+        format: OutputFormat,
+        timestamp: FileTimestamp,
+        exists: (String) -> Boolean = { false },
+    ): String {
+        val nameSlug = Slug.slugify(name, emptyFallback = "photo")
+        val purpose = purposeOf(mode)
+        val ext = extOf(format)
+
+        val datePart = pad2(timestamp.year % 100) + pad2(timestamp.month) + pad2(timestamp.day)
+        val timePart = pad2(timestamp.hour) + pad2(timestamp.minute)
+        val base = "$nameSlug-photo-$purpose-$datePart-$timePart"
+
+        val first = "$base.$ext"
+        if (!exists(first)) return first
+
+        val ss = pad2(timestamp.second)
+        val withSeconds = "$base-$ss.$ext"
+        if (!exists(withSeconds)) return withSeconds
+
+        var n = 2
+        while (true) {
+            val candidate = "$base-$ss-$n.$ext"
+            if (!exists(candidate)) return candidate
+            n++
+        }
+    }
+
     private fun pad2(value: Int): String = if (value < 10) "0$value" else value.toString()
 }
