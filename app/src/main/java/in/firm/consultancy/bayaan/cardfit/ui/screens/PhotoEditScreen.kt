@@ -1,17 +1,11 @@
 package `in`.firm.consultancy.bayaan.cardfit.ui.screens
 
-import android.Manifest
-import android.content.pm.PackageManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -22,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.border
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,8 +25,6 @@ import androidx.compose.material.icons.automirrored.filled.RotateRight
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -47,7 +38,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -63,17 +53,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoSize
 import `in`.firm.consultancy.bayaan.cardfit.ui.PhotoViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.CustomSizeDialog
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.PhotoCropFrame
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
-import java.io.File
 
 /**
  * Photo flow step 2 (CLAUDE.md Phase 13): the single editing page. The photo frame is pinned at the
@@ -90,7 +76,6 @@ fun PhotoEditScreen(
     onNext: () -> Unit,
     onBack: () -> Unit,
 ) {
-    val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     val preview by viewModel.preview.collectAsStateWithLifecycle()
     val comparePreview by viewModel.comparePreview.collectAsStateWithLifecycle()
@@ -110,31 +95,6 @@ fun PhotoEditScreen(
             withFrameNanos {}
             scrollState.animateScrollTo(scrollState.maxValue)
         }
-    }
-
-    // --- in-place recapture (camera / gallery) ---
-    var pendingCameraUri by remember { mutableStateOf<String?>(null) }
-    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) { viewModel.setSource(uri.toString()); resetKey++ }
-    }
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        val uri = pendingCameraUri
-        if (success && uri != null) { viewModel.setSource(uri); resetKey++ }
-    }
-    fun launchCamera() {
-        val dir = File(context.cacheDir, "camera").apply { mkdirs() }
-        val file = File(dir, "capture-${System.currentTimeMillis()}.jpg")
-        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-        pendingCameraUri = uri.toString()
-        cameraLauncher.launch(uri)
-    }
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission(),
-    ) { granted -> if (granted) launchCamera() }
-    fun requestCamera() {
-        val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
-            PackageManager.PERMISSION_GRANTED
-        if (granted) launchCamera() else cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
     val cropAspect = state.resolvedSize?.aspectRatio?.toFloat() ?: (7f / 9f)
@@ -165,28 +125,6 @@ fun PhotoEditScreen(
                 onCrop = viewModel::setCropNorm,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                TextButton(onClick = { requestCamera() }, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Filled.PhotoCamera, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.size(6.dp))
-                    Text("Retake")
-                }
-                TextButton(
-                    onClick = {
-                        galleryLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                        )
-                    },
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Icon(Icons.Filled.PhotoLibrary, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.size(6.dp))
-                    Text("Gallery")
-                }
-            }
 
             // --- scrolling controls ---
             Column(
@@ -212,7 +150,10 @@ fun PhotoEditScreen(
                     ) { Text("Revert") }
                 }
 
-                ToggleRow("Remove background (white)", state.removeBackground, viewModel::setRemoveBackground)
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                    ToggleCell("Remove background", state.removeBackground, viewModel::setRemoveBackground, Modifier.weight(1f))
+                    ToggleCell("Auto-enhance", state.autoEnhance, viewModel::setAutoEnhance, Modifier.weight(1f))
+                }
                 if (state.removeBackground) {
                     Text(
                         "Quality varies on hair and edges — turn off to revert.",
@@ -220,14 +161,13 @@ fun PhotoEditScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                ToggleRow("Auto-enhance", state.autoEnhance, viewModel::setAutoEnhance)
 
                 HorizontalDivider()
 
                 Text("Photo size", style = MaterialTheme.typography.titleSmall)
-                FlowRow(
+                Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     PhotoSize.entries.forEach { size ->
                         PhotoSizeCard(
@@ -237,6 +177,7 @@ fun PhotoEditScreen(
                             onClick = {
                                 if (size == PhotoSize.CUSTOM) showCustom = true else viewModel.selectSize(size)
                             },
+                            modifier = Modifier.weight(1f),
                         )
                     }
                 }
@@ -323,20 +264,26 @@ private fun HoldCompareButton(active: Boolean, onHoldChange: (Boolean) -> Unit, 
 
 /** A small, equal-sized size card: a proportioned rectangle (the size's aspect) with a portrait icon. */
 @Composable
-private fun PhotoSizeCard(label: String, aspect: Float, selected: Boolean, onClick: () -> Unit) {
+private fun PhotoSizeCard(
+    label: String,
+    aspect: Float,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Surface(
         shape = RoundedCornerShape(10.dp),
         color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
         contentColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
         border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
-        modifier = Modifier.width(84.dp).clickable(onClick = onClick),
+        modifier = modifier.clickable(onClick = onClick),
     ) {
         Column(
-            modifier = Modifier.padding(8.dp),
+            modifier = Modifier.padding(8.dp).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Box(modifier = Modifier.height(52.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.height(48.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Box(
                     modifier = Modifier
                         .fillMaxHeight()
@@ -356,14 +303,15 @@ private fun PhotoSizeCard(label: String, aspect: Float, selected: Boolean, onCli
 private fun LocalContentColorOf(selected: Boolean): Color =
     if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
 
+/** A compact half-width toggle (label + Switch) so two can share one row. */
 @Composable
-private fun ToggleRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+private fun ToggleCell(label: String, checked: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, style = MaterialTheme.typography.bodyLarge)
+        Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
         Switch(checked = checked, onCheckedChange = onChange)
     }
 }
@@ -399,5 +347,5 @@ private fun labelFor(size: PhotoSize): String = when (size) {
 
 private fun aspectFor(size: PhotoSize, customW: Double?, customH: Double?): Float {
     val a = size.aspectRatio ?: if (customW != null && customH != null && customH > 0) customW / customH else 1.0
-    return a.toFloat().coerceIn(0.5f, 1.5f)
+    return a.toFloat().coerceIn(0.5f, 1.1f)
 }

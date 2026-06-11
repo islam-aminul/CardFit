@@ -9,9 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -28,8 +26,8 @@ import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 
 /**
- * About: the firm's name + contact details (from bayaan.consultancy.firm.in), the on-device privacy
- * statement, and open-source licenses. Back is anchored at the bottom.
+ * About: the firm's name + website (bayaan.consultancy.firm.in), the on-device privacy statement, and
+ * open-source licenses. Back is anchored at the bottom.
  */
 @Composable
 fun SettingsScreen(
@@ -48,15 +46,6 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text("Bayaan Consultancy", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "Contact",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                ContactRow(Icons.Filled.Email, "bayaan@consultancy.firm.in") {
-                    open("mailto:bayaan@consultancy.firm.in")
-                }
-                ContactRow(Icons.Filled.Phone, "+91 6399009003") { open("tel:+916399009003") }
                 ContactRow(Icons.Filled.Language, "bayaan.consultancy.firm.in") {
                     open("https://bayaan.consultancy.firm.in/")
                 }
@@ -70,15 +59,17 @@ fun SettingsScreen(
             ) {
                 Text("Privacy", style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "CardFit works entirely on your device. Scanning, text recognition, and file " +
-                        "generation all happen offline.",
+                    "CardFit works entirely on your device. Scanning, text recognition, photo " +
+                        "editing, and file generation all happen offline.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
                     "• No internet permission — nothing is uploaded or sent anywhere.\n" +
                         "• No accounts, analytics, ads, or tracking.\n" +
-                        "• Your card images and any ID numbers never leave the device, and ID " +
-                        "numbers are never put in filenames or logs.\n" +
+                        "• Your card images, photos, and any ID numbers never leave the device, and " +
+                        "ID numbers are never put in filenames or logs.\n" +
+                        "• Photo background removal and enhancement run on-device; your photos are " +
+                        "never sent anywhere.\n" +
                         "• Files you save go to your Downloads folder; sharing is always your choice.",
                     style = MaterialTheme.typography.bodySmall,
                 )
