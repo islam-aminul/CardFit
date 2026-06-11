@@ -8,7 +8,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -81,7 +80,7 @@ fun PhotoSourceScreen(
         if (granted) launchCamera() else cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
-    ScreenScaffold(title = "Add a photo") {
+    ScreenScaffold(title = "Add a photo", onBack = onBack) {
         Text("Take a new photo or choose one from your gallery. The original is never changed.")
 
         Button(onClick = { requestCamera() }, modifier = Modifier.fillMaxWidth()) {
@@ -97,7 +96,5 @@ fun PhotoSourceScreen(
         ) { Text("Choose from gallery") }
 
         errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
     }
 }

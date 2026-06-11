@@ -44,6 +44,7 @@ import `in`.firm.consultancy.bayaan.cardfit.domain.task.DocumentEntry
 import `in`.firm.consultancy.bayaan.cardfit.domain.task.EntryKind
 import `in`.firm.consultancy.bayaan.cardfit.ui.TaskExportState
 import `in`.firm.consultancy.bayaan.cardfit.ui.TaskViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 
 /**
@@ -73,10 +74,17 @@ fun TaskDetailScreen(
 
     var editingEntry by remember { mutableStateOf<DocumentEntry?>(null) }
 
-    ScreenScaffold(title = "Task", scrollState = rememberScrollState()) {
+    ScreenScaffold(
+        title = "Task",
+        scrollState = rememberScrollState(),
+        bottomBar = {
+            ScaffoldBottomBar {
+                OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back to tasks") }
+            }
+        },
+    ) {
         if (task == null) {
             Text("Task not found.")
-            OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
             return@ScreenScaffold
         }
 
@@ -136,8 +144,6 @@ fun TaskDetailScreen(
         }
 
         TaskExportStatus(exportState)
-
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back to tasks") }
     }
 
     editingEntry?.let { entry ->

@@ -7,6 +7,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
@@ -57,7 +58,41 @@ internal fun decodeSampledBitmap(context: Context, uriString: String, maxDim: In
     while (max(w, h) / sample > maxDim) sample *= 2
 
     val opts = BitmapFactory.Options().apply { inSampleSize = sample }
-    return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
+    val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts) ?: return null
+    return applyExifOrientation(decoded, bytes)
+}
+
+/**
+ * Rotate/flip [bmp] so it is displayed upright, honouring the JPEG's EXIF orientation tag. Camera
+ * captures commonly store the photo sideways with an orientation flag rather than rotating the pixels;
+ * without this the preview would come up rotated (e.g. facing "east" instead of "north"). Decoding
+ * from a byte array bypasses BitmapFactory's EXIF handling, so we apply it explicitly here.
+ */
+private fun applyExifOrientation(bmp: Bitmap, bytes: ByteArray): Bitmap {
+    val orientation = try {
+        ExifInterface(java.io.ByteArrayInputStream(bytes))
+            .getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+    } catch (e: Exception) {
+        ExifInterface.ORIENTATION_NORMAL
+    }
+    val matrix = Matrix()
+    when (orientation) {
+        ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+        ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+        ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+        ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.postScale(-1f, 1f)
+        ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.postScale(1f, -1f)
+        ExifInterface.ORIENTATION_TRANSPOSE -> { matrix.postRotate(90f); matrix.postScale(-1f, 1f) }
+        ExifInterface.ORIENTATION_TRANSVERSE -> { matrix.postRotate(270f); matrix.postScale(-1f, 1f) }
+        else -> return bmp
+    }
+    return try {
+        val out = Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, matrix, true)
+        if (out !== bmp) bmp.recycle()
+        out
+    } catch (e: OutOfMemoryError) {
+        bmp
+    }
 }
 
 private fun readAllBytes(context: Context, uriString: String): ByteArray? = try {

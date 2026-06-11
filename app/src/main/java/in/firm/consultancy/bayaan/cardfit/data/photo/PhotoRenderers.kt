@@ -29,8 +29,8 @@ import kotlin.math.roundToInt
  *
  *  - UPLOAD: a single JPEG sized to exact pixels (`mm * dpi / 25.4`), optional max-KB cap via the
  *    shared [targetJpegSize] loop (same legibility floor + warning), DPI written via ExifInterface.
- *  - PRINT: a SINGLE-PAGE PDF grid of exactly `finalCount` photos at exact physical size with thin
- *    corner cut marks, drawn with the framework `PdfDocument`.
+ *  - PRINT: a SINGLE-PAGE PDF grid of exactly `finalCount` photos at exact physical size, anchored to
+ *    the top margin, each framed by a thin light-gray border, drawn with the framework `PdfDocument`.
  */
 internal object PhotoRenderers {
 
@@ -134,7 +134,7 @@ internal object PhotoRenderers {
                     mmToPtF(cell.yMm + heightMm),
                 )
                 canvas.drawBitmap(photo, centerCropSrcRect(photo, dst.width(), dst.height()), dst, paint)
-                if (cutMarks) drawCutMarks(canvas, dst)
+                if (cutMarks) drawPhotoBorder(canvas, dst)
             }
 
             document.finishPage(page)
@@ -147,27 +147,14 @@ internal object PhotoRenderers {
         }
     }
 
-    /** Thin 0.3pt corner ticks just outside each photo corner (cut guides for trimming). */
-    private fun drawCutMarks(canvas: Canvas, rect: RectF) {
-        val mark = Paint().apply {
-            color = Color.BLACK
+    /** A thin, continuous light-gray border around all four sides of each photo (cut guide). */
+    private fun drawPhotoBorder(canvas: Canvas, rect: RectF) {
+        val border = Paint().apply {
+            color = Color.rgb(200, 200, 200)
             style = Paint.Style.STROKE
-            strokeWidth = 0.3f
+            strokeWidth = 0.5f
             isAntiAlias = true
         }
-        val len = 6f
-        val gap = 2f
-        // Top-left
-        canvas.drawLine(rect.left - gap - len, rect.top, rect.left - gap, rect.top, mark)
-        canvas.drawLine(rect.left, rect.top - gap - len, rect.left, rect.top - gap, mark)
-        // Top-right
-        canvas.drawLine(rect.right + gap, rect.top, rect.right + gap + len, rect.top, mark)
-        canvas.drawLine(rect.right, rect.top - gap - len, rect.right, rect.top - gap, mark)
-        // Bottom-left
-        canvas.drawLine(rect.left - gap - len, rect.bottom, rect.left - gap, rect.bottom, mark)
-        canvas.drawLine(rect.left, rect.bottom + gap, rect.left, rect.bottom + gap + len, mark)
-        // Bottom-right
-        canvas.drawLine(rect.right + gap, rect.bottom, rect.right + gap + len, rect.bottom, mark)
-        canvas.drawLine(rect.right, rect.bottom + gap, rect.right, rect.bottom + gap + len, mark)
+        canvas.drawRect(rect, border)
     }
 }

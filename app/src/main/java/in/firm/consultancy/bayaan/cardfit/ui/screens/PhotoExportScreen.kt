@@ -43,6 +43,7 @@ import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoPaper
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputMode
 import `in`.firm.consultancy.bayaan.cardfit.ui.PhotoExportState
 import `in`.firm.consultancy.bayaan.cardfit.ui.PhotoViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.SelectableCard
 
@@ -102,7 +103,15 @@ fun PhotoExportScreen(
         onStartFresh()
     }
 
-    ScreenScaffold(title = "Export photo", scrollState = scrollState) {
+    ScreenScaffold(
+        title = "Export photo",
+        scrollState = scrollState,
+        bottomBar = {
+            ScaffoldBottomBar {
+                OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+            }
+        },
+    ) {
         // --- purpose ---
         Text("Purpose", style = MaterialTheme.typography.titleSmall)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -162,7 +171,6 @@ fun PhotoExportScreen(
         Button(onClick = { viewModel.share() }, enabled = canExport, modifier = Modifier.fillMaxWidth()) {
             Text("Share")
         }
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
 
         PhotoExportStatus(exportState)
 
@@ -231,6 +239,13 @@ private fun PhotoExportStatus(state: PhotoExportState) {
                 Text("Saved ${state.files.size} file(s):", style = MaterialTheme.typography.titleSmall)
                 state.files.forEach { file ->
                     Text("• ${file.fileName}", style = MaterialTheme.typography.bodySmall)
+                    file.detail?.let {
+                        Text(
+                            "  $it",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     file.warning?.let {
                         Text("  $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                     }

@@ -38,6 +38,7 @@ import `in`.firm.consultancy.bayaan.cardfit.data.export.ShareItem
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.ExportUiState
 import `in`.firm.consultancy.bayaan.cardfit.ui.ExportViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 
 /**
@@ -129,10 +130,17 @@ fun PreviewScreen(
         onStartFresh()
     }
 
-    ScreenScaffold(title = "Preview & export", scrollState = scrollState) {
+    ScreenScaffold(
+        title = "Preview & export",
+        scrollState = scrollState,
+        bottomBar = {
+            ScaffoldBottomBar {
+                OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+            }
+        },
+    ) {
         if (session == null) {
             Text("No card scanned yet.")
-            OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
             return@ScreenScaffold
         }
 
@@ -173,7 +181,6 @@ fun PreviewScreen(
         OutlinedButton(onClick = onEditConfig, modifier = Modifier.fillMaxWidth()) {
             Text("Change output settings")
         }
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
 
         ExportStatus(uiState)
 

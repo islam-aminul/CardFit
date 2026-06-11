@@ -66,7 +66,8 @@ class PhotoExporter(
         )
         val fileName = photoName(name, OutputMode.PRINT, OutputFormat.PDF)
         val location = fileSaver.save(fileName, MimeTypes.PDF, output.bytes)
-        ExportedFile(fileName, location, output.sizeWarning)
+        val photos = if (finalCount == 1) "1 photo" else "$finalCount photos"
+        ExportedFile(fileName, location, output.sizeWarning, detail = "$photos on this sheet")
     }
 
     suspend fun shareUpload(

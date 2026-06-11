@@ -9,7 +9,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -39,7 +38,7 @@ fun TaskListScreen(
     var showCreate by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<String?>(null) }
 
-    ScreenScaffold(title = "Tasks") {
+    ScreenScaffold(title = "Tasks", onBack = onBack) {
         Text("Group several people's documents into one application set, then export them together.")
 
         Button(onClick = { showCreate = true }, modifier = Modifier.fillMaxWidth()) { Text("New task") }
@@ -77,8 +76,6 @@ fun TaskListScreen(
                 }
             }
         }
-
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
     }
 
     if (showCreate) {

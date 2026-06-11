@@ -145,6 +145,10 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
     private val _original = MutableStateFlow<Bitmap?>(null)
     val original: StateFlow<Bitmap?> = _original.asStateFlow()
 
+    /** The initial photo with rotation applied but no other edits — shown while "Compare" is held. */
+    private val _comparePreview = MutableStateFlow<Bitmap?>(null)
+    val comparePreview: StateFlow<Bitmap?> = _comparePreview.asStateFlow()
+
     private val _previewBusy = MutableStateFlow(false)
     val previewBusy: StateFlow<Boolean> = _previewBusy.asStateFlow()
 
@@ -159,6 +163,8 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
     fun setSource(uri: String) {
         viewModelScope.launch {
             val size = processor.sourceSize(uri)
+            // The crop frame (pan/zoom) is owned by the edit screen, which pushes the resulting crop
+            // via [setCropNorm]; we only record the source + its dimensions here.
             _state.value = PhotoState(
                 sourceUri = uri,
                 sourceWidthPx = size?.first ?: 0,
@@ -166,6 +172,7 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
             )
             loadOriginal(uri)
             refreshPreview()
+            refreshComparePreview()
         }
     }
 
@@ -178,51 +185,33 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
 
     // --- edit mutations ---
 
-    fun rotateClockwise() = mutate { it.copy(rotationDegrees = (it.rotationDegrees + 90) % 360) }
+    fun rotateClockwise() {
+        _state.update { it.copy(rotationDegrees = (it.rotationDegrees + 90) % 360) }
+        refreshPreview()
+        refreshComparePreview()
+    }
+
     fun setBrightness(v: Int) = mutate { it.copy(brightnessPercent = v) }
     fun setContrast(v: Int) = mutate { it.copy(contrastPercent = v) }
     fun setSaturation(v: Int) = mutate { it.copy(saturationPercent = v) }
     fun setAutoEnhance(v: Boolean) = mutate { it.copy(autoEnhance = v) }
     fun setRemoveBackground(v: Boolean) = mutate { it.copy(removeBackground = v) }
-    fun setCropNorm(crop: NormCrop?) = mutate { it.copy(cropNorm = crop) }
 
-    fun setAspectLocked(locked: Boolean) {
-        val s = _state.value
-        val crop = if (locked) lockedCropFor(s) else null
-        _state.update { it.copy(aspectLocked = locked, cropNorm = crop) }
-        refreshPreview()
-    }
+    /** Set the crop (in normalized rotated-source space). The preview shows the full frame, so this
+     *  does not re-render the preview — it only records what export should crop to. */
+    fun setCropNorm(crop: NormCrop?) = _state.update { it.copy(cropNorm = crop) }
 
-    /** Reset all edits to the untouched original. */
+    /** Reset all edits to the untouched original. The crop frame re-centres itself in the UI. */
     fun revertEdits() {
         _state.update {
             it.copy(
-                rotationDegrees = 0, cropNorm = null, aspectLocked = false,
+                rotationDegrees = 0, cropNorm = null,
                 brightnessPercent = 0, contrastPercent = 0, saturationPercent = 0,
                 autoEnhance = false, removeBackground = false,
             )
         }
         refreshPreview()
-    }
-
-    /** A centred, aspect-correct max crop for the selected size, in normalized rotated-source space. */
-    private fun lockedCropFor(s: PhotoState): NormCrop? {
-        val size = s.resolvedSize ?: return null
-        val swap = s.rotationDegrees % 180 != 0
-        val rW = (if (swap) s.sourceHeightPx else s.sourceWidthPx).toDouble()
-        val rH = (if (swap) s.sourceWidthPx else s.sourceHeightPx).toDouble()
-        if (rW <= 0 || rH <= 0) return null
-        val target = size.aspectRatio // w/h
-        val srcAspect = rW / rH
-        return if (srcAspect > target) {
-            val wFrac = (target / srcAspect).toFloat()
-            val left = (1f - wFrac) / 2f
-            NormCrop(left, 0f, left + wFrac, 1f)
-        } else {
-            val hFrac = (srcAspect / target).toFloat()
-            val top = (1f - hFrac) / 2f
-            NormCrop(0f, top, 1f, top + hFrac)
-        }
+        refreshComparePreview()
     }
 
     private inline fun mutate(crossinline transform: (PhotoState) -> PhotoState) {
@@ -248,16 +237,23 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** Render the "before" image: the source with only the current rotation applied (no other edits). */
+    private fun refreshComparePreview() {
+        val s = _state.value
+        val uri = s.sourceUri ?: return
+        viewModelScope.launch {
+            val params = PhotoEditParams(rotationDegrees = s.rotationDegrees)
+            val result = processor.process(uri, params, PREVIEW_MAX_DIM)
+            val old = _comparePreview.value
+            _comparePreview.value = result
+            if (old !== result) old?.recycle()
+        }
+    }
+
     // --- size + export config ---
 
-    fun selectSize(size: PhotoSize) {
-        _state.update {
-            val next = it.copy(size = size)
-            // Re-lock the crop to the new aspect if the lock is on.
-            if (it.aspectLocked) next.copy(cropNorm = lockedCropFor(next)) else next
-        }
-        if (_state.value.aspectLocked) refreshPreview()
-    }
+    /** Pick a size; the edit screen re-centres its crop frame to the new aspect (no preview re-render). */
+    fun selectSize(size: PhotoSize) = _state.update { it.copy(size = size) }
 
     fun setCustomSizeMm(widthMm: Double, heightMm: Double) = _state.update {
         it.copy(size = PhotoSize.CUSTOM, customWidthMm = widthMm, customHeightMm = heightMm)
@@ -347,6 +343,7 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
         previewJob?.cancel()
         _preview.value?.recycle(); _preview.value = null
         _original.value?.recycle(); _original.value = null
+        _comparePreview.value?.recycle(); _comparePreview.value = null
         _state.value = PhotoState()
         _exportState.value = PhotoExportState.Idle
         _pendingShare.value = null
@@ -359,6 +356,7 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
         previewJob?.cancel()
         _preview.value?.recycle()
         _original.value?.recycle()
+        _comparePreview.value?.recycle()
         segmenter.close()
     }
 

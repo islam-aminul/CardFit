@@ -17,7 +17,6 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.screens.HomeScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.NameScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.PhotoEditScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.PhotoExportScreen
-import `in`.firm.consultancy.bayaan.cardfit.ui.screens.PhotoSizeScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.PhotoSourceScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.PreviewScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.ScanScreen
@@ -34,10 +33,9 @@ object Routes {
     const val CONFIGURE = "configure"
     const val NAME = "name"
     const val PREVIEW = "preview"
-    // Photo flow.
+    // Photo flow. Size selection now lives on the edit screen (no standalone size step).
     const val PHOTO_SOURCE = "photo_source"
     const val PHOTO_EDIT = "photo_edit"
-    const val PHOTO_SIZE = "photo_size"
     const val PHOTO_EXPORT = "photo_export"
     // Task flow (Phase 14). Adding an entry reuses the document/photo flows under task-scoped routes.
     const val TASK_LIST = "task_list"
@@ -46,7 +44,6 @@ object Routes {
     const val TASK_SCAN = "task_scan"
     const val TASK_PHOTO_SOURCE = "task_photo_source"
     const val TASK_PHOTO_EDIT = "task_photo_edit"
-    const val TASK_PHOTO_SIZE = "task_photo_size"
     const val SETTINGS = "settings"
 }
 
@@ -77,7 +74,8 @@ fun CardFitNavGraph(
             CardTypeScreen(
                 viewModel = appViewModel,
                 onNext = { navController.navigate(Routes.SCAN) },
-                onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                // Dynamic: returns to Home (the entry that launched this) via the back stack.
+                onBack = { navController.popBackStack() },
             )
         }
         composable(Routes.SCAN) {
@@ -121,13 +119,6 @@ fun CardFitNavGraph(
         composable(Routes.PHOTO_EDIT) {
             PhotoEditScreen(
                 viewModel = photoViewModel,
-                onNext = { navController.navigate(Routes.PHOTO_SIZE) },
-                onBack = { navController.popBackStack() },
-            )
-        }
-        composable(Routes.PHOTO_SIZE) {
-            PhotoSizeScreen(
-                viewModel = photoViewModel,
                 onNext = { navController.navigate(Routes.PHOTO_EXPORT) },
                 onBack = { navController.popBackStack() },
             )
@@ -162,7 +153,8 @@ fun CardFitNavGraph(
             CardTypeScreen(
                 viewModel = appViewModel,
                 onNext = { navController.navigate(Routes.TASK_SCAN) },
-                onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                // Dynamic: returns to the active Task detail via the back stack.
+                onBack = { navController.popBackStack() },
             )
         }
         composable(Routes.TASK_SCAN) {
@@ -182,7 +174,7 @@ fun CardFitNavGraph(
             )
         }
 
-        // Task: add an edited photo (reuses the photo source/edit/size screens).
+        // Task: add an edited photo (reuses the photo source/edit screens; size is chosen on edit).
         composable(Routes.TASK_PHOTO_SOURCE) {
             PhotoSourceScreen(
                 viewModel = photoViewModel,
@@ -191,15 +183,8 @@ fun CardFitNavGraph(
             )
         }
         composable(Routes.TASK_PHOTO_EDIT) {
-            PhotoEditScreen(
-                viewModel = photoViewModel,
-                onNext = { navController.navigate(Routes.TASK_PHOTO_SIZE) },
-                onBack = { navController.popBackStack() },
-            )
-        }
-        composable(Routes.TASK_PHOTO_SIZE) {
             val scope = rememberCoroutineScope()
-            PhotoSizeScreen(
+            PhotoEditScreen(
                 viewModel = photoViewModel,
                 onNext = {
                     val size = photoViewModel.state.value.resolvedSize

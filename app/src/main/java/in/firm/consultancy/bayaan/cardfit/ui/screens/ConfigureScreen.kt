@@ -37,6 +37,7 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.AppState
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.SettingsViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.CustomSizeDialog
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.SelectableCard
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.formatNumber
@@ -73,7 +74,19 @@ fun ConfigureScreen(
         }
     }
 
-    ScreenScaffold(title = "Configure output") {
+    ScreenScaffold(
+        title = "Configure output",
+        bottomBar = {
+            ScaffoldBottomBar {
+                Button(
+                    onClick = onNext,
+                    enabled = state.hasCompleteSelection,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("Next") }
+                OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+            }
+        },
+    ) {
         // --- Purpose (multi) ---
         SectionLabel("Purpose")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -169,13 +182,6 @@ fun ConfigureScreen(
             onOverride = viewModel::setSizeOverride,
             onCustom = { showSizeDialog = true },
         )
-
-        Button(
-            onClick = onNext,
-            enabled = state.hasCompleteSelection,
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text("Next") }
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
 
         if (showSizeDialog) {
             val session = state.session

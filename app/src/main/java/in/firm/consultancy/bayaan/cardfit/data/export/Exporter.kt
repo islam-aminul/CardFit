@@ -12,8 +12,13 @@ import `in`.firm.consultancy.bayaan.cardfit.domain.model.ScanSession
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** One saved file in an export. */
-data class ExportedFile(val fileName: String, val savedLocation: String?, val warning: String?)
+/** One saved file in an export. [detail] is an optional human note (e.g. the photo count for a print grid). */
+data class ExportedFile(
+    val fileName: String,
+    val savedLocation: String?,
+    val warning: String?,
+    val detail: String? = null,
+)
 
 /** One file prepared for sharing (FileProvider content-URI string + MIME type). */
 data class ShareItem(val uri: String, val mimeType: String)

@@ -15,6 +15,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.NameSuggestion
 import `in`.firm.consultancy.bayaan.cardfit.ui.NameViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 
 /**
@@ -44,7 +45,15 @@ fun NameScreen(
         viewModel.applyNameSuggestion(ready.name)
     }
 
-    ScreenScaffold(title = "Name on file") {
+    ScreenScaffold(
+        title = "Name on file",
+        bottomBar = {
+            ScaffoldBottomBar {
+                Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text("Next") }
+                OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+            }
+        },
+    ) {
         Text("Used only for the filename. Edit freely; nothing is auto-finalized.")
 
         OutlinedTextField(
@@ -70,8 +79,5 @@ fun NameScreen(
             }
             NameSuggestion.Idle -> Unit
         }
-
-        Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text("Next") }
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
     }
 }

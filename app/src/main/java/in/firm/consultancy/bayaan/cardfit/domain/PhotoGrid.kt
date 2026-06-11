@@ -26,6 +26,7 @@ data class PhotoGrid(
     val paperWidthMm: Double,
     val paperHeightMm: Double,
     val gapMm: Double,
+    val marginMm: Double = 6.0,
 ) {
     /** Photos that fit on one page = [perRow] × [rows]. */
     val perPage: Int get() = perRow * rows
@@ -34,17 +35,17 @@ data class PhotoGrid(
     val fits: Boolean get() = perRow > 0 && rows > 0
 
     /**
-     * Centred top-left positions for a block of [blockRows] full rows (`blockRows <= rows`), laid
-     * left-to-right then top-to-bottom. The block is centred on the whole page in both axes, so a
-     * partial-height render (fewer rows than fit) is still centred. Defaults to the full grid.
+     * Top-left positions for a block of [blockRows] full rows (`blockRows <= rows`), laid
+     * left-to-right then top-to-bottom. The block is centred horizontally but anchored to the top
+     * margin vertically, so a partial-height render (fewer rows than fit) sits immediately below the
+     * top edge and wastes no paper above it. Defaults to the full grid.
      */
     fun cells(blockRows: Int = rows): List<GridCell> {
         if (!fits || blockRows <= 0) return emptyList()
         val r = min(blockRows, rows)
         val blockW = perRow * photoWidthMm + (perRow - 1) * gapMm
-        val blockH = r * photoHeightMm + (r - 1) * gapMm
         val startX = (paperWidthMm - blockW) / 2.0
-        val startY = (paperHeightMm - blockH) / 2.0
+        val startY = marginMm
         val out = ArrayList<GridCell>(perRow * r)
         for (row in 0 until r) {
             val y = startY + row * (photoHeightMm + gapMm)
@@ -84,6 +85,7 @@ fun gridLayout(
         paperWidthMm = paperWidthMm,
         paperHeightMm = paperHeightMm,
         gapMm = gapMm,
+        marginMm = marginMm,
     )
 }
 

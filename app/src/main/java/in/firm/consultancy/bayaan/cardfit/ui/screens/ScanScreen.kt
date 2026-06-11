@@ -32,6 +32,7 @@ import `in`.firm.consultancy.bayaan.cardfit.data.scanner.MlKitDocumentScanner
 import `in`.firm.consultancy.bayaan.cardfit.data.scanner.ScanSlot
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.ScannedSide
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 import kotlinx.coroutines.launch
 
@@ -114,7 +115,19 @@ fun ScanScreen(
         }
     }
 
-    ScreenScaffold(title = "Scan card") {
+    ScreenScaffold(
+        title = "Scan card",
+        bottomBar = {
+            ScaffoldBottomBar {
+                Button(
+                    onClick = onNext,
+                    enabled = session?.front != null,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("Next") }
+                OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+            }
+        },
+    ) {
         // Hide the helper text once the front is captured, to free vertical space for Next on
         // small (≈5") screens.
         if (session?.front == null) {
@@ -135,13 +148,6 @@ fun ScanScreen(
         errorMessage?.let { message ->
             Text(text = message, color = MaterialTheme.colorScheme.error)
         }
-
-        Button(
-            onClick = onNext,
-            enabled = session?.front != null,
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text("Next") }
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
     }
 }
 

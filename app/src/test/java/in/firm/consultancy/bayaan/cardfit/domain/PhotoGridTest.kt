@@ -29,17 +29,15 @@ class PhotoGridTest {
     }
 
     @Test
-    fun a4FullGrid_centeredNoOverlap_withinPage() {
+    fun a4FullGrid_centeredHoriz_topAligned_withinPage() {
         val cells = a4.cells()
         assertEquals(30, cells.size)
-        // Centred: left edge of first column mirrors the right margin of the last column.
+        // Centred horizontally: left edge of first column mirrors the right margin of the last column.
         val firstX = cells.first().xMm
         val lastRightX = cells.last().xMm + a4.photoWidthMm
         assertEquals(firstX, 210.0 - lastRightX, 1e-9)
-        // Centred vertically too.
-        val firstY = cells.first().yMm
-        val lastBottomY = cells.last().yMm + a4.photoHeightMm
-        assertEquals(firstY, 297.0 - lastBottomY, 1e-9)
+        // Top-aligned vertically: first row sits at the top margin.
+        assertEquals(a4.marginMm, cells.first().yMm, 1e-9)
         assertNoOverlap(cells, a4.photoWidthMm, a4.photoHeightMm, 210.0, 297.0)
     }
 
@@ -54,13 +52,11 @@ class PhotoGridTest {
     }
 
     @Test
-    fun partialRowsBlock_isCentered() {
-        // Two of six possible rows on A4, centred on the full page.
+    fun partialRowsBlock_isTopAligned() {
+        // Two of six possible rows on A4, anchored to the top margin (no wasted paper above).
         val cells = a4.cells(blockRows = 2)
         assertEquals(10, cells.size)
-        val firstY = cells.first().yMm
-        val lastBottomY = cells.last().yMm + a4.photoHeightMm
-        assertEquals(firstY, 297.0 - lastBottomY, 1e-9)
+        assertEquals(a4.marginMm, cells.first().yMm, 1e-9)
     }
 
     // --- copy-count adjustment rule ---

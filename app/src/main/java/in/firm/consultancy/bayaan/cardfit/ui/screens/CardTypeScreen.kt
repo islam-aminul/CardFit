@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,6 +35,7 @@ import `in`.firm.consultancy.bayaan.cardfit.domain.model.CardType
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.CardArtwork
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.CustomSizeDialog
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 
 /**
  * Step 1 (CLAUDE.md section 11.1): tappable card-type tiles with original stylized illustrations.
@@ -47,12 +47,17 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.components.CustomSizeDialog
 fun CardTypeScreen(
     viewModel: AppViewModel,
     onNext: () -> Unit,
-    onOpenSettings: () -> Unit,
+    onBack: () -> Unit,
 ) {
     var showCustomDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Choose card type") }) },
+        bottomBar = {
+            ScaffoldBottomBar {
+                OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+            }
+        },
     ) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
@@ -75,11 +80,6 @@ fun CardTypeScreen(
                         }
                     },
                 )
-            }
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                OutlinedButton(onClick = onOpenSettings, modifier = Modifier.fillMaxWidth()) {
-                    Text("About")
-                }
             }
         }
     }
