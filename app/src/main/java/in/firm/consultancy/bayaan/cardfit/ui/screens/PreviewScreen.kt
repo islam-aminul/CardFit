@@ -6,7 +6,10 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -38,14 +41,17 @@ import `in`.firm.consultancy.bayaan.cardfit.data.export.ShareItem
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.ExportUiState
 import `in`.firm.consultancy.bayaan.cardfit.ui.ExportViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.OutputChip
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.outputChipLabel
 
 /**
  * Step 5 (CLAUDE.md section 11.5): preview the page(s), then Save (MediaStore) or Share
  * (FileProvider + ACTION_SEND). Generates one or two files from the same [ScanSession] per the
  * selection. "Change output settings" returns to Configure to re-export without re-scanning.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PreviewScreen(
     viewModel: AppViewModel,
@@ -164,7 +170,18 @@ fun PreviewScreen(
 
         Text("Card: ${session.cardType.name}", style = MaterialTheme.typography.bodyMedium)
         Text("Name: ${state.name.ifBlank { "(document)" }}", style = MaterialTheme.typography.bodyMedium)
-        Text("Will generate ${configs.size} file(s).", style = MaterialTheme.typography.bodyMedium)
+
+        if (configs.isNotEmpty()) {
+            Text("Files (${configs.size})", style = MaterialTheme.typography.titleSmall)
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                configs.forEach { config ->
+                    OutputChip(outputChipLabel(config))
+                }
+            }
+        }
 
         Button(
             onClick = ::onSaveClick,

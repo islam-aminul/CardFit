@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +38,15 @@ import `in`.firm.consultancy.bayaan.cardfit.domain.model.PaperSize
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppState
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.SettingsViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.CardPrintArt
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.CardUploadArt
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.CustomSizeDialog
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.IllustratedTile
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.JpegArt
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.OutputChip
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PaperArt
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PdfArt
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.outputChipLabel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.SelectableCard
@@ -89,38 +99,71 @@ fun ConfigureScreen(
     ) {
         // --- Purpose (multi) ---
         SectionLabel("Purpose")
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             OutputMode.entries.forEach { mode ->
-                SelectableCard(
+                IllustratedTile(
                     label = mode.label(),
+                    subtitle = mode.subtitle(),
                     selected = mode in state.selectedModes,
                     onClick = { viewModel.toggleMode(mode) },
+                    artwork = { accent ->
+                        when (mode) {
+                            OutputMode.PRINT -> CardPrintArt(accent, Modifier.fillMaxSize())
+                            OutputMode.UPLOAD -> CardUploadArt(accent, Modifier.fillMaxSize())
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
                 )
             }
         }
 
         // --- Paper (multi, up to 2) ---
         SectionLabel("Paper (up to ${AppViewModel.MAX_PAPERS})")
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             PaperSize.entries.forEach { paper ->
                 val selected = paper in state.selectedPapers
-                SelectableCard(
+                IllustratedTile(
                     label = paper.name,
                     selected = selected,
                     enabled = selected || state.selectedPapers.size < AppViewModel.MAX_PAPERS,
                     onClick = { viewModel.togglePaper(paper) },
+                    artwork = { accent ->
+                        PaperArt(
+                            ratio = (paper.widthMm / paper.heightMm).toFloat(),
+                            accent = accent,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    },
+                    modifier = Modifier.width(96.dp),
                 )
             }
         }
 
         // --- Format (multi) ---
         SectionLabel("Format")
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             OutputFormat.entries.forEach { format ->
-                SelectableCard(
+                IllustratedTile(
                     label = format.name,
+                    subtitle = format.subtitle(),
                     selected = format in state.selectedFormats,
                     onClick = { viewModel.toggleFormat(format) },
+                    artwork = { accent ->
+                        when (format) {
+                            OutputFormat.PDF -> PdfArt(accent, Modifier.fillMaxSize())
+                            OutputFormat.JPEG -> JpegArt(accent, Modifier.fillMaxSize())
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
                 )
             }
         }
@@ -167,12 +210,17 @@ fun ConfigureScreen(
             )
         }
 
-        val fileCount = viewModel.renderConfigs().size
-        if (fileCount > 0) {
-            Text(
-                "This will create $fileCount file(s).",
-                style = MaterialTheme.typography.bodyMedium,
-            )
+        val configs = viewModel.renderConfigs()
+        if (configs.isNotEmpty()) {
+            SectionLabel("Files (${configs.size})")
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                configs.forEach { config ->
+                    OutputChip(outputChipLabel(config))
+                }
+            }
         }
 
         // --- Card size (just above Next) ---
@@ -202,6 +250,16 @@ fun ConfigureScreen(
 private fun OutputMode.label(): String = when (this) {
     OutputMode.PRINT -> "Print"
     OutputMode.UPLOAD -> "Upload"
+}
+
+private fun OutputMode.subtitle(): String = when (this) {
+    OutputMode.PRINT -> "Both sides, true size"
+    OutputMode.UPLOAD -> "Compressed to a cap"
+}
+
+private fun OutputFormat.subtitle(): String = when (this) {
+    OutputFormat.PDF -> "Vector, searchable"
+    OutputFormat.JPEG -> "Single flat image"
 }
 
 @Composable

@@ -9,15 +9,25 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -33,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -43,15 +54,19 @@ import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoPaper
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputMode
 import `in`.firm.consultancy.bayaan.cardfit.ui.PhotoExportState
 import `in`.firm.consultancy.bayaan.cardfit.ui.PhotoViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.IllustratedTile
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PaperArt
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PhotoPrintArt
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PhotoUploadArt
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
-import `in`.firm.consultancy.bayaan.cardfit.ui.components.SelectableCard
 
 /**
  * Photo flow step 4 (CLAUDE.md Phase 13): choose Upload and/or Print, set the name and per-mode
  * options (upload max-KB cap; print paper, copies and cut marks), then Save or Share. Upload yields a
  * single exact-pixel JPEG; Print yields a single-page PDF grid with the copy-count adjustment rules.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PhotoExportScreen(
     viewModel: PhotoViewModel,
@@ -114,9 +129,26 @@ fun PhotoExportScreen(
     ) {
         // --- purpose ---
         Text("Purpose", style = MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            SelectableCard("Upload", uploadOn, { viewModel.toggleMode(OutputMode.UPLOAD) })
-            SelectableCard("Print", printOn, { viewModel.toggleMode(OutputMode.PRINT) })
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            IllustratedTile(
+                label = "Upload",
+                subtitle = "One compressed image",
+                selected = uploadOn,
+                onClick = { viewModel.toggleMode(OutputMode.UPLOAD) },
+                artwork = { accent -> PhotoUploadArt(accent, Modifier.fillMaxSize()) },
+                modifier = Modifier.weight(1f),
+            )
+            IllustratedTile(
+                label = "Print",
+                subtitle = "Photos arranged on a page",
+                selected = printOn,
+                onClick = { viewModel.toggleMode(OutputMode.PRINT) },
+                artwork = { accent -> PhotoPrintArt(accent, Modifier.fillMaxSize()) },
+                modifier = Modifier.weight(1f),
+            )
         }
 
         OutlinedTextField(
@@ -146,12 +178,33 @@ fun PhotoExportScreen(
             HorizontalDivider()
             Text("Print (single-page PDF)", style = MaterialTheme.typography.titleSmall)
             Text("Paper", style = MaterialTheme.typography.bodyMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 PhotoPaper.entries.forEach { paper ->
-                    SelectableCard(paper.label, state.printPaper == paper, { viewModel.setPrintPaper(paper) })
+                    IllustratedTile(
+                        label = paper.label,
+                        selected = state.printPaper == paper,
+                        onClick = { viewModel.setPrintPaper(paper) },
+                        artwork = { accent ->
+                            PaperArt(
+                                ratio = (paper.widthMm / paper.heightMm).toFloat(),
+                                accent = accent,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        },
+                        modifier = Modifier.width(96.dp),
+                    )
                 }
             }
-            CopiesField(state.requestedCopies, viewModel::setRequestedCopies)
+            val grid = state.grid()
+            CopiesStepper(
+                value = state.requestedCopies,
+                perRow = grid?.perRow ?: 0,
+                perPage = grid?.perPage ?: 0,
+                onChange = viewModel::setRequestedCopies,
+            )
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -197,21 +250,56 @@ private fun MaxKbField(value: Int?, onChange: (Int?) -> Unit) {
     )
 }
 
+/**
+ * Copies control as a −/value/+ stepper. The grid rounds copies up to whole rows anyway, so each tap
+ * adds or removes one full row ([perRow] photos) and the value is snapped to a row multiple; it is
+ * clamped to one row at the bottom and to one full page ([perPage]) at the top. When the photo size
+ * doesn't fit the page ([perRow] == 0) it falls back to ±1 (the [CopiesNotice] explains the problem).
+ */
 @Composable
-private fun CopiesField(value: Int, onChange: (Int) -> Unit) {
-    var text by remember { mutableStateOf(value.toString()) }
-    OutlinedTextField(
-        value = text,
-        onValueChange = {
-            text = it
-            it.trim().toIntOrNull()?.let(onChange)
-        },
-        label = { Text("Copies") },
-        singleLine = true,
-        isError = text.trim().toIntOrNull()?.let { it < 1 } ?: text.isNotBlank(),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+private fun CopiesStepper(value: Int, perRow: Int, perPage: Int, onChange: (Int) -> Unit) {
+    val step = perRow.coerceAtLeast(1)
+    val rows = Math.ceil(value.toDouble() / step).toInt().coerceAtLeast(1)
+    val decreased = ((rows - 1) * step).coerceAtLeast(step)
+    val increasedRaw = (rows + 1) * step
+    val increased = if (perPage > 0) increasedRaw.coerceAtMost(perPage) else increasedRaw
+    val canDecrease = value > step
+    val canIncrease = perPage <= 0 || value < perPage
+    Row(
         modifier = Modifier.fillMaxWidth(),
-    )
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column {
+            Text("Copies", style = MaterialTheme.typography.bodyLarge)
+            if (perRow > 0) {
+                Text(
+                    "$perRow per row",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            FilledTonalIconButton(
+                onClick = { onChange(decreased) },
+                enabled = canDecrease,
+            ) { Icon(Icons.Filled.Remove, contentDescription = "Fewer copies") }
+            Text(
+                value.toString(),
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.widthIn(min = 36.dp),
+            )
+            FilledTonalIconButton(
+                onClick = { onChange(increased) },
+                enabled = canIncrease,
+            ) { Icon(Icons.Filled.Add, contentDescription = "More copies") }
+        }
+    }
 }
 
 @Composable
