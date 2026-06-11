@@ -6,15 +6,12 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,8 +43,10 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.components.CardUploadArt
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.CustomSizeDialog
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.IllustratedTile
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.JpegArt
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.OutputChip
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.PaperArt
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.PdfArt
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.outputChipLabel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.SelectableCard
@@ -219,7 +218,7 @@ fun ConfigureScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 configs.forEach { config ->
-                    OutputChip("${config.mode.label()} · ${config.paper.name} · ${config.format.name}")
+                    OutputChip(outputChipLabel(config))
                 }
             }
         }
@@ -266,22 +265,6 @@ private fun OutputFormat.subtitle(): String = when (this) {
 @Composable
 private fun SectionLabel(text: String) {
     Text(text = text, style = MaterialTheme.typography.titleSmall)
-}
-
-/** A small, non-interactive chip summarising one output file, e.g. "Print · A4 · PDF". */
-@Composable
-private fun OutputChip(text: String) {
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-        )
-    }
 }
 
 @Composable
