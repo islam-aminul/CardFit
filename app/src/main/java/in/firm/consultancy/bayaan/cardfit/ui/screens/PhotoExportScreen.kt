@@ -9,9 +9,13 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -43,15 +47,19 @@ import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoPaper
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputMode
 import `in`.firm.consultancy.bayaan.cardfit.ui.PhotoExportState
 import `in`.firm.consultancy.bayaan.cardfit.ui.PhotoViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.IllustratedTile
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PaperArt
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PhotoPrintArt
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PhotoUploadArt
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
-import `in`.firm.consultancy.bayaan.cardfit.ui.components.SelectableCard
 
 /**
  * Photo flow step 4 (CLAUDE.md Phase 13): choose Upload and/or Print, set the name and per-mode
  * options (upload max-KB cap; print paper, copies and cut marks), then Save or Share. Upload yields a
  * single exact-pixel JPEG; Print yields a single-page PDF grid with the copy-count adjustment rules.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PhotoExportScreen(
     viewModel: PhotoViewModel,
@@ -114,9 +122,26 @@ fun PhotoExportScreen(
     ) {
         // --- purpose ---
         Text("Purpose", style = MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            SelectableCard("Upload", uploadOn, { viewModel.toggleMode(OutputMode.UPLOAD) })
-            SelectableCard("Print", printOn, { viewModel.toggleMode(OutputMode.PRINT) })
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            IllustratedTile(
+                label = "Upload",
+                subtitle = "One compressed image",
+                selected = uploadOn,
+                onClick = { viewModel.toggleMode(OutputMode.UPLOAD) },
+                artwork = { accent -> PhotoUploadArt(accent, Modifier.fillMaxSize()) },
+                modifier = Modifier.weight(1f),
+            )
+            IllustratedTile(
+                label = "Print",
+                subtitle = "Photos arranged on a page",
+                selected = printOn,
+                onClick = { viewModel.toggleMode(OutputMode.PRINT) },
+                artwork = { accent -> PhotoPrintArt(accent, Modifier.fillMaxSize()) },
+                modifier = Modifier.weight(1f),
+            )
         }
 
         OutlinedTextField(
@@ -146,9 +171,24 @@ fun PhotoExportScreen(
             HorizontalDivider()
             Text("Print (single-page PDF)", style = MaterialTheme.typography.titleSmall)
             Text("Paper", style = MaterialTheme.typography.bodyMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 PhotoPaper.entries.forEach { paper ->
-                    SelectableCard(paper.label, state.printPaper == paper, { viewModel.setPrintPaper(paper) })
+                    IllustratedTile(
+                        label = paper.label,
+                        selected = state.printPaper == paper,
+                        onClick = { viewModel.setPrintPaper(paper) },
+                        artwork = { accent ->
+                            PaperArt(
+                                ratio = (paper.widthMm / paper.heightMm).toFloat(),
+                                accent = accent,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        },
+                        modifier = Modifier.width(96.dp),
+                    )
                 }
             }
             CopiesField(state.requestedCopies, viewModel::setRequestedCopies)
