@@ -6,12 +6,15 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -208,12 +211,17 @@ fun ConfigureScreen(
             )
         }
 
-        val fileCount = viewModel.renderConfigs().size
-        if (fileCount > 0) {
-            Text(
-                "This will create $fileCount file(s).",
-                style = MaterialTheme.typography.bodyMedium,
-            )
+        val configs = viewModel.renderConfigs()
+        if (configs.isNotEmpty()) {
+            SectionLabel("Files (${configs.size})")
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                configs.forEach { config ->
+                    OutputChip("${config.mode.label()} · ${config.paper.name} · ${config.format.name}")
+                }
+            }
         }
 
         // --- Card size (just above Next) ---
@@ -258,6 +266,22 @@ private fun OutputFormat.subtitle(): String = when (this) {
 @Composable
 private fun SectionLabel(text: String) {
     Text(text = text, style = MaterialTheme.typography.titleSmall)
+}
+
+/** A small, non-interactive chip summarising one output file, e.g. "Print · A4 · PDF". */
+@Composable
+private fun OutputChip(text: String) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+        )
+    }
 }
 
 @Composable
