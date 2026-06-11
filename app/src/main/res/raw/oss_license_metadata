@@ -1,0 +1,353 @@
+0:46 Activity
+0:46 Activity Compose
+0:46 Activity Kotlin Extensions
+0:46 Experimental annotation
+0:46 Annotation
+0:46 AppCompat
+0:46 AppCompat Resources
+0:46 Android Arch-Common
+0:46 Android Arch-Runtime
+0:46 AndroidX Autofill
+0:46 Android Support CardView v7
+0:46 collections
+0:46 Collections Kotlin Extensions
+0:46 Compose Animation
+0:46 Compose Animation Core
+0:46 Compose Foundation
+0:46 Compose Foundation
+0:46 Compose Layouts
+0:46 Compose Layouts
+0:46 Compose Material Icons Core
+0:46 Compose Material Icons Core
+0:46 Compose Material Ripple
+0:46 Compose Material3 Components
+0:46 Compose Material3 Components
+0:46 Material Adaptive
+0:46 Material Adaptive
+0:46 Compose Runtime
+0:46 Compose Runtime
+0:46 Compose Runtime Annotation
+0:46 Compose Runtime Retain
+0:46 Compose Saveable
+0:46 Compose UI
+0:46 Compose UI
+0:46 Compose Geometry
+0:46 Compose Graphics
+0:46 Compose UI Text
+0:46 Compose UI Preview Tooling
+0:46 Compose Unit
+0:46 Compose Util
+0:46 AndroidX Futures
+0:46 Android ConstraintLayout
+0:46 Android ConstraintLayout Core
+0:46 Android Support Library Coordinator Layout
+0:46 Core
+0:46 Core Kotlin Extensions
+0:46 androidx.core:core-viewtree
+0:46 Android Support Library Cursor Adapter
+0:46 Android Support Library Custom View
+0:46 androidx.customview:poolingcontainer
+0:46 DataStore
+0:46 DataStore Core
+0:46 DataStore Core Okio
+0:46 Preferences DataStore
+0:46 Preferences DataStore Core
+48:44 Preferences External Protobuf
+0:46 Preferences DataStore Proto
+0:46 Android Support Library Drawer Layout
+0:46 DynamicAnimation
+0:46 Emoji2
+0:46 Emoji2 Views Helper
+0:46 ExifInterface
+0:46 Android Support Library fragment
+0:46 Android Graphics Path
+0:46 Graphics Shapes
+0:46 Android Support Library Interpolators
+0:46 Lifecycle-Common for Java 8
+0:46 Lifecycle-Common
+0:46 Lifecycle LiveData
+0:46 Lifecycle LiveData Core
+0:46 LiveData Core Kotlin Extensions
+0:46 Lifecycle Process
+0:46 Lifecycle Runtime
+0:46 Lifecycle Runtime Compose
+0:46 Lifecycle Runtime Compose
+0:46 Lifecycle Kotlin Extensions
+0:46 Lifecycle ViewModel
+0:46 Lifecycle ViewModel
+0:46 Lifecycle ViewModel Compose
+0:46 Lifecycle ViewModel Compose
+0:46 Lifecycle ViewModel Kotlin Extensions
+0:46 Lifecycle ViewModel with SavedState
+0:46 Android Support Library loader
+0:46 Navigation Common
+0:46 Compose Navigation
+0:46 Navigation Runtime
+0:46 Androidx Navigation 3 Runtime
+0:46 Androidx Navigation 3 Runtime
+0:46 Androidx Navigation 3 UI
+0:46 Androidx Navigation 3 UI
+0:46 Navigation Event
+0:46 NavigationEvent Compose
+0:46 Profile Installer
+0:46 Android Support RecyclerView
+0:46 Android Resource Inspection - Annotations
+0:46 Saved State
+0:46 Saved State Compose
+0:46 SavedState Kotlin Extensions
+0:46 Android App Startup Runtime
+0:46 Android Tracing
+0:46 Transition
+0:46 Android Support VectorDrawable
+0:46 Android Support AnimatedVectorDrawable
+0:46 VersionedParcelable
+0:46 Android Support Library View Pager
+0:46 AndroidX Widget ViewPager2
+0:46 WindowManager
+0:46 WindowManager Core
+0:46 Accompanist Drawable Painter library
+0:46 transport-api
+0:46 transport-backend-cct
+0:46 transport-runtime
+94:11361 Dagger
+11457:47 play-services-base
+11506:1096 Animal Sniffer
+12604:1892 Checker Framework Annotations
+14498:11357 Error Prone
+25857:11358 Guava JDK5
+37217:11362 Guava JDK7
+48581:81008 J2ObjC
+129591:1602 JSR 305
+25857:11358 JSpecify
+131195:11307 JsInterop Annotations
+142504:112095 Kotlin
+14498:11357 Kotlin coroutines
+25857:11358 SafeParcelable library
+254601:10695 apksig
+25857:11358 gsfclient
+265298:9116 java_annotations
+274416:11356 kotlinx_atomicfu
+285774:11356 kotlinx_serialization
+11457:47 play-services-basement
+297132:42 play-services-mlkit-document-scanner
+297176:16008 Android SDK Platforms
+313186:10695 AndroidX activity library
+323883:10691 AndroidX annotation experimental library
+313186:10695 AndroidX annotation library
+334576:10694 AndroidX architecture core common library
+334576:10694 AndroidX architecture core runtime library
+345272:10694 AndroidX asynclayoutinflater library
+313186:10695 AndroidX collection library
+355968:10173 AndroidX compose runtime annotation library
+313186:10695 AndroidX compose runtime library
+313186:10695 AndroidX concurrent futures library
+313186:10695 AndroidX coordinatorlayout library
+313186:10695 AndroidX core ktx library
+313186:10695 AndroidX core library
+366143:10113 AndroidX core viewtree library
+313186:10695 AndroidX cursoradapter library
+313186:10695 AndroidX customview library
+313186:10695 AndroidX documentfile library
+313186:10695 AndroidX drawerlayout library
+313186:10695 AndroidX fragment library
+376258:10693 AndroidX interpolator library
+313186:10695 AndroidX legacy coreui library
+313186:10695 AndroidX legacy coreutils library
+313186:10695 AndroidX legacy v4 library
+334576:10694 AndroidX lifecycle common library
+334576:10694 AndroidX lifecycle livedatacore library
+334576:10694 AndroidX lifecycle runtime library
+334576:10694 AndroidX lifecycle viewmodel library
+376258:10693 AndroidX lifecycle viewmodel savedstate library
+313186:10695 AndroidX loader library
+376258:10693 AndroidX localbroadcastmanager library
+313186:10695 AndroidX media base library
+376258:10693 AndroidX navigationevent library
+376258:10693 AndroidX performance annotation library
+313186:10695 AndroidX print library
+386953:10689 AndroidX savedstate library
+313186:10695 AndroidX swiperefreshlayout library
+334576:10694 AndroidX tracing library
+397644:10695 AndroidX versionedparcelable library
+313186:10695 AndroidX viewpager library
+408341:11357 Firebase
+25857:11358 Google Auto
+25857:11358 JSR 250
+419700:11365 JSR 330
+431067:11357 Jakarta Inject
+297132:42 play-services-mlkit-text-recognition
+313186:10695 AndroidX exifinterface library
+442426:11419 TensorFlow Lite Support
+297132:42 play-services-mlkit-text-recognition-common
+11457:47 play-services-oss-licenses
+453847:11359 HighwayHash
+25857:11358 Material Components for Android
+465208:1732 Protocol Buffers for Java
+11457:47 play-services-tasks
+0:46 Material Components for Android
+11457:47 image
+334576:10694 AndroidX architecture core library
+334576:10694 AndroidX architecture library
+0:46 error-prone annotations
+0:46 firebase-annotations
+0:46 firebase-components
+0:46 firebase-encoders
+0:46 firebase-encoders-json
+297132:42 common
+297132:42 text-recognition
+466942:11361 Abseil
+14498:11357 Bazel Platforms
+478305:24922 Boost
+503229:12529 BoringSSL
+515760:1084 Brotli
+516846:1537 Chrome Certificate Verifier
+25857:11358 Crunchy Crypt
+518385:1320 Darts-clone
+25857:11358 Dimsum
+519707:20187 Edge TPU (0)
+539896:11416 Edge TPU (1)
+551314:11729 Edge TPU firmware callback
+563045:66597 Eigen 3
+629644:1131 FP16
+630777:1117 FXdiv
+25857:11358 FlatBuffers
+25857:11358 Google Toolbox for Mac
+631896:14115 Halide
+646013:22461 ICU4C
+25857:11358 Khronos OpenGL headers
+668476:10280 KleidiAI
+678758:3855 LAPACK
+682615:81006 LLVM
+763623:1516 Leptonica
+765141:5416 Libxml2
+770559:4855 Little CMS
+775416:12331 MediaPipe
+25857:11358 Mosys
+787749:6002 NCurses
+793753:1756 NVIDIA Management Library
+795511:1732 Nano Protocol Buffers
+797245:185 Ooura FFT
+797432:23289 OpenCV
+25857:11358 OpenCensus
+820723:11357 PCG Random Number Generator
+832082:5345 PNG
+25857:11358 Proto Converter
+837429:3028 Protocol Buffers
+840459:1558 RE2
+14498:11357 Riegeli
+842019:1507 Skia
+843528:53839 SwiftShader
+897369:11360 TCMalloc
+908731:13575 TensorFlow
+922308:11512 TensorFlow Models
+933822:11362 TensorFlow Serving
+25857:11358 Tink
+945186:731 UTF
+25857:11358 Unsmear
+945919:47018 X.Org
+992939:1337 XCB library
+994278:1560 XNNPACK
+995840:42655 Zippy
+1038497:3879 Zstandard
+1042378:1492 address_sorting
+1043872:52765 angle
+1096639:1896 bzip2
+1098537:3269 c-ares
+1101808:667 cblas
+1102477:1073 cnpy
+1103552:1318 cppitertools
+1104872:12876 cpu_features
+1117750:1424 cpuinfo
+1119176:1547 cutlass
+1120725:5091 dav1d
+1125818:1561 dawn
+1127381:1527 double-conversion
+1128910:28317 ducc
+25857:11358 ecclesia
+1157229:14962 expat
+1172193:4019 f2reduce
+1176214:1094 fast_hash
+1177310:1506 from_libaom (0)
+1178818:1084 from_libaom (1)
+1179904:29687 gRPC
+25857:11358 gRPC Protos
+1209593:38636 gcc_14_1_0
+25857:11358 gemmlowp
+1248231:1088 giflib
+1249321:54705 glslang
+274416:11356 highway
+1304028:2552 hwloc
+1306582:1497 imath
+1308081:54063 intel_dnnl
+1362146:46395 jpegxl
+1408543:16702 legacy_libcxx_sort
+1425247:5309 libaom
+1430558:14168 libavif
+1444728:1052 libdeflate
+1445782:1359 libexecinfo
+1447143:7174 libjpeg-turbo
+1454319:1150 libpfm4
+1455471:1050 liburing
+1456523:51684 libwebp
+1508209:1506 libyuv
+1509717:1602 mecab
+1511321:1996 minizip
+25857:11358 ml_dtypes
+1513319:16726 mozilla_psl
+1530047:1481 nanoflann
+1531530:1662 neon2sse
+25857:11358 nsync
+25857:11358 open_platforms_util_subtle
+25857:11358 opencl_headers
+14498:11357 opencl_icd_loader
+1533194:1500 openexr
+1534696:28233 openssh
+25857:11358 pdlp
+1562931:12452 perfetto
+431067:11357 piex
+1575385:2434 pngnq
+25857:11358 program_image_remapper
+1577821:1378 pthreadpool
+25857:11358 ruy
+1579201:15930 sentencepiece
+25857:11358 sequence_lock
+1595133:1479 sha3
+25857:11358 sjpeg
+1596614:1820 sobol_data
+1598436:4812 spirv_headers
+25857:11358 spirv_tools
+25857:11358 splitfile
+14498:11357 stablehlo
+14498:11357 tbb
+1603250:14049 tf_runtime
+1513319:16726 tf_runtime_eigen
+1617301:15141 tf_runtime_llvm
+1632444:4391 tiff
+1636837:1825 tz database
+1638664:1091 utf8_range
+1639757:12444 vulkan_headers
+1652203:14415 vulkan_loader
+1666620:1099 vulkan_memory_allocator
+1667721:1066 vulkan_volk
+1668789:1535 xmp_toolkit
+1670326:1389 xxhash
+1671717:2500 zlib
+297132:42 text-recognition-bundled-common
+297132:42 vision-common
+297176:16008 Android SDK
+313186:10695 AndroidX collection jvm library
+297132:42 vision-interfaces
+323883:10691 AndroidX annotation jvm library
+0:46 okio
+1674219:47 coil
+1674219:47 coil-compose
+1674219:47 coil-compose-core
+1674219:47 coil-core
+0:46 javax.inject
+1674219:47 JetBrains Java Annotations
+0:46 Kotlin Stdlib
+1674219:47 kotlinx-coroutines-android
+1674219:47 kotlinx-coroutines-core
+1674219:47 kotlinx-serialization-core
+1674219:47 kotlinx-serialization-json
+0:46 JSpecify annotations

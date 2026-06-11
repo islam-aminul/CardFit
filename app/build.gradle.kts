@@ -5,7 +5,6 @@ plugins {
     // No org.jetbrains.kotlin.android: AGP 9.0+ compiles Kotlin via built-in Kotlin support.
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.oss.licenses)
 }
 
 android {
@@ -75,7 +74,6 @@ dependencies {
     // services; no INTERNET permission required).
     implementation(libs.mlkit.subject.segmentation)
 
-    implementation(libs.play.services.oss.licenses)
     implementation(libs.coil.compose)
 
     testImplementation(libs.junit)

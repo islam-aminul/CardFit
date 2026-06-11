@@ -63,16 +63,6 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
-
-        <!-- Give the OSS Licenses activities an AppCompat theme (they extend AppCompatActivity). -->
-        <activity
-            android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
-            android:theme="@style/Theme.CardFit.OssLicenses"
-            tools:node="merge" />
-        <activity
-            android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"
-            android:theme="@style/Theme.CardFit.OssLicenses"
-            tools:node="merge" />
     </application>
 
 </manifest>

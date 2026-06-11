@@ -61,13 +61,6 @@ class AndroidPdfRenderer(
             } else {
                 emptyList()
             }
-            // Diagnostic only — element COUNTS, never any recognized text (privacy).
-            android.util.Log.d(
-                "CardFitTextLayer",
-                "searchable=${config.searchableText} sides=${ocrLayers.size} " +
-                    "elements=${ocrLayers.sumOf { it.elements.size }} " +
-                    "dims=${ocrLayers.joinToString { "${it.imageWidthPx}x${it.imageHeightPx}" }}",
-            )
 
             try {
                 val layout = planLayout(session, config, sides)

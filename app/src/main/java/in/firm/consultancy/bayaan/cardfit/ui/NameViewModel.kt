@@ -48,11 +48,6 @@ class NameViewModel(application: Application) : AndroidViewModel(application) {
             _suggestion.value = NameSuggestion.Loading
             val lines = ocr.recognize(frontUri)
             val name = NameParser.parse(session.cardType, lines)?.takeIf { it.isNotBlank() }
-            // Diagnostic only — counts/booleans, never the recognized text or any ID (privacy).
-            android.util.Log.d(
-                "CardFitName",
-                "card=${session.cardType} ocrLines=${lines.size} nameFound=${name != null} nameLen=${name?.length ?: 0}",
-            )
             _suggestion.value = NameSuggestion.Ready(name)
         }
     }

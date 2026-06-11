@@ -14,6 +14,7 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.TaskViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.CardTypeScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.ConfigureScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.HomeScreen
+import `in`.firm.consultancy.bayaan.cardfit.ui.screens.LicensesScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.NameScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.PhotoEditScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.PhotoExportScreen
@@ -45,6 +46,7 @@ object Routes {
     const val TASK_PHOTO_SOURCE = "task_photo_source"
     const val TASK_PHOTO_EDIT = "task_photo_edit"
     const val SETTINGS = "settings"
+    const val LICENSES = "licenses"
 }
 
 /**
@@ -202,7 +204,13 @@ fun CardFitNavGraph(
         }
 
         composable(Routes.SETTINGS) {
-            SettingsScreen(onBack = { navController.popBackStack() })
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onOpenLicenses = { navController.navigate(Routes.LICENSES) },
+            )
+        }
+        composable(Routes.LICENSES) {
+            LicensesScreen(onBack = { navController.popBackStack() })
         }
     }
 }

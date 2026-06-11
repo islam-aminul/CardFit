@@ -22,7 +22,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 
 /**
@@ -32,6 +31,7 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onOpenLicenses: () -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -76,13 +76,9 @@ fun SettingsScreen(
             }
         }
 
-        OutlinedButton(
-            onClick = {
-                OssLicensesMenuActivity.setActivityTitle("Open source licenses")
-                context.startActivity(Intent(context, OssLicensesMenuActivity::class.java))
-            },
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text("Open source licenses") }
+        OutlinedButton(onClick = onOpenLicenses, modifier = Modifier.fillMaxWidth()) {
+            Text("Open source licenses")
+        }
     }
 }
 

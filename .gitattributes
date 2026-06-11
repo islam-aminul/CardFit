@@ -1,0 +1,4 @@
+# Bundled OSS license data: byte-offset indexed, so the exact bytes must be
+# preserved across platforms (no line-ending conversion).
+app/src/main/res/raw/oss_licenses binary
+app/src/main/res/raw/oss_license_metadata binary
