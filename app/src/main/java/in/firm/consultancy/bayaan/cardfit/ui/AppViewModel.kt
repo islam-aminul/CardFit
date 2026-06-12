@@ -32,7 +32,7 @@ data class AppState(
     val grayscale: Boolean = false,
     val cropMarks: Boolean = false,
     val maxFileSizeKb: Int? = null,
-    val searchableText: Boolean = true, // PDF only (Phase 11); default ON per product decision
+    val searchableText: Boolean = false, // PDF only (Phase 11); default OFF — privacy by default
     val sizeOverride: SizeOverride = SizeOverride.AUTOMATIC, // Phase 12 sizing override
     val name: String = "",
     // True when [name] came from an OCR suggestion (not a manual edit), so a new scan may replace it.

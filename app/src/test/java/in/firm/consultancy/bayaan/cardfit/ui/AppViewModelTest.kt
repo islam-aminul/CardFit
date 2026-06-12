@@ -88,6 +88,7 @@ class AppViewModelTest {
         vm.selectCardType(CardType.PAN)
         vm.toggleMode(OutputMode.PRINT)
         vm.toggleMode(OutputMode.UPLOAD)
+        vm.toggleFormat(OutputFormat.PDF) // no format is selected by default
         vm.setGrayscale(true)
         vm.setCropMarks(true)
         vm.setMaxFileSizeKb(200)
@@ -114,7 +115,8 @@ class AppViewModelTest {
         vm.toggleMode(OutputMode.PRINT)
         vm.toggleMode(OutputMode.UPLOAD)
         vm.togglePaper(PaperSize.A5) // A4 (default) + A5
-        vm.toggleFormat(OutputFormat.JPEG) // PDF (default) + JPEG
+        vm.toggleFormat(OutputFormat.PDF)
+        vm.toggleFormat(OutputFormat.JPEG) // PDF + JPEG
         // 2 modes x 2 papers x 2 formats = 8 files
         assertEquals(8, vm.renderConfigs().size)
     }
@@ -132,7 +134,8 @@ class AppViewModelTest {
 
     @Test
     fun toggleFormat_addsAndRemoves() {
-        val vm = vm() // default PDF
+        val vm = vm() // no format selected by default
+        vm.toggleFormat(OutputFormat.PDF)
         vm.toggleFormat(OutputFormat.JPEG)
         assertEquals(setOf(OutputFormat.PDF, OutputFormat.JPEG), vm.state.value.selectedFormats)
         vm.toggleFormat(OutputFormat.PDF)

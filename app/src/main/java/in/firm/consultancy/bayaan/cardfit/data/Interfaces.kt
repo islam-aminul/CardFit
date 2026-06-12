@@ -73,7 +73,7 @@ data class UserPrefs(
     val defaultGrayscale: Boolean = false,
     val defaultMaxFileSizeKb: Int? = null,
     val lastName: String = "",
-    val searchableText: Boolean = true, // Phase 11: persisted searchable-PDF preference (default ON)
+    val searchableText: Boolean = false, // Phase 11: persisted searchable-PDF preference (default OFF — privacy by default)
 )
 
 interface Prefs {
