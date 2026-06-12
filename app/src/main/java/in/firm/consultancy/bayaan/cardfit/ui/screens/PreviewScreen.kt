@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -57,6 +58,7 @@ fun PreviewScreen(
     viewModel: AppViewModel,
     onBack: () -> Unit,
     onEditConfig: () -> Unit,
+    onNewScan: () -> Unit,
     onStartFresh: () -> Unit,
     exportViewModel: ExportViewModel = viewModel(),
 ) {
@@ -73,11 +75,15 @@ fun PreviewScreen(
     val scrollState = rememberScrollState()
     // Becomes true after a successful Save or Share, to reveal + scroll to New Scan / Home.
     var finishActionsVisible by remember { mutableStateOf(false) }
+    // On a successful save: reveal the finish actions first, let the bottom bar grow/relayout (two
+    // frames), then scroll the saved-file info into view.
     LaunchedEffect(uiState) {
-        if (uiState is ExportUiState.Saved) finishActionsVisible = true
-    }
-    LaunchedEffect(finishActionsVisible) {
-        if (finishActionsVisible) scrollState.animateScrollTo(scrollState.maxValue)
+        if (uiState is ExportUiState.Saved) {
+            finishActionsVisible = true
+            withFrameNanos {}
+            withFrameNanos {}
+            scrollState.animateScrollTo(scrollState.maxValue)
+        }
     }
 
     // (Re)generate the preview whenever the session or render settings change.
@@ -128,19 +134,24 @@ fun PreviewScreen(
         }
     }
 
-    // Fully reset the document (cached images, OCR name, render settings) and return to the start.
-    fun startFresh() {
+    // Fully reset the document (cached images, OCR name, render settings).
+    fun resetAll() {
         exportViewModel.resetForNewSession()
         exportViewModel.discardScans()
         viewModel.reset()
-        onStartFresh()
     }
+    fun startFresh() { resetAll(); onStartFresh() }
+    fun newScan() { resetAll(); onNewScan() }
 
     ScreenScaffold(
         title = "Preview & export",
         scrollState = scrollState,
         bottomBar = {
             ScaffoldBottomBar {
+                if (finishActionsVisible) {
+                    Button(onClick = { newScan() }, modifier = Modifier.fillMaxWidth()) { Text("New Scan") }
+                    OutlinedButton(onClick = { startFresh() }, modifier = Modifier.fillMaxWidth()) { Text("Home") }
+                }
                 OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
             }
         },
@@ -183,33 +194,36 @@ fun PreviewScreen(
             }
         }
 
-        Button(
+        val exportEnabled = configs.isNotEmpty() && uiState !is ExportUiState.Working
+        // Emphasized (filled) until a successful save/share, then de-emphasized (outlined).
+        ActionButton(
+            filled = !finishActionsVisible,
             onClick = ::onSaveClick,
-            enabled = configs.isNotEmpty() && uiState !is ExportUiState.Working,
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text("Save to Downloads") }
-
-        Button(
+            enabled = exportEnabled,
+            text = "Save to Downloads",
+        )
+        ActionButton(
+            filled = !finishActionsVisible,
             onClick = { exportViewModel.share(session, state.name, configs) },
-            enabled = configs.isNotEmpty() && uiState !is ExportUiState.Working,
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text("Share") }
+            enabled = exportEnabled,
+            text = "Share",
+        )
 
         OutlinedButton(onClick = onEditConfig, modifier = Modifier.fillMaxWidth()) {
             Text("Change output settings")
         }
 
         ExportStatus(uiState)
+    }
+}
 
-        // After a successful save OR share, make sure the user is never stranded (auto-scrolled to).
-        if (finishActionsVisible) {
-            Button(onClick = { startFresh() }, modifier = Modifier.fillMaxWidth()) {
-                Text("New Scan")
-            }
-            OutlinedButton(onClick = { startFresh() }, modifier = Modifier.fillMaxWidth()) {
-                Text("Home")
-            }
-        }
+/** A full-width primary action that is filled (emphasized) or outlined (de-emphasized) per [filled]. */
+@Composable
+private fun ActionButton(filled: Boolean, onClick: () -> Unit, enabled: Boolean, text: String) {
+    if (filled) {
+        Button(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(text) }
+    } else {
+        OutlinedButton(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(text) }
     }
 }
 

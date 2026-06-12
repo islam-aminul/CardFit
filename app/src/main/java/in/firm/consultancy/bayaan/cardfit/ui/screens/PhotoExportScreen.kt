@@ -9,13 +9,13 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -39,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -66,11 +67,11 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
  * options (upload max-KB cap; print paper, copies and cut marks), then Save or Share. Upload yields a
  * single exact-pixel JPEG; Print yields a single-page PDF grid with the copy-count adjustment rules.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PhotoExportScreen(
     viewModel: PhotoViewModel,
     onBack: () -> Unit,
+    onNewPhoto: () -> Unit,
     onStartFresh: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -81,8 +82,16 @@ fun PhotoExportScreen(
     val scrollState = rememberScrollState()
     var finishVisible by remember { mutableStateOf(false) }
 
-    LaunchedEffect(exportState) { if (exportState is PhotoExportState.Saved) finishVisible = true }
-    LaunchedEffect(finishVisible) { if (finishVisible) scrollState.animateScrollTo(scrollState.maxValue) }
+    // On a successful save: reveal the finish actions first, let the bottom bar grow/relayout (two
+    // frames), then scroll the saved-file info into view.
+    LaunchedEffect(exportState) {
+        if (exportState is PhotoExportState.Saved) {
+            finishVisible = true
+            withFrameNanos {}
+            withFrameNanos {}
+            scrollState.animateScrollTo(scrollState.maxValue)
+        }
+    }
     LaunchedEffect(pendingShare) {
         val items = pendingShare ?: return@LaunchedEffect
         launchPhotoShare(context, items)
@@ -118,11 +127,20 @@ fun PhotoExportScreen(
         onStartFresh()
     }
 
+    fun newPhoto() {
+        viewModel.reset()
+        onNewPhoto()
+    }
+
     ScreenScaffold(
         title = "Export photo",
         scrollState = scrollState,
         bottomBar = {
             ScaffoldBottomBar {
+                if (finishVisible) {
+                    Button(onClick = { newPhoto() }, modifier = Modifier.fillMaxWidth()) { Text("New photo") }
+                    OutlinedButton(onClick = { startFresh() }, modifier = Modifier.fillMaxWidth()) { Text("Home") }
+                }
                 OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
             }
         },
@@ -130,24 +148,24 @@ fun PhotoExportScreen(
         // --- purpose ---
         Text("Purpose", style = MaterialTheme.typography.titleSmall)
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             IllustratedTile(
                 label = "Upload",
-                subtitle = "One compressed image",
+                subtitle = "One image file",
                 selected = uploadOn,
                 onClick = { viewModel.toggleMode(OutputMode.UPLOAD) },
                 artwork = { accent -> PhotoUploadArt(accent, Modifier.fillMaxSize()) },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).fillMaxHeight(),
             )
             IllustratedTile(
                 label = "Print",
-                subtitle = "Photos arranged on a page",
+                subtitle = "A sheet of photos",
                 selected = printOn,
                 onClick = { viewModel.toggleMode(OutputMode.PRINT) },
                 artwork = { accent -> PhotoPrintArt(accent, Modifier.fillMaxSize()) },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).fillMaxHeight(),
             )
         }
 
@@ -178,9 +196,9 @@ fun PhotoExportScreen(
             HorizontalDivider()
             Text("Print (single-page PDF)", style = MaterialTheme.typography.titleSmall)
             Text("Paper", style = MaterialTheme.typography.bodyMedium)
-            FlowRow(
+            Row(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 PhotoPaper.entries.forEach { paper ->
                     IllustratedTile(
@@ -194,7 +212,7 @@ fun PhotoExportScreen(
                                 modifier = Modifier.fillMaxSize(),
                             )
                         },
-                        modifier = Modifier.width(96.dp),
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }
@@ -218,19 +236,31 @@ fun PhotoExportScreen(
 
         HorizontalDivider()
 
-        Button(onClick = ::onSaveClick, enabled = canExport, modifier = Modifier.fillMaxWidth()) {
-            Text("Save to Downloads")
-        }
-        Button(onClick = { viewModel.share() }, enabled = canExport, modifier = Modifier.fillMaxWidth()) {
-            Text("Share")
-        }
+        // Emphasized (filled) until a successful save/share, then de-emphasized (outlined).
+        ActionButton(
+            filled = !finishVisible,
+            onClick = ::onSaveClick,
+            enabled = canExport,
+            text = "Save to Downloads",
+        )
+        ActionButton(
+            filled = !finishVisible,
+            onClick = { viewModel.share() },
+            enabled = canExport,
+            text = "Share",
+        )
 
         PhotoExportStatus(exportState)
+    }
+}
 
-        if (finishVisible) {
-            Button(onClick = { startFresh() }, modifier = Modifier.fillMaxWidth()) { Text("New photo") }
-            OutlinedButton(onClick = { startFresh() }, modifier = Modifier.fillMaxWidth()) { Text("Home") }
-        }
+/** A full-width primary action that is filled (emphasized) or outlined (de-emphasized) per [filled]. */
+@Composable
+private fun ActionButton(filled: Boolean, onClick: () -> Unit, enabled: Boolean, text: String) {
+    if (filled) {
+        Button(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(text) }
+    } else {
+        OutlinedButton(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(text) }
     }
 }
 

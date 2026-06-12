@@ -28,7 +28,7 @@ data class AppState(
     // multi-select; an export produces every combination (mode x paper x format).
     val selectedModes: Set<OutputMode> = emptySet(),
     val selectedPapers: Set<PaperSize> = setOf(PaperSize.A4),
-    val selectedFormats: Set<OutputFormat> = setOf(OutputFormat.PDF),
+    val selectedFormats: Set<OutputFormat> = emptySet(),
     val grayscale: Boolean = false,
     val cropMarks: Boolean = false,
     val maxFileSizeKb: Int? = null,

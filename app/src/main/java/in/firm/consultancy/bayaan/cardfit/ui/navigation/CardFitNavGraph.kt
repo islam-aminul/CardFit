@@ -106,6 +106,7 @@ fun CardFitNavGraph(
                 viewModel = appViewModel,
                 onBack = { navController.popBackStack() },
                 onEditConfig = { navController.popBackStack(Routes.CONFIGURE, inclusive = false) },
+                onNewScan = { navController.popBackStack(Routes.CARD_TYPE, inclusive = false) },
                 onStartFresh = { navController.popBackStack(Routes.HOME, inclusive = false) },
             )
         }
@@ -129,6 +130,7 @@ fun CardFitNavGraph(
             PhotoExportScreen(
                 viewModel = photoViewModel,
                 onBack = { navController.popBackStack() },
+                onNewPhoto = { navController.popBackStack(Routes.PHOTO_SOURCE, inclusive = false) },
                 onStartFresh = { navController.popBackStack(Routes.HOME, inclusive = false) },
             )
         }

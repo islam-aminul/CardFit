@@ -62,7 +62,7 @@ data class PhotoState(
     val customWidthMm: Double? = null,
     val customHeightMm: Double? = null,
     val name: String = "",
-    val modes: Set<OutputMode> = setOf(OutputMode.UPLOAD),
+    val modes: Set<OutputMode> = emptySet(),
     val uploadDpi: Int = 300,
     val uploadMaxKb: Int? = null,
     val printPaper: PhotoPaper = PhotoPaper.A4,

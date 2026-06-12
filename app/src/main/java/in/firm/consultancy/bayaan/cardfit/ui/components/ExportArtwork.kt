@@ -16,9 +16,9 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 /**
  * ORIGINAL, generic, schematic illustrations of what each export OPTION produces, drawn entirely with
  * Compose Canvas primitives (same spirit as [CardArtwork]). They are deliberately abstract OUTCOME
- * diagrams — a page tiled with photo cells, a single image with an upload arrow, a document with text
- * lines — so the user can guess the result of a choice at a glance. They are NOT a preview of the
- * user's actual file and contain no real logos, emblems, or seals (CLAUDE.md sections 2 and 15).
+ * diagrams — a page tiled with photo cells, a single image, a document with text lines — so the user
+ * can guess the result of a choice at a glance. They are NOT a preview of the user's actual file and
+ * contain no real logos, emblems, or seals (CLAUDE.md sections 2 and 15).
  *
  * Each takes an [accent] colour; the hosting [IllustratedTile] passes a colour that reads correctly on
  * the tile's current (selected / unselected / disabled) background, so the art needs no theme access.
@@ -29,7 +29,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 fun PhotoPrintArt(accent: Color, modifier: Modifier = Modifier) =
     Canvas(modifier) { drawPhotoSheet(accent) }
 
-/** Photo UPLOAD: a single portrait photo with an upward arrow (one compressed image file). */
+/** Photo UPLOAD: a single portrait photo (one compressed image file). */
 @Composable
 fun PhotoUploadArt(accent: Color, modifier: Modifier = Modifier) =
     Canvas(modifier) { drawSingleUpload(accent) }
@@ -39,7 +39,7 @@ fun PhotoUploadArt(accent: Color, modifier: Modifier = Modifier) =
 fun CardPrintArt(accent: Color, modifier: Modifier = Modifier) =
     Canvas(modifier) { drawCardSheet(accent) }
 
-/** ID/document UPLOAD: the two card sides cropped to content with an upward arrow (compressed file). */
+/** ID/document UPLOAD: the two card sides cropped to content (one compressed file). */
 @Composable
 fun CardUploadArt(accent: Color, modifier: Modifier = Modifier) =
     Canvas(modifier) { drawCardsUpload(accent) }
@@ -123,15 +123,6 @@ private fun DrawScope.photoCell(accent: Color, x: Float, y: Float, w: Float, h: 
     }
 }
 
-/** An upward arrow centred on [cx], from [bottom] up to [top]. */
-private fun DrawScope.upArrow(accent: Color, cx: Float, top: Float, bottom: Float) {
-    val sw = (size.width * 0.03f).coerceAtLeast(2f)
-    val head = size.width * 0.06f
-    drawLine(accent, Offset(cx, bottom), Offset(cx, top), sw)
-    drawLine(accent, Offset(cx, top), Offset(cx - head, top + head), sw)
-    drawLine(accent, Offset(cx, top), Offset(cx + head, top + head), sw)
-}
-
 private fun DrawScope.drawPhotoSheet(accent: Color) {
     val r = pageRect(210f / 297f)
     drawPage(r, accent)
@@ -157,12 +148,11 @@ private fun DrawScope.drawPhotoSheet(accent: Color) {
 private fun DrawScope.drawSingleUpload(accent: Color) {
     val w = size.width
     val h = size.height
-    val ph = h * 0.58f
+    val ph = h * 0.86f
     val pw = ph * (35f / 45f) // passport-ish portrait
     val left = (w - pw) / 2f
-    val top = h * 0.36f
+    val top = (h - ph) / 2f
     photoCell(accent, left, top, pw, ph)
-    upArrow(accent, w / 2f, top = h * 0.08f, bottom = top - h * 0.05f)
 }
 
 /** A mini landscape ID card: tinted body, outline, small photo box, and field bars. */
@@ -211,17 +201,23 @@ private fun DrawScope.drawCardSheet(accent: Color) {
 private fun DrawScope.drawCardsUpload(accent: Color) {
     val w = size.width
     val h = size.height
-    val cardW = w * 0.5f
-    val cardH = cardW * (54f / 85.6f)
-    val gap = cardH * 0.4f
+    // Size the two stacked landscape cards to fit the (wide, short) art box by HEIGHT, then cap width.
+    val gapFrac = 0.2f
+    var cardH = (h * 0.92f) / (2f + gapFrac)
+    var cardW = cardH * (85.6f / 54f)
+    val maxW = w * 0.7f
+    if (cardW > maxW) {
+        cardW = maxW
+        cardH = cardW * (54f / 85.6f)
+    }
+    val gap = cardH * gapFrac
     val totalH = cardH * 2 + gap
     val cx = (w - cardW) / 2f
-    var cy = h * 0.34f
+    var cy = (h - totalH) / 2f
     repeat(2) {
         cardGlyph(accent, cx, cy, cardW, cardH)
         cy += cardH + gap
     }
-    upArrow(accent, w / 2f, top = h * 0.07f, bottom = cy - totalH - h * 0.04f)
 }
 
 private fun DrawScope.drawPdf(accent: Color) {

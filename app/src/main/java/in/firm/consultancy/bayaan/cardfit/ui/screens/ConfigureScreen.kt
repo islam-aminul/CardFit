@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -122,9 +121,9 @@ fun ConfigureScreen(
 
         // --- Paper (multi, up to 2) ---
         SectionLabel("Paper (up to ${AppViewModel.MAX_PAPERS})")
-        FlowRow(
+        Row(
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             PaperSize.entries.forEach { paper ->
                 val selected = paper in state.selectedPapers
@@ -140,7 +139,7 @@ fun ConfigureScreen(
                             modifier = Modifier.fillMaxSize(),
                         )
                     },
-                    modifier = Modifier.width(96.dp),
+                    modifier = Modifier.weight(1f),
                 )
             }
         }
