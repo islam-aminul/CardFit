@@ -20,7 +20,12 @@ CardFit opens to three flows:
   compressed under a KB cap for upload.
 - **Automatic card-type detection** and orientation-aware sizing (PAN, Aadhaar, Voter ID/EPIC,
   admit cards, custom, or free) with a manual override.
-- Optional **searchable PDF text layer** (an invisible, on-device OCR layer so the PDF is selectable).
+- **Rounded-corner trim** for PVC cards (PAN/Aadhaar/Voter ID): trims each card's corners to the true
+  ISO ID-1 radius and fills them white, removing the off-colour corner spots left when a card is
+  scanned on a coloured surface (bedsheet, tabletop). On by default for those cards; toggle off for
+  square-corner paper cards.
+- **Searchable PDF text layer** (an invisible, on-device OCR layer so the PDF is selectable) — opt-in,
+  off by default for privacy.
 - **OCR name suggestion** fills the filename field from the scan (a suggestion only — never
   auto-finalized, and identity numbers are never extracted).
 

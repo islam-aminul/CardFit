@@ -77,6 +77,7 @@ data class RenderConfig(
     val grayscale: Boolean,
     val cropMarks: Boolean,       // print only
     val maxFileSizeKb: Int?,      // upload only
+    val roundCorners: Boolean = false,                   // trim PVC-card corners to white (ID-1 3.18 mm)
     val searchableText: Boolean = false,                 // Phase 11: PDF-only invisible OCR layer
     val sizeOverride: SizeOverride = SizeOverride.AUTOMATIC,  // Phase 12
 )
@@ -124,7 +125,8 @@ Caller flow: render layout bitmap once at target DPI → run chooseQuality. If N
 ## 8. Output generation
 - **PDF (print):** `PdfDocument`; page width/height in points (round to Int); draw each card bitmap into a points-rect at exact physical size; honor crop marks (thin 0.3pt corner ticks just outside each card) when enabled.
 - **PDF (upload):** same engine, FIT_WIDTH sizing, compressed embedded image.
-- **Searchable PDF text layer (Phase 11):** when enabled (PDF only), overlay the OCR-recognized tokens as an invisible text layer aligned to the image (`TextLayer` maps OCR pixel boxes → page points). Makes the PDF text-selectable/searchable without showing extra glyphs. Default ON (persisted via DataStore; section 14).
+- **Searchable PDF text layer (Phase 11):** when enabled (PDF only), overlay the OCR-recognized tokens as an invisible text layer aligned to the image (`TextLayer` maps OCR pixel boxes → page points). Makes the PDF text-selectable/searchable without showing extra glyphs. Default OFF — privacy by default (persisted via DataStore; section 14).
+- **Rounded corners (PVC cards):** when enabled, trim each card's four corners to the ISO/IEC 7810 ID-1 radius (3.18 mm) and fill with the page white — removes the off-colour corner spots the rectangular scan crop leaves when a rounded card is scanned on a coloured surface. Shared anti-aliased helper (`RenderSupport.drawRoundedCardCorners`) applied across print PDF (points), upload JPEG, upload PDF, and the in-app preview (px). Default ON for PAN/Aadhaar/EPIC (`CardType.roundedByDefault`); off for others; not offered for FIT_WIDTH/FIT_PAGE (scaled) types.
 - **JPEG:** render layout to a Bitmap (white background) at target pixel dimensions; `Bitmap.compress(JPEG, quality)`; then write DPI density to the saved file via `ExifInterface` (TAG_X_RESOLUTION, TAG_Y_RESOLUTION = dpi, TAG_RESOLUTION_UNIT = inches).
 - **Grayscale:** apply a saturation-0 ColorMatrix when enabled (shrinks file).
 - **Multi-select:** generate one file per `RenderConfig` from `renderConfigs()` (the modes × papers × formats product) — all from the same ScanSession.
@@ -150,7 +152,7 @@ Template: `{nameSlug}-{docSlug}-{purpose}-{yyMMdd}-{HHmm}.{ext}`
 **A. Document/ID flow** (`AppViewModel` + `ExportViewModel`):
 1. **Card type** — tappable tiles with original stylized card illustrations (`CardArtwork`, Compose Canvas; no real emblems). Includes Custom (mm/cm/inch inputs via `CustomSizeDialog`) and Free.
 2. **Scan** — launch ML Kit Document Scanner for front, then back (skippable for single-side). Show thumbnails; allow retake.
-3. **Configure** — purpose, paper (up to 2), and format are multi-select **illustrated tiles** (`IllustratedTile` + `ExportArtwork`, showing each option's outcome). Max-size field ONLY when Upload selected. Grayscale toggle. Crop-marks toggle ONLY when Print selected. Searchable-PDF toggle ONLY when PDF selected. Card-size detection/override section (Automatic / Force CR-80 / Custom). A chip per output file is shown (e.g. `Print · A4 · PDF`).
+3. **Configure** — purpose, paper (up to 2), and format are multi-select **illustrated tiles** (`IllustratedTile` + `ExportArtwork`, showing each option's outcome). Max-size field ONLY when Upload selected. Grayscale toggle. Crop-marks toggle ONLY when Print selected. Searchable-PDF toggle ONLY when PDF selected. Trim-rounded-corners toggle ONLY for actual-size card types (default ON for PVC cards; turn off for square-corner paper cards). Card-size detection/override section (Automatic / Force CR-80 / Custom). A chip per output file is shown (e.g. `Print · A4 · PDF`).
 4. **Name** — editable field pre-filled by OCR suggestion.
 5. **Preview & Export** — render preview of the page(s); Save (MediaStore) and Share (FileProvider). Generates one file per selected combination. Go back to change settings and re-export without re-scanning.
 
@@ -182,7 +184,8 @@ Permissions: declare CAMERA; request at runtime before first camera use. `WRITE_
 - No PNG output. Aadhaar masking is OUT of v1 (future). OCR auto-name from English text only.
 - Default paper = A4; default print DPI = 300; default upload DPI = 200; readability floor ≈ 150 dpi effective; minQuality = 30.
 - CR-80 detection band = [1.50, 1.75]; near-CR-80 = [1.45, 1.85]. Custom size limits = 20–300 mm.
-- Searchable-PDF text layer default = ON (persisted).
+- Searchable-PDF text layer default = OFF — privacy by default (persisted).
+- Rounded-corner trim default = ON for PVC cards (PAN/Aadhaar/EPIC), OFF otherwise; ID-1 corner radius = 3.18 mm.
 - **Photo flow defaults:** default size = Passport (India) 35×45 mm (presets: Passport 35×45, Visa 51×51, Stamp 20×25, Custom); default mode = Upload; **photo upload DPI = 300** (note: higher than document upload's 200, intentional for photo sharpness); default print paper = A4 (photo papers: A4, A5, 4×6 in postcard, Letter); default copies = 4; cut marks default ON; photo print grid margin = 6 mm, gap = 3 mm; background removal & auto-enhance default OFF (opt-in). Copies round UP to fill the last row, then cap at one page.
 - App is closed-source by default (no obligation to publish source).
 
