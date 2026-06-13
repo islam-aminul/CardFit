@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Long-press launcher shortcuts. Each launches MainActivity with a custom action; MainActivity maps
+  the action to a flow route and the nav graph deep-links into it. Listed task → photo → scan so the
+  primary "Scan" sits nearest the icon on most launchers.
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="open_tasks"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_task"
+        android:shortcutShortLabel="@string/shortcut_task_short"
+        android:shortcutLongLabel="@string/shortcut_task_long">
+        <intent
+            android:action="in.firm.consultancy.bayaan.cardfit.SHORTCUT_TASK"
+            android:targetPackage="in.firm.consultancy.bayaan.cardfit"
+            android:targetClass="in.firm.consultancy.bayaan.cardfit.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="prepare_photo"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_photo"
+        android:shortcutShortLabel="@string/shortcut_photo_short"
+        android:shortcutLongLabel="@string/shortcut_photo_long">
+        <intent
+            android:action="in.firm.consultancy.bayaan.cardfit.SHORTCUT_PHOTO"
+            android:targetPackage="in.firm.consultancy.bayaan.cardfit"
+            android:targetClass="in.firm.consultancy.bayaan.cardfit.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="scan_card"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_scan"
+        android:shortcutShortLabel="@string/shortcut_scan_short"
+        android:shortcutLongLabel="@string/shortcut_scan_long">
+        <intent
+            android:action="in.firm.consultancy.bayaan.cardfit.SHORTCUT_SCAN"
+            android:targetPackage="in.firm.consultancy.bayaan.cardfit"
+            android:targetClass="in.firm.consultancy.bayaan.cardfit.MainActivity" />
+    </shortcut>
+</shortcuts>

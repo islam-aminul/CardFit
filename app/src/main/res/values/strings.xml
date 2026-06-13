@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">CardFit</string>
+
+    <!-- Long-press launcher shortcuts -->
+    <string name="shortcut_scan_short">Scan</string>
+    <string name="shortcut_scan_long">Scan documents &amp; cards</string>
+    <string name="shortcut_photo_short">Photo</string>
+    <string name="shortcut_photo_long">Prepare a photo</string>
+    <string name="shortcut_task_short">Tasks</string>
+    <string name="shortcut_task_long">Open tasks</string>
 </resources>

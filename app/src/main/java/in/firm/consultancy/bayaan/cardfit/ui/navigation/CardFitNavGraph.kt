@@ -1,6 +1,7 @@
 package `in`.firm.consultancy.bayaan.cardfit.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -60,7 +61,19 @@ fun CardFitNavGraph(
     appViewModel: AppViewModel = viewModel(),
     photoViewModel: PhotoViewModel = viewModel(),
     taskViewModel: TaskViewModel = viewModel(),
+    shortcutRoute: String? = null,
+    onShortcutHandled: () -> Unit = {},
 ) {
+    // A long-press launcher shortcut deep-links into a flow: jump there from Home (so Back returns Home).
+    LaunchedEffect(shortcutRoute) {
+        val route = shortcutRoute ?: return@LaunchedEffect
+        navController.navigate(route) {
+            popUpTo(Routes.HOME) { inclusive = false }
+            launchSingleTop = true
+        }
+        onShortcutHandled()
+    }
+
     NavHost(navController = navController, startDestination = Routes.HOME) {
         composable(Routes.HOME) {
             HomeScreen(

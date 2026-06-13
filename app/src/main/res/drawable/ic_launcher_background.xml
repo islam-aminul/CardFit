@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Adaptive icon background: original red-to-blue diagonal gradient (no emblem). -->
+<!-- Adaptive icon background: full-rainbow diagonal gradient (no emblem). Endpoints pulled inward
+     (30,30)->(78,78) so pure red and violet sit inside the launcher's masked area, not the clipped
+     corners; the gradient clamps to those colours toward the corners. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
@@ -10,12 +12,18 @@
         <aapt:attr name="android:fillColor">
             <gradient
                 android:type="linear"
-                android:startX="6"
-                android:startY="6"
-                android:endX="102"
-                android:endY="102"
-                android:startColor="#E53935"
-                android:endColor="#1E88E5" />
+                android:startX="30"
+                android:startY="30"
+                android:endX="78"
+                android:endY="78">
+                <item android:offset="0.0" android:color="#FF0000" />
+                <item android:offset="0.17" android:color="#FF7F00" />
+                <item android:offset="0.33" android:color="#FFFF00" />
+                <item android:offset="0.5" android:color="#00FF00" />
+                <item android:offset="0.67" android:color="#00BFFF" />
+                <item android:offset="0.83" android:color="#0000FF" />
+                <item android:offset="1.0" android:color="#8B00FF" />
+            </gradient>
         </aapt:attr>
     </path>
 </vector>
