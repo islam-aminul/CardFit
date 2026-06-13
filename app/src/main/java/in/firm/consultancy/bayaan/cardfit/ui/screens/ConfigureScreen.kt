@@ -27,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import `in`.firm.consultancy.bayaan.cardfit.domain.CardClassifier
 import `in`.firm.consultancy.bayaan.cardfit.domain.CardFormat
+import `in`.firm.consultancy.bayaan.cardfit.domain.model.FitMode
 import `in`.firm.consultancy.bayaan.cardfit.domain.Orientation
 import `in`.firm.consultancy.bayaan.cardfit.domain.SizeOverride
 import `in`.firm.consultancy.bayaan.cardfit.domain.SizingMode
@@ -169,6 +170,17 @@ fun ConfigureScreen(
 
         // --- Grayscale ---
         ToggleRow("Grayscale", state.grayscale, viewModel::setGrayscale)
+
+        // --- Trim rounded corners: actual-size cards only (PVC cards have rounded corners) ---
+        if (state.session?.cardType?.fitMode == FitMode.ACTUAL_SIZE) {
+            ToggleRow("Trim rounded corners", state.roundCorners, viewModel::setRoundCorners)
+            Text(
+                "Rounds the corners and removes off-colour corner spots from PVC cards like PAN / " +
+                    "Aadhaar / Voter ID. Turn off for square-corner paper cards.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
 
         // --- Crop marks: when Print is selected ---
         if (printSelected) {

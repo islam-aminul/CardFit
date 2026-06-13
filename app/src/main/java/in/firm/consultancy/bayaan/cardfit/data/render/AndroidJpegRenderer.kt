@@ -6,6 +6,7 @@ import android.graphics.Paint
 import `in`.firm.consultancy.bayaan.cardfit.data.JpegRenderer
 import `in`.firm.consultancy.bayaan.cardfit.data.RenderedOutput
 import `in`.firm.consultancy.bayaan.cardfit.domain.PageLayout
+import `in`.firm.consultancy.bayaan.cardfit.domain.Units
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.RenderConfig
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.ScanSession
 import `in`.firm.consultancy.bayaan.cardfit.domain.targetJpegSize
@@ -32,9 +33,10 @@ class AndroidJpegRenderer(private val context: Context) : JpegRenderer {
                 val paint = cardPaint(config.grayscale)
                 val capBytes = config.maxFileSizeKb?.let { it * 1024 }
 
+                val cornerMm = if (config.roundCorners) Units.ID1_CORNER_RADIUS_MM else 0.0
                 if (capBytes == null) {
                     // No size cap (print, or upload without a cap): single high-quality pass.
-                    val page = composePageBitmap(layout, sides, config.dpi, paint)
+                    val page = composePageBitmap(layout, sides, config.dpi, paint, cornerMm)
                     try {
                         val bytes = jpegBytes(page, PRINT_JPEG_QUALITY)
                         RenderedOutput(writeJpegDpi(context, bytes, config.dpi))
@@ -59,11 +61,12 @@ class AndroidJpegRenderer(private val context: Context) : JpegRenderer {
     ): RenderedOutput {
         var cachedDpi = -1
         var cached: Bitmap? = null
+        val cornerMm = if (config.roundCorners) Units.ID1_CORNER_RADIUS_MM else 0.0
 
         fun pageAt(dpi: Int): Bitmap {
             if (dpi != cachedDpi || cached == null) {
                 cached?.recycle()
-                cached = composePageBitmap(layout, sides, dpi, paint)
+                cached = composePageBitmap(layout, sides, dpi, paint, cornerMm)
                 cachedDpi = dpi
             }
             return cached!!

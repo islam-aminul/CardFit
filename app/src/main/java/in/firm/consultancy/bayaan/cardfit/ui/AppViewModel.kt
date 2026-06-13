@@ -31,6 +31,7 @@ data class AppState(
     val selectedFormats: Set<OutputFormat> = emptySet(),
     val grayscale: Boolean = false,
     val cropMarks: Boolean = false,
+    val roundCorners: Boolean = true, // PVC-card corner trim; set per card type on selection
     val maxFileSizeKb: Int? = null,
     val searchableText: Boolean = false, // PDF only (Phase 11); default OFF — privacy by default
     val sizeOverride: SizeOverride = SizeOverride.AUTOMATIC, // Phase 12 sizing override
@@ -73,6 +74,8 @@ class AppViewModel : ViewModel() {
                 ),
                 // Reset the sizing override to this card type's default (Phase 12).
                 sizeOverride = CardClassifier.defaultOverride(type),
+                // Default corner-trim ON for rounded PVC cards (PAN/Aadhaar/EPIC), off otherwise.
+                roundCorners = type.roundedByDefault,
             )
         }
     }
@@ -117,6 +120,7 @@ class AppViewModel : ViewModel() {
 
     fun setGrayscale(value: Boolean) = _state.update { it.copy(grayscale = value) }
     fun setCropMarks(value: Boolean) = _state.update { it.copy(cropMarks = value) }
+    fun setRoundCorners(value: Boolean) = _state.update { it.copy(roundCorners = value) }
     fun setMaxFileSizeKb(value: Int?) = _state.update { it.copy(maxFileSizeKb = value) }
     fun setSearchableText(value: Boolean) = _state.update { it.copy(searchableText = value) }
     fun setSizeOverride(value: SizeOverride) = _state.update { it.copy(sizeOverride = value) }
@@ -164,6 +168,7 @@ class AppViewModel : ViewModel() {
                                 dpi = if (mode == OutputMode.PRINT) Defaults.PRINT_DPI else Defaults.UPLOAD_DPI,
                                 grayscale = s.grayscale,
                                 cropMarks = mode == OutputMode.PRINT && s.cropMarks,
+                                roundCorners = s.roundCorners,
                                 maxFileSizeKb = if (mode == OutputMode.UPLOAD) s.maxFileSizeKb else null,
                                 searchableText = s.searchableText && format == OutputFormat.PDF,
                                 sizeOverride = s.sizeOverride,

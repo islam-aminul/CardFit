@@ -150,6 +150,26 @@ class AppViewModelTest {
     }
 
     @Test
+    fun selectCardType_defaultsRoundCornersByType() {
+        val vm = vm()
+        vm.selectCardType(CardType.PAN) // PVC card -> rounded
+        assertTrue(vm.state.value.roundCorners)
+        vm.selectCardType(CardType.ADMIT_CARD) // not a PVC card -> off
+        assertEquals(false, vm.state.value.roundCorners)
+    }
+
+    @Test
+    fun renderConfigs_propagatesRoundCorners() {
+        val vm = vm()
+        vm.selectCardType(CardType.PAN) // roundCorners defaults on
+        vm.toggleMode(OutputMode.PRINT)
+        vm.toggleFormat(OutputFormat.PDF)
+        assertTrue(vm.renderConfigs().all { it.roundCorners })
+        vm.setRoundCorners(false)
+        assertTrue(vm.renderConfigs().none { it.roundCorners })
+    }
+
+    @Test
     fun applyNameSuggestion_replacesAutoFilled_clearsOnNone_keepsManual() {
         val vm = vm()
         vm.selectCardType(CardType.PAN)

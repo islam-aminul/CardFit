@@ -24,6 +24,10 @@ enum class CardType(
     ADMIT_CARD(null, null, "admit-card", FitMode.FIT_PAGE),
     CUSTOM(null, null, "custom", FitMode.ACTUAL_SIZE), // dimensions supplied at runtime
     FREE(null, null, "free", FitMode.FIT_WIDTH),
+    ;
+
+    /** PVC cards with rounded corners — corner trimming defaults ON for these. */
+    val roundedByDefault: Boolean get() = this == PAN || this == AADHAAR || this == EPIC
 }
 
 enum class PaperSize(val widthMm: Double, val heightMm: Double) {
@@ -46,6 +50,7 @@ data class RenderConfig(
     val grayscale: Boolean,
     val cropMarks: Boolean, // print only
     val maxFileSizeKb: Int?, // upload only
+    val roundCorners: Boolean = false, // trim PVC-card rounded corners to white (ID-1 radius)
     val searchableText: Boolean = false, // PDF only: embed an invisible OCR text layer (Phase 11)
     // Sizing override for aspect-ratio detection (Phase 12); resolved against the scanned sides.
     val sizeOverride: `in`.firm.consultancy.bayaan.cardfit.domain.SizeOverride =

@@ -13,6 +13,9 @@ object Units {
     const val MM_PER_INCH: Double = 25.4
     const val POINTS_PER_INCH: Double = 72.0
 
+    /** ISO/IEC 7810 ID-1 (CR-80) corner radius in mm — used to trim PVC-card rounded corners. */
+    const val ID1_CORNER_RADIUS_MM: Double = 3.18
+
     /** mm -> PDF points: `pt = mm * 72.0 / 25.4`. */
     fun mmToPoints(mm: Double): Double = mm * POINTS_PER_INCH / MM_PER_INCH
 

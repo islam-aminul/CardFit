@@ -9,6 +9,7 @@ import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Matrix
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.Rect
 import android.graphics.RectF
 import androidx.core.graphics.createBitmap
@@ -157,12 +158,19 @@ internal fun planLayout(session: ScanSession, config: RenderConfig, sides: List<
  * Compose the whole page as one RGB_565 bitmap at [dpi] (white background), drawing each side
  * center-cropped into its layout rect. Caller owns + recycles the returned bitmap.
  */
-internal fun composePageBitmap(layout: PageLayout, sides: List<Bitmap>, dpi: Int, paint: Paint): Bitmap {
+internal fun composePageBitmap(
+    layout: PageLayout,
+    sides: List<Bitmap>,
+    dpi: Int,
+    paint: Paint,
+    cornerRadiusMm: Double = 0.0,
+): Bitmap {
     val wPx = Units.mmToPixels(layout.pageWidthMm, dpi).coerceAtLeast(1)
     val hPx = Units.mmToPixels(layout.pageHeightMm, dpi).coerceAtLeast(1)
     val bmp = createBitmap(wPx, hPx, Bitmap.Config.RGB_565)
     val canvas = Canvas(bmp)
     canvas.drawColor(Color.WHITE)
+    val cornerPx = if (cornerRadiusMm > 0.0) mmToPxF(cornerRadiusMm, dpi) else 0f
     layout.cards.forEachIndexed { i, rect ->
         val src = sides[i]
         val dst = RectF(
@@ -172,8 +180,41 @@ internal fun composePageBitmap(layout: PageLayout, sides: List<Bitmap>, dpi: Int
             mmToPxF(rect.yMm + rect.heightMm, dpi),
         )
         canvas.drawBitmap(src, centerCropSrcRect(src, dst.width(), dst.height()), dst, paint)
+        drawRoundedCardCorners(canvas, dst, cornerPx)
     }
     return bmp
+}
+
+/**
+ * Trim a card's four corners to a rounded-rectangle of [radius] by painting the corner "nubs" white
+ * (the page background) with anti-aliasing. Used for PVC cards (PAN/Aadhaar/EPIC) whose true corners
+ * are rounded — the rectangular scan crop leaves off-colour background in those corners. Unit-agnostic
+ * ([radius] in the canvas's own units), so it serves both the px page bitmap and the PDF point canvas.
+ * No-op when [radius] <= 0.
+ */
+internal fun drawRoundedCardCorners(canvas: Canvas, rect: RectF, radius: Float) {
+    val r = radius.coerceAtMost(minOf(rect.width(), rect.height()) / 2f)
+    if (r <= 0f) return
+    val white = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE; style = Paint.Style.FILL }
+    val l = rect.left
+    val t = rect.top
+    val rr = rect.right
+    val b = rect.bottom
+    val path = Path()
+
+    fun wedge(moveX: Float, moveY: Float, lineX: Float, lineY: Float, oval: RectF, start: Float) {
+        path.reset()
+        path.moveTo(moveX, moveY)
+        path.lineTo(lineX, lineY)
+        path.arcTo(oval, start, -90f, false)
+        path.close()
+        canvas.drawPath(path, white)
+    }
+    // Top-left, top-right, bottom-right, bottom-left.
+    wedge(l, t, l + r, t, RectF(l, t, l + 2 * r, t + 2 * r), 270f)
+    wedge(rr, t, rr, t + r, RectF(rr - 2 * r, t, rr, t + 2 * r), 0f)
+    wedge(rr, b, rr - r, b, RectF(rr - 2 * r, b - 2 * r, rr, b), 90f)
+    wedge(l, b, l, b - r, RectF(l, b - 2 * r, l + 2 * r, b), 180f)
 }
 
 internal fun mmToPxF(mm: Double, dpi: Int): Float = (mm * dpi / Units.MM_PER_INCH).toFloat()

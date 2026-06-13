@@ -104,6 +104,9 @@ class AndroidPdfRenderer(
                 mmToPtF(rect.yMm + rect.heightMm),
             )
             canvas.drawBitmap(src, centerCropSrcRect(src, dst.width(), dst.height()), dst, paint)
+            if (config.roundCorners) {
+                drawRoundedCardCorners(canvas, dst, mmToPtF(Units.ID1_CORNER_RADIUS_MM))
+            }
             if (config.cropMarks) drawCropMarks(canvas, dst)
         }
 
@@ -128,10 +131,11 @@ class AndroidPdfRenderer(
     ): RenderedOutput {
         var cachedDpi = -1
         var cached: Bitmap? = null
+        val cornerMm = if (config.roundCorners) Units.ID1_CORNER_RADIUS_MM else 0.0
         fun pageAt(dpi: Int): Bitmap {
             if (dpi != cachedDpi || cached == null) {
                 cached?.recycle()
-                cached = composePageBitmap(layout, sides, dpi, paint)
+                cached = composePageBitmap(layout, sides, dpi, paint, cornerMm)
                 cachedDpi = dpi
             }
             return cached!!
