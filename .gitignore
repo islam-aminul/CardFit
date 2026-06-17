@@ -11,3 +11,8 @@ build/
 local.properties
 *.apk
 *.aab
+
+# Signing secrets — never commit
+*.jks
+*.keystore
+keystore.properties
