@@ -1,6 +1,5 @@
 package `in`.firm.consultancy.bayaan.cardfit.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,13 +13,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,18 +25,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.material3.MaterialTheme
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.CardType
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanCard
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanTopBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.CardArtwork
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.CustomSizeDialog
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextHeading
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextMuted
 
 /**
  * Step 1 (CLAUDE.md section 11.1): tappable card-type tiles with original stylized illustrations.
  * Selecting a type persists the choice into the [ScanSession] (via [AppViewModel.selectCardType])
  * and advances. Custom collects runtime mm dimensions first; Free needs no dimensions.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CardTypeScreen(
     viewModel: AppViewModel,
@@ -52,10 +52,10 @@ fun CardTypeScreen(
     var showCustomDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Choose card type") }) },
+        topBar = { BayaanTopBar("Choose card type") },
         bottomBar = {
             ScaffoldBottomBar {
-                OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+                GhostButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
             }
         },
     ) { padding ->
@@ -101,15 +101,13 @@ private fun CardTypeTile(
     type: CardType,
     onClick: () -> Unit,
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+    BayaanCard(
+        onClick = onClick,
+        contentPadding = PaddingValues(12.dp),
+        modifier = Modifier.fillMaxWidth(),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             CardArtwork(
@@ -122,13 +120,14 @@ private fun CardTypeTile(
             Spacer(Modifier.height(8.dp))
             Text(
                 text = labelFor(type),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp),
+                color = TextHeading,
                 textAlign = TextAlign.Center,
             )
             Text(
                 text = subtitleFor(type),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = TextMuted,
                 textAlign = TextAlign.Center,
             )
         }

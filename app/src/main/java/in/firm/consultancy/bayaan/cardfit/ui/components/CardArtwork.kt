@@ -24,13 +24,13 @@ import `in`.firm.consultancy.bayaan.cardfit.domain.model.CardType
  * accent colour and a small layout variation so the tiles are recognisable without copying anything.
  */
 
-// Original accent palette (not tied to any real document's colours).
-private val PanAccent = Color(0xFF1565C0) // blue
-private val AadhaarAccent = Color(0xFF00897B) // teal
-private val EpicAccent = Color(0xFF3949AB) // indigo
-private val AdmitAccent = Color(0xFFEF6C00) // orange
-private val CustomAccent = Color(0xFF546E7A) // blue-grey
-private val FreeAccent = Color(0xFF2E7D32) // green
+// Original accent palette remapped onto Bayaan midnight/teal/sage (not tied to any real document).
+private val PanAccent = Color(0xFF2A2F6B) // midnight-600
+private val AadhaarAccent = Color(0xFF14B8A6) // teal-500
+private val EpicAccent = Color(0xFF23275B) // midnight-700
+private val AdmitAccent = Color(0xFF0E9384) // teal-600
+private val CustomAccent = Color(0xFF8E96C4) // midnight-300
+private val FreeAccent = Color(0xFF6B8A74) // sage-500
 private val ChipGold = Color(0xFFCBA135)
 
 @Composable

@@ -6,7 +6,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,6 +18,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import `in`.firm.consultancy.bayaan.cardfit.ui.PhotoViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PrimaryButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 import java.io.File
 
@@ -83,10 +84,10 @@ fun PhotoSourceScreen(
     ScreenScaffold(title = "Add a photo", onBack = onBack) {
         Text("Take a new photo or choose one from your gallery. The original is never changed.")
 
-        Button(onClick = { requestCamera() }, modifier = Modifier.fillMaxWidth()) {
+        PrimaryButton(onClick = { requestCamera() }, modifier = Modifier.fillMaxWidth()) {
             Text("Take photo")
         }
-        Button(
+        GhostButton(
             onClick = {
                 galleryLauncher.launch(
                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),

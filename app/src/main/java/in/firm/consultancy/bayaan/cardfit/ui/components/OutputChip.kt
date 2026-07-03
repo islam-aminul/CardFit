@@ -8,21 +8,24 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputMode
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.RenderConfig
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.AccentSoft
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Teal700
 
-/** A small, non-interactive chip summarising one output file, e.g. "Print · A4 · PDF". */
+/** A small, non-interactive chip summarising one output file (.bv-chip), e.g. "Print · A4 · PDF". */
 @Composable
 fun OutputChip(text: String, modifier: Modifier = Modifier) {
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        color = AccentSoft,
+        contentColor = Teal700,
         modifier = modifier,
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 0.02.em),
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
         )
     }

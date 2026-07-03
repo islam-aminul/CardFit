@@ -7,19 +7,15 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,10 +38,16 @@ import `in`.firm.consultancy.bayaan.cardfit.data.export.ShareItem
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.ExportUiState
 import `in`.firm.consultancy.bayaan.cardfit.ui.ExportViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanCard
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.OutputChip
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PrimaryButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.SectionLabel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.TealCallout
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.outputChipLabel
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Teal700
 
 /**
  * Step 5 (CLAUDE.md section 11.5): preview the page(s), then Save (MediaStore) or Share
@@ -149,10 +151,10 @@ fun PreviewScreen(
         bottomBar = {
             ScaffoldBottomBar {
                 if (finishActionsVisible) {
-                    Button(onClick = { newScan() }, modifier = Modifier.fillMaxWidth()) { Text("New Scan") }
-                    OutlinedButton(onClick = { startFresh() }, modifier = Modifier.fillMaxWidth()) { Text("Home") }
+                    PrimaryButton(onClick = { newScan() }, modifier = Modifier.fillMaxWidth()) { Text("New Scan") }
+                    GhostButton(onClick = { startFresh() }, modifier = Modifier.fillMaxWidth()) { Text("Home") }
                 }
-                OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+                GhostButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
             }
         },
     ) {
@@ -163,15 +165,22 @@ fun PreviewScreen(
 
         val bytes = previewBytes
         when {
-            bytes != null -> AsyncImage(
-                model = bytes,
-                contentDescription = "Output preview",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(280.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-            )
+            // The rendered page sits inside a white bordered "sheet" card, per the UI kit.
+            bytes != null -> BayaanCard(
+                shape = RoundedCornerShape(12.dp),
+                contentPadding = PaddingValues(12.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                AsyncImage(
+                    model = bytes,
+                    contentDescription = "Output preview",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(280.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                )
+            }
             previewFailed -> Text(
                 "Couldn't render a preview from this scan. Try re-scanning the card.",
                 color = MaterialTheme.colorScheme.error,
@@ -183,7 +192,7 @@ fun PreviewScreen(
         Text("Name: ${state.name.ifBlank { "(document)" }}", style = MaterialTheme.typography.bodyMedium)
 
         if (configs.isNotEmpty()) {
-            Text("Files (${configs.size})", style = MaterialTheme.typography.titleSmall)
+            SectionLabel("Files (${configs.size})")
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -209,7 +218,7 @@ fun PreviewScreen(
             text = "Share",
         )
 
-        OutlinedButton(onClick = onEditConfig, modifier = Modifier.fillMaxWidth()) {
+        GhostButton(onClick = onEditConfig, modifier = Modifier.fillMaxWidth()) {
             Text("Change output settings")
         }
 
@@ -221,9 +230,9 @@ fun PreviewScreen(
 @Composable
 private fun ActionButton(filled: Boolean, onClick: () -> Unit, enabled: Boolean, text: String) {
     if (filled) {
-        Button(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(text) }
+        PrimaryButton(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(text) }
     } else {
-        OutlinedButton(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(text) }
+        GhostButton(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(text) }
     }
 }
 
@@ -235,14 +244,16 @@ private fun ExportStatus(uiState: ExportUiState) {
             CircularProgressIndicator()
             Text("Working…")
         }
-        is ExportUiState.Saved -> Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-                Text("Saved ${uiState.files.size} file(s):", style = MaterialTheme.typography.titleSmall)
-                uiState.files.forEach { file ->
-                    Text("• ${file.fileName}", style = MaterialTheme.typography.bodySmall)
-                    file.warning?.let {
-                        Text("  $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-                    }
+        is ExportUiState.Saved -> TealCallout(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                "Saved ${uiState.files.size} file(s):",
+                style = MaterialTheme.typography.labelLarge,
+                color = Teal700,
+            )
+            uiState.files.forEach { file ->
+                Text("• ${file.fileName}", style = MaterialTheme.typography.bodySmall, color = Teal700)
+                file.warning?.let {
+                    Text("  $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                 }
             }
         }

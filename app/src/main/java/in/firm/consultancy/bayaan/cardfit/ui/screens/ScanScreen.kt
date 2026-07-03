@@ -7,12 +7,16 @@ import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,11 +24,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
@@ -32,8 +43,15 @@ import `in`.firm.consultancy.bayaan.cardfit.data.scanner.MlKitDocumentScanner
 import `in`.firm.consultancy.bayaan.cardfit.data.scanner.ScanSlot
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.ScannedSide
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanCard
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.HelpText
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PrimaryButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Midnight200
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextHeading
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextMuted
 import kotlinx.coroutines.launch
 
 /**
@@ -119,28 +137,30 @@ fun ScanScreen(
         title = "Scan card",
         bottomBar = {
             ScaffoldBottomBar {
-                Button(
+                PrimaryButton(
                     onClick = onNext,
                     enabled = session?.front != null,
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text("Next") }
-                OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+                GhostButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
             }
         },
     ) {
         // Hide the helper text once the front is captured, to free vertical space for Next on
         // small (≈5") screens.
         if (session?.front == null) {
-            Text("Capture the front of the card. The back is optional.")
+            HelpText("Capture the front of the card. The back is optional.")
         }
 
-        SideSection(
+        ScanSlotCard(
             label = "Front",
+            required = true,
             side = session?.front,
             onCapture = { requestScan(ScanSlot.FRONT) },
         )
-        SideSection(
-            label = "Back (optional)",
+        ScanSlotCard(
+            label = "Back",
+            required = false,
             side = session?.back,
             onCapture = { requestScan(ScanSlot.BACK) },
         )
@@ -151,29 +171,82 @@ fun ScanScreen(
     }
 }
 
+/** One scan slot: white bordered card with label + Required/Optional, thumbnail or dashed placeholder. */
 @Composable
-private fun SideSection(
+private fun ScanSlotCard(
     label: String,
+    required: Boolean,
     side: ScannedSide?,
     onCapture: () -> Unit,
 ) {
-    Text(text = label, style = MaterialTheme.typography.titleSmall)
-    if (side == null) {
-        Button(onClick = onCapture, modifier = Modifier.fillMaxWidth()) {
-            Text("Capture $label")
+    BayaanCard(contentPadding = PaddingValues(12.dp), modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            Text(
+                label,
+                style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp),
+                color = TextHeading,
+            )
+            Text(
+                if (required) "Required" else "Optional",
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                color = TextMuted,
+            )
         }
-    } else {
-        AsyncImage(
-            model = side.imageUri,
-            contentDescription = "$label preview",
-            contentScale = ContentScale.Fit,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(180.dp)
-                .clip(RoundedCornerShape(8.dp)),
-        )
-        OutlinedButton(onClick = onCapture, modifier = Modifier.fillMaxWidth()) {
-            Text("Retake $label")
+        Spacer(Modifier.height(10.dp))
+        if (side == null) {
+            NotScannedPlaceholder()
+        } else {
+            AsyncImage(
+                model = side.imageUri,
+                contentDescription = "$label preview",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1.585f)
+                    .clip(RoundedCornerShape(8.dp)),
+            )
         }
+        Spacer(Modifier.height(10.dp))
+        if (side == null) {
+            PrimaryButton(onClick = onCapture, modifier = Modifier.fillMaxWidth()) {
+                Text("Scan ${label.lowercase()}")
+            }
+        } else {
+            GhostButton(onClick = onCapture, modifier = Modifier.fillMaxWidth()) {
+                Text("Retake")
+            }
+        }
+    }
+}
+
+/** Empty slot: card-ratio box with a 2dp dashed midnight-200 rounded border. */
+@Composable
+private fun NotScannedPlaceholder() {
+    val density = LocalDensity.current
+    val strokeWidth = with(density) { 2.dp.toPx() }
+    val dash = with(density) { 12.dp.toPx() }
+    val gap = with(density) { 8.dp.toPx() }
+    val corner = with(density) { 8.dp.toPx() }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1.585f)
+            .drawBehind {
+                drawRoundRect(
+                    color = Midnight200,
+                    cornerRadius = CornerRadius(corner, corner),
+                    style = Stroke(
+                        width = strokeWidth,
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(dash, gap), 0f),
+                    ),
+                )
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text("Not scanned yet", style = MaterialTheme.typography.bodySmall, color = TextMuted)
     }
 }

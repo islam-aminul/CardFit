@@ -26,19 +26,14 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -57,9 +52,24 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoSize
 import `in`.firm.consultancy.bayaan.cardfit.ui.PhotoViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanTopBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.CustomSizeDialog
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.HelpText
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.PhotoCropFrame
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PillShape
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PrimaryButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.SectionLabel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.bayaanSwitchColors
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.AccentSoft
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Ink
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Midnight200
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Midnight50
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Midnight600
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Midnight800
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Teal500
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Teal700
 
 /**
  * Photo flow step 2 (CLAUDE.md Phase 13): the single editing page. The photo frame is pinned at the
@@ -69,7 +79,6 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
  * & Auto-enhance, photo-size cards, then Advanced (brightness/contrast/saturation). The source file is
  * never modified.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PhotoEditScreen(
     viewModel: PhotoViewModel,
@@ -102,15 +111,15 @@ fun PhotoEditScreen(
     val shown = (if (compare) comparePreview else preview)?.asImageBitmap()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Edit photo") }) },
+        topBar = { BayaanTopBar("Edit photo") },
         bottomBar = {
             ScaffoldBottomBar {
-                Button(
+                PrimaryButton(
                     onClick = onNext,
                     enabled = state.resolvedSize != null,
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text("Next") }
-                OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+                GhostButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
             }
         },
     ) { padding ->
@@ -138,15 +147,15 @@ fun PhotoEditScreen(
                 HoldCompareButton(active = compare, onHoldChange = { compare = it }, modifier = Modifier.fillMaxWidth())
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    OutlinedButton(onClick = { viewModel.rotateClockwise() }, modifier = Modifier.weight(1f)) {
+                    GhostButton(onClick = { viewModel.rotateClockwise() }, modifier = Modifier.weight(1f)) {
                         Icon(Icons.AutoMirrored.Filled.RotateRight, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.size(8.dp))
                         Text("Rotate")
                     }
-                    OutlinedButton(
+                    GhostButton(
                         onClick = { viewModel.revertEdits(); resetKey++ },
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                        contentColor = MaterialTheme.colorScheme.error,
                     ) { Text("Revert") }
                 }
 
@@ -155,16 +164,12 @@ fun PhotoEditScreen(
                     ToggleCell("Auto-enhance", state.autoEnhance, viewModel::setAutoEnhance, Modifier.weight(1f))
                 }
                 if (state.removeBackground) {
-                    Text(
-                        "Quality varies on hair and edges — turn off to revert.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    HelpText("Quality varies on hair and edges — turn off to revert.")
                 }
 
                 HorizontalDivider()
 
-                Text("Photo size", style = MaterialTheme.typography.titleSmall)
+                SectionLabel("Photo size")
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth(),
@@ -204,11 +209,7 @@ fun PhotoEditScreen(
                     AdjustSlider("Saturation", state.saturationPercent, viewModel::setSaturation)
                 }
 
-                Text(
-                    "Everything is processed on your device — nothing is uploaded.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                HelpText("Everything is processed on your device — nothing is uploaded.")
             }
         }
     }
@@ -234,14 +235,10 @@ fun PhotoEditScreen(
 @Composable
 private fun HoldCompareButton(active: Boolean, onHoldChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
     Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = if (active) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
-        contentColor = if (active) {
-            MaterialTheme.colorScheme.onSecondaryContainer
-        } else {
-            MaterialTheme.colorScheme.primary
-        },
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        shape = PillShape,
+        color = if (active) AccentSoft else Color.Transparent,
+        contentColor = if (active) Teal700 else Midnight800,
+        border = BorderStroke(1.dp, if (active) Teal500 else Midnight200),
         modifier = modifier.pointerInput(Unit) {
             detectTapGestures(onPress = {
                 onHoldChange(true)
@@ -273,9 +270,9 @@ private fun PhotoSizeCard(
 ) {
     Surface(
         shape = RoundedCornerShape(10.dp),
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-        contentColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+        color = if (selected) AccentSoft else Midnight50,
+        contentColor = if (selected) Midnight800 else Midnight600,
+        border = BorderStroke(2.dp, if (selected) Teal500 else Color.Transparent),
         modifier = modifier.clickable(onClick = onClick),
     ) {
         Column(
@@ -301,7 +298,7 @@ private fun PhotoSizeCard(
 
 @Composable
 private fun LocalContentColorOf(selected: Boolean): Color =
-    if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+    if (selected) Midnight800 else Midnight600
 
 /** A compact half-width toggle (label + Switch) so two can share one row. */
 @Composable
@@ -311,8 +308,8 @@ private fun ToggleCell(label: String, checked: Boolean, onChange: (Boolean) -> U
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = onChange)
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = Ink, modifier = Modifier.weight(1f))
+        Switch(checked = checked, onCheckedChange = onChange, colors = bayaanSwitchColors())
     }
 }
 

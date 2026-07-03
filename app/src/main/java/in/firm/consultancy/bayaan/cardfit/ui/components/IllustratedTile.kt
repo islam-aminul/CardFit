@@ -16,18 +16,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.AccentSoft
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Midnight50
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Midnight600
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Midnight800
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Teal500
 
 /**
  * A selectable tile that, unlike the text-only [SelectableCard], shows a schematic OUTCOME
  * illustration above its label so the user can guess what the option produces (CLAUDE.md section 11:
- * "visual tiles, progressive disclosure"). Selected / unselected / disabled visuals match
- * [SelectableCard] for consistency.
+ * "visual tiles, progressive disclosure"). Bayaan states (.bv-illustrated): tonal midnight-50 at
+ * rest, teal 2px border + teal/10 tint when selected, 40% opacity when disabled.
  *
- * [artwork] receives the [accent] colour to draw with — chosen here to read on the tile's current
- * background — so the illustrations from [ExportArtwork] need no theme access of their own.
+ * [artwork] receives the [accent] colour to draw with — the tile's current content colour, so the
+ * illustrations from [ExportArtwork] read correctly on any state without theme access of their own.
  */
 @Composable
 fun IllustratedTile(
@@ -41,27 +47,22 @@ fun IllustratedTile(
     artHeight: Dp = 56.dp,
 ) {
     val container = when {
-        !enabled -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-        selected -> MaterialTheme.colorScheme.primaryContainer
-        else -> MaterialTheme.colorScheme.surfaceVariant
+        !enabled -> Midnight50.copy(alpha = 0.4f)
+        selected -> AccentSoft
+        else -> Midnight50
     }
     val content = when {
-        !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-        selected -> MaterialTheme.colorScheme.onPrimaryContainer
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
+        !enabled -> Midnight600.copy(alpha = 0.4f)
+        selected -> Midnight800
+        else -> Midnight600
     }
-    // The illustration's drawing colour: the primary accent when selected, otherwise the muted
-    // content colour, so the art is visible but doesn't fight the label.
-    val accent = when {
-        !enabled -> content
-        selected -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
+    // Transparent 2dp border at rest so the teal selection ring doesn't shift the layout.
+    val border = BorderStroke(2.dp, if (selected) Teal500 else Color.Transparent)
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = container,
         contentColor = content,
-        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+        border = border,
         modifier = modifier.clickable(enabled = enabled, onClick = onClick),
     ) {
         Column(
@@ -72,11 +73,12 @@ fun IllustratedTile(
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Box(modifier = Modifier.fillMaxWidth().height(artHeight)) {
-                artwork(accent)
+                artwork(content)
             }
             Text(
                 text = label,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center,
             )
             if (subtitle != null) {

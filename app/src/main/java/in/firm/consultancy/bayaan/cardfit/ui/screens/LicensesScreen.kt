@@ -12,13 +12,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,7 +28,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import `in`.firm.consultancy.bayaan.cardfit.data.OssLicenseEntry
 import `in`.firm.consultancy.bayaan.cardfit.data.loadOssLicenses
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanTopBar
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextHeading
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextMuted
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -39,7 +40,6 @@ import kotlinx.coroutines.withContext
  * Offline open-source licenses screen. Reads the bundled attribution data (see [loadOssLicenses]) and
  * lists each library; tapping one expands its full license text. Back is anchored at the bottom.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LicensesScreen(onBack: () -> Unit) {
     val context = LocalContext.current
@@ -51,10 +51,10 @@ fun LicensesScreen(onBack: () -> Unit) {
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Open-source licenses") }) },
+        topBar = { BayaanTopBar("Open-source licenses") },
         bottomBar = {
             ScaffoldBottomBar {
-                OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+                GhostButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
             }
         },
     ) { padding ->
@@ -77,13 +77,13 @@ fun LicensesScreen(onBack: () -> Unit) {
                             .padding(vertical = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Text(entry.name, style = MaterialTheme.typography.titleSmall)
+                        Text(entry.name, style = MaterialTheme.typography.titleSmall, color = TextHeading)
                         if (expanded == entry.name) {
                             SelectionContainer {
                                 Text(
                                     entry.text,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = TextMuted,
                                 )
                             }
                         }

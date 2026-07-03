@@ -9,11 +9,19 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.AccentSoft
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Midnight50
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Midnight600
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Midnight800
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Teal500
 
 /**
- * A small, compact tappable card used for multi-select choices (purpose / paper / format). Highlights
- * when [selected]; dims and ignores taps when not [enabled] (e.g. a paper size beyond the max).
+ * A small, compact tappable chip-card for multi-select choices (.bv-selectable): tonal midnight-50 at
+ * rest; teal 2px border + teal/10 tint + midnight-800 medium text when [selected]; dims to 40% and
+ * ignores taps when not [enabled] (e.g. a paper size beyond the max).
  */
 @Composable
 fun SelectableCard(
@@ -24,26 +32,29 @@ fun SelectableCard(
     enabled: Boolean = true,
 ) {
     val container = when {
-        !enabled -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-        selected -> MaterialTheme.colorScheme.primaryContainer
-        else -> MaterialTheme.colorScheme.surfaceVariant
+        !enabled -> Midnight50.copy(alpha = 0.4f)
+        selected -> AccentSoft
+        else -> Midnight50
     }
     val content = when {
-        !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-        selected -> MaterialTheme.colorScheme.onPrimaryContainer
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
+        !enabled -> Midnight600.copy(alpha = 0.4f)
+        selected -> Midnight800
+        else -> Midnight600
     }
+    // A transparent 2dp border at rest keeps the layout stable when selection adds the teal ring.
+    val border = BorderStroke(2.dp, if (selected) Teal500 else Color.Transparent)
     Surface(
         shape = RoundedCornerShape(10.dp),
         color = container,
         contentColor = content,
-        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+        border = border,
         modifier = modifier.clickable(enabled = enabled, onClick = onClick),
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
         )
     }
 }

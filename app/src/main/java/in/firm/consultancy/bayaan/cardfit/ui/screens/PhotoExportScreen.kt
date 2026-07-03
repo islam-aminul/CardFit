@@ -15,22 +15,18 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +42,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -55,12 +52,26 @@ import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoPaper
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputMode
 import `in`.firm.consultancy.bayaan.cardfit.ui.PhotoExportState
 import `in`.firm.consultancy.bayaan.cardfit.ui.PhotoViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanTextField
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.HelpText
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.IllustratedTile
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.PaperArt
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.PhotoPrintArt
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.PhotoUploadArt
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PrimaryButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.SectionLabel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.TealCallout
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.bayaanSwitchColors
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Ink
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Midnight50
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Midnight800
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Teal600
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Teal700
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextHeading
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextMuted
 
 /**
  * Photo flow step 4 (CLAUDE.md Phase 13): choose Upload and/or Print, set the name and per-mode
@@ -138,15 +149,15 @@ fun PhotoExportScreen(
         bottomBar = {
             ScaffoldBottomBar {
                 if (finishVisible) {
-                    Button(onClick = { newPhoto() }, modifier = Modifier.fillMaxWidth()) { Text("New photo") }
-                    OutlinedButton(onClick = { startFresh() }, modifier = Modifier.fillMaxWidth()) { Text("Home") }
+                    PrimaryButton(onClick = { newPhoto() }, modifier = Modifier.fillMaxWidth()) { Text("New photo") }
+                    GhostButton(onClick = { startFresh() }, modifier = Modifier.fillMaxWidth()) { Text("Home") }
                 }
-                OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+                GhostButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
             }
         },
     ) {
         // --- purpose ---
-        Text("Purpose", style = MaterialTheme.typography.titleSmall)
+        SectionLabel("Purpose")
         Row(
             modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -169,24 +180,21 @@ fun PhotoExportScreen(
             )
         }
 
-        OutlinedTextField(
+        BayaanTextField(
             value = state.name,
             onValueChange = viewModel::setName,
-            label = { Text("Name (optional)") },
-            singleLine = true,
+            label = "Name (optional)",
             modifier = Modifier.fillMaxWidth(),
         )
 
         // --- upload options ---
         if (uploadOn) {
             HorizontalDivider()
-            Text("Upload (JPEG)", style = MaterialTheme.typography.titleSmall)
+            SectionLabel("Upload (JPEG)")
             MaxKbField(state.uploadMaxKb, viewModel::setUploadMaxKb)
             state.resolvedSize?.let { rs ->
-                Text(
+                HelpText(
                     "Single photo, ${trim(rs.widthMm)}×${trim(rs.heightMm)} mm at ${state.uploadDpi} dpi.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -194,8 +202,8 @@ fun PhotoExportScreen(
         // --- print options ---
         if (printOn) {
             HorizontalDivider()
-            Text("Print (single-page PDF)", style = MaterialTheme.typography.titleSmall)
-            Text("Paper", style = MaterialTheme.typography.bodyMedium)
+            SectionLabel("Print (single-page PDF)")
+            Text("Paper", style = MaterialTheme.typography.bodyMedium, color = Ink)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -228,8 +236,8 @@ fun PhotoExportScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("Cut marks", style = MaterialTheme.typography.bodyLarge)
-                Switch(checked = state.cutMarks, onCheckedChange = viewModel::setCutMarks)
+                Text("Cut marks", style = MaterialTheme.typography.bodyLarge, color = Ink)
+                Switch(checked = state.cutMarks, onCheckedChange = viewModel::setCutMarks, colors = bayaanSwitchColors())
             }
             CopiesNotice(copies)
         }
@@ -258,23 +266,22 @@ fun PhotoExportScreen(
 @Composable
 private fun ActionButton(filled: Boolean, onClick: () -> Unit, enabled: Boolean, text: String) {
     if (filled) {
-        Button(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(text) }
+        PrimaryButton(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(text) }
     } else {
-        OutlinedButton(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(text) }
+        GhostButton(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(text) }
     }
 }
 
 @Composable
 private fun MaxKbField(value: Int?, onChange: (Int?) -> Unit) {
     var text by remember { mutableStateOf(value?.toString() ?: "") }
-    OutlinedTextField(
+    BayaanTextField(
         value = text,
         onValueChange = {
             text = it
             onChange(it.trim().toIntOrNull()?.takeIf { n -> n > 0 })
         },
-        label = { Text("Max size (KB) — optional") },
-        singleLine = true,
+        label = "Max size (KB) — optional",
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         modifier = Modifier.fillMaxWidth(),
     )
@@ -301,12 +308,12 @@ private fun CopiesStepper(value: Int, perRow: Int, perPage: Int, onChange: (Int)
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column {
-            Text("Copies", style = MaterialTheme.typography.bodyLarge)
+            Text("Copies", style = MaterialTheme.typography.bodyLarge, color = Ink)
             if (perRow > 0) {
                 Text(
                     "$perRow per row",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = TextMuted,
                 )
             }
         }
@@ -317,16 +324,25 @@ private fun CopiesStepper(value: Int, perRow: Int, perPage: Int, onChange: (Int)
             FilledTonalIconButton(
                 onClick = { onChange(decreased) },
                 enabled = canDecrease,
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = Midnight50,
+                    contentColor = Midnight800,
+                ),
             ) { Icon(Icons.Filled.Remove, contentDescription = "Fewer copies") }
             Text(
                 value.toString(),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp),
+                color = TextHeading,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.widthIn(min = 36.dp),
             )
             FilledTonalIconButton(
                 onClick = { onChange(increased) },
                 enabled = canIncrease,
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = Midnight50,
+                    contentColor = Midnight800,
+                ),
             ) { Icon(Icons.Filled.Add, contentDescription = "More copies") }
         }
     }
@@ -336,7 +352,7 @@ private fun CopiesStepper(value: Int, perRow: Int, perPage: Int, onChange: (Int)
 private fun CopiesNotice(copies: CopiesResult?) {
     when (copies) {
         is CopiesResult.Ok -> copies.message?.let {
-            Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+            Text(it, style = MaterialTheme.typography.bodySmall, color = Teal600)
         }
         is CopiesResult.DoesNotFit -> Text(copies.message, color = MaterialTheme.colorScheme.error)
         is CopiesResult.Invalid -> Text(copies.message, color = MaterialTheme.colorScheme.error)
@@ -352,21 +368,19 @@ private fun PhotoExportStatus(state: PhotoExportState) {
             CircularProgressIndicator()
             Text("Working…")
         }
-        is PhotoExportState.Saved -> Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-                Text("Saved ${state.files.size} file(s):", style = MaterialTheme.typography.titleSmall)
-                state.files.forEach { file ->
-                    Text("• ${file.fileName}", style = MaterialTheme.typography.bodySmall)
-                    file.detail?.let {
-                        Text(
-                            "  $it",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    file.warning?.let {
-                        Text("  $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-                    }
+        is PhotoExportState.Saved -> TealCallout(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                "Saved ${state.files.size} file(s):",
+                style = MaterialTheme.typography.labelLarge,
+                color = Teal700,
+            )
+            state.files.forEach { file ->
+                Text("• ${file.fileName}", style = MaterialTheme.typography.bodySmall, color = Teal700)
+                file.detail?.let {
+                    Text("  $it", style = MaterialTheme.typography.bodySmall, color = TextMuted)
+                }
+                file.warning?.let {
+                    Text("  $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                 }
             }
         }

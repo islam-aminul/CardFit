@@ -7,10 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,19 +34,27 @@ import `in`.firm.consultancy.bayaan.cardfit.domain.model.PaperSize
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppState
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.SettingsViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanTextField
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.CardPrintArt
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.CardUploadArt
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.CustomSizeDialog
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.HelpText
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.IllustratedTile
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.JpegArt
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.OutputChip
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.PaperArt
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.PdfArt
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PrimaryButton
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.SectionLabel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.bayaanSwitchColors
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.outputChipLabel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.SelectableCard
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.formatNumber
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Ink
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextMuted
 
 /**
  * Step 3: configure output. Purpose, paper, and format are all multi-select (small tappable cards);
@@ -88,12 +92,12 @@ fun ConfigureScreen(
         title = "Configure output",
         bottomBar = {
             ScaffoldBottomBar {
-                Button(
+                PrimaryButton(
                     onClick = onNext,
                     enabled = state.hasCompleteSelection,
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text("Next") }
-                OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+                GhostButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
             }
         },
     ) {
@@ -174,11 +178,9 @@ fun ConfigureScreen(
         // --- Trim rounded corners: actual-size cards only (PVC cards have rounded corners) ---
         if (state.session?.cardType?.fitMode == FitMode.ACTUAL_SIZE) {
             ToggleRow("Trim rounded corners", state.roundCorners, viewModel::setRoundCorners)
-            Text(
+            HelpText(
                 "Rounds the corners and removes off-colour corner spots from PVC cards like PAN / " +
                     "Aadhaar / Voter ID. Turn off for square-corner paper cards.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
@@ -197,25 +199,20 @@ fun ConfigureScreen(
                     settingsViewModel.setSearchableText(value)
                 },
             )
-            Text(
-                "Embeds the recognized text into the PDF as a hidden, selectable layer.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            HelpText("Embeds the recognized text into the PDF as a hidden, selectable layer.")
         }
 
         // --- Max upload size: when Upload is selected ---
         if (uploadSelected) {
             SectionLabel("Max upload size")
-            OutlinedTextField(
+            BayaanTextField(
                 value = maxSizeText,
                 onValueChange = { input ->
                     val digits = input.filter { it.isDigit() }.take(7)
                     maxSizeText = digits
                     viewModel.setMaxFileSizeKb(digits.toIntOrNull()?.takeIf { it > 0 })
                 },
-                label = { Text("Size cap in KB (blank = no cap)") },
-                singleLine = true,
+                label = "Size cap in KB (blank = no cap)",
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -274,11 +271,6 @@ private fun OutputFormat.subtitle(): String = when (this) {
 }
 
 @Composable
-private fun SectionLabel(text: String) {
-    Text(text = text, style = MaterialTheme.typography.titleSmall)
-}
-
-@Composable
 private fun ToggleRow(
     label: String,
     checked: Boolean,
@@ -292,13 +284,14 @@ private fun ToggleRow(
     ) {
         Text(
             text = label,
-            color = if (enabled) {
-                MaterialTheme.colorScheme.onSurface
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            },
+            color = if (enabled) Ink else TextMuted,
         )
-        Switch(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            enabled = enabled,
+            colors = bayaanSwitchColors(),
+        )
     }
 }
 
@@ -320,11 +313,9 @@ private fun CardSizeSection(
     }
 
     when {
-        session?.cardType == CardType.CUSTOM -> Text(
+        session?.cardType == CardType.CUSTOM -> HelpText(
             "Custom: ${formatNumber(session.customWidthMm ?: 85.6)} × " +
                 "${formatNumber(session.customHeightMm ?: 54.0)} mm.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         classification != null && session != null && front != null -> {
             val resolved = CardClassifier.resolveSizingMode(
@@ -333,23 +324,15 @@ private fun CardSizeSection(
                 frontHeightPx = front.heightPx,
                 override = state.sizeOverride,
             )
-            Text(
+            HelpText(
                 "Detected: ${if (classification.format == CardFormat.CR80) "CR-80" else "Non-standard"}, " +
                     "${classification.orientation.name.lowercase()} (ratio ${formatNumber(classification.ratio)})",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
+            HelpText(
                 "Sizing: ${sizingSummary(resolved, classification.orientation, session.customWidthMm, session.customHeightMm)}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        else -> Text(
-            "Scan the front to detect the card size.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        else -> HelpText("Scan the front to detect the card size.")
     }
 
     // Offer Force CR-80 only when the detection is a near-CR-80 miss (or it's already selected).
@@ -358,11 +341,7 @@ private fun CardSizeSection(
         CardClassifier.isNearCr80(classification.ratio)
     val showForceCr80 = nearMiss || state.sizeOverride == SizeOverride.FORCE_CR80
     if (nearMiss) {
-        Text(
-            "Looks close to a CR-80 card — tap Force CR-80 if it is one.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        HelpText("Looks close to a CR-80 card — tap Force CR-80 if it is one.")
     }
 
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

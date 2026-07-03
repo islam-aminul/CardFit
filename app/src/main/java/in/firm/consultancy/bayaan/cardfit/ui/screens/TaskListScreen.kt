@@ -1,17 +1,13 @@
 package `in`.firm.consultancy.bayaan.cardfit.ui.screens
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,10 +15,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import `in`.firm.consultancy.bayaan.cardfit.ui.TaskViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanCard
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanTextField
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButtonSmall
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.HelpText
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PrimaryButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Ink
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextHeading
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextMuted
 
 /**
  * Task mode home (CLAUDE.md Phase 14): list saved tasks (persisted, survive restarts), create a new
@@ -41,38 +49,40 @@ fun TaskListScreen(
     ScreenScaffold(title = "Tasks", onBack = onBack) {
         Text("Group several people's documents into one application set, then export them together.")
 
-        Button(onClick = { showCreate = true }, modifier = Modifier.fillMaxWidth()) { Text("New task") }
+        PrimaryButton(onClick = { showCreate = true }, modifier = Modifier.fillMaxWidth()) { Text("New task") }
 
         if (tasks.isEmpty()) {
-            Text(
-                "No tasks yet. Create one to get started.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            HelpText("No tasks yet. Create one to get started.")
         }
 
         tasks.forEach { task ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        viewModel.openTask(task.id)
-                        onOpenTask()
-                    },
+            BayaanCard(
+                onClick = {
+                    viewModel.openTask(task.id)
+                    onOpenTask()
+                },
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(task.name.ifBlank { "(untitled task)" }, style = MaterialTheme.typography.titleMedium)
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            task.name.ifBlank { "(untitled task)" },
+                            style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp),
+                            color = TextHeading,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                         Text(
                             "${task.documents.size} document(s)",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = TextMuted,
                         )
                     }
-                    TextButton(onClick = { pendingDelete = task.id }) { Text("Delete") }
+                    GhostButtonSmall(onClick = { pendingDelete = task.id }) { Text("Delete") }
                 }
             }
         }
@@ -95,15 +105,19 @@ fun TaskListScreen(
     pendingDelete?.let { id ->
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
-            title = { Text("Delete task?") },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = Color.White,
+            titleContentColor = TextHeading,
+            textContentColor = Ink,
+            title = { Text("Delete task?", style = MaterialTheme.typography.titleMedium) },
             text = { Text("This removes the task and all of its captured images from the device.") },
             confirmButton = {
-                TextButton(onClick = {
+                PrimaryButton(onClick = {
                     viewModel.deleteTask(id)
                     pendingDelete = null
                 }) { Text("Delete") }
             },
-            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text("Cancel") } },
+            dismissButton = { GhostButton(onClick = { pendingDelete = null }) { Text("Cancel") } },
         )
     }
 }
@@ -121,19 +135,22 @@ fun NameDialog(
     var text by remember { mutableStateOf(initial) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title) },
+        shape = RoundedCornerShape(16.dp),
+        containerColor = Color.White,
+        titleContentColor = TextHeading,
+        textContentColor = Ink,
+        title = { Text(title, style = MaterialTheme.typography.titleMedium) },
         text = {
-            OutlinedTextField(
+            BayaanTextField(
                 value = text,
                 onValueChange = { text = it },
-                label = { Text(label) },
-                singleLine = true,
+                label = label,
                 modifier = Modifier.fillMaxWidth(),
             )
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(text.trim()) }, enabled = text.isNotBlank()) { Text(confirmLabel) }
+            PrimaryButton(onClick = { onConfirm(text.trim()) }, enabled = text.isNotBlank()) { Text(confirmLabel) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { GhostButton(onClick = onDismiss) { Text("Cancel") } },
     )
 }

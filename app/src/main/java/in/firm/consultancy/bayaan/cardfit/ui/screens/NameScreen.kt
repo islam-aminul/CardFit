@@ -1,10 +1,6 @@
 package `in`.firm.consultancy.bayaan.cardfit.ui.screens
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,6 +11,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.NameSuggestion
 import `in`.firm.consultancy.bayaan.cardfit.ui.NameViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanTextField
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.HelpText
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PrimaryButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 
@@ -49,33 +49,29 @@ fun NameScreen(
         title = "Name on file",
         bottomBar = {
             ScaffoldBottomBar {
-                Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text("Next") }
-                OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+                PrimaryButton(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text("Next") }
+                GhostButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
             }
         },
     ) {
         Text("Used only for the filename. Edit freely; nothing is auto-finalized.")
 
-        OutlinedTextField(
+        BayaanTextField(
             value = state.name,
             onValueChange = viewModel::setName,
-            label = { Text("Holder name (optional)") },
-            singleLine = true,
+            label = "Holder name (optional)",
             modifier = Modifier.fillMaxWidth(),
         )
 
         when (val s = suggestion) {
-            NameSuggestion.Loading -> Text(
-                "Reading the name from your scan…",
-                style = MaterialTheme.typography.bodySmall,
-            )
+            NameSuggestion.Loading -> HelpText("Reading the name from your scan…")
             is NameSuggestion.Ready -> {
                 val message = if (s.name != null) {
                     "Suggested from the scan — edit if it's not quite right."
                 } else {
                     "No name detected — type it in if you'd like."
                 }
-                Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                HelpText(message)
             }
             NameSuggestion.Idle -> Unit
         }

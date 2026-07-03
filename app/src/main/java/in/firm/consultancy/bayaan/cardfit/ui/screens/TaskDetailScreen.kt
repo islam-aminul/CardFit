@@ -5,21 +5,19 @@ import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
@@ -44,8 +43,19 @@ import `in`.firm.consultancy.bayaan.cardfit.domain.task.DocumentEntry
 import `in`.firm.consultancy.bayaan.cardfit.domain.task.EntryKind
 import `in`.firm.consultancy.bayaan.cardfit.ui.TaskExportState
 import `in`.firm.consultancy.bayaan.cardfit.ui.TaskViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanCard
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanTextField
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.HelpText
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PrimaryButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.SectionLabel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.TealCallout
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Ink
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Teal700
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextHeading
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextMuted
 
 /**
  * Task detail (CLAUDE.md Phase 14): name the task, set a default upload cap, add documents/photos,
@@ -79,7 +89,7 @@ fun TaskDetailScreen(
         scrollState = rememberScrollState(),
         bottomBar = {
             ScaffoldBottomBar {
-                OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back to tasks") }
+                GhostButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back to tasks") }
             }
         },
     ) {
@@ -88,28 +98,23 @@ fun TaskDetailScreen(
             return@ScreenScaffold
         }
 
-        OutlinedTextField(
+        BayaanTextField(
             value = task.name,
             onValueChange = viewModel::renameTask,
-            label = { Text("Task name") },
-            singleLine = true,
+            label = "Task name",
             modifier = Modifier.fillMaxWidth(),
         )
         DefaultMaxKbField(task.defaultMaxFileSizeKb, viewModel::setDefaultMaxKb)
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-            Button(onClick = onAddDocument, modifier = Modifier.weight(1f)) { Text("Add document") }
-            Button(onClick = onAddPhoto, modifier = Modifier.weight(1f)) { Text("Add photo") }
+            PrimaryButton(onClick = onAddDocument, modifier = Modifier.weight(1f)) { Text("Add document") }
+            PrimaryButton(onClick = onAddPhoto, modifier = Modifier.weight(1f)) { Text("Add photo") }
         }
 
         HorizontalDivider()
 
         if (task.documents.isEmpty()) {
-            Text(
-                "No documents yet. Add a scanned document or a photo.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            HelpText("No documents yet. Add a scanned document or a photo.")
         }
         task.documents.forEachIndexed { index, entry ->
             EntryRow(
@@ -123,22 +128,22 @@ fun TaskDetailScreen(
 
         HorizontalDivider()
 
-        Text("Export", style = MaterialTheme.typography.titleSmall)
+        SectionLabel("Export")
         val canExport = task.documents.any { it.frontImage != null } && exportState !is TaskExportState.Working
-        Button(onClick = { viewModel.exportIndividual() }, enabled = canExport, modifier = Modifier.fillMaxWidth()) {
+        PrimaryButton(onClick = { viewModel.exportIndividual() }, enabled = canExport, modifier = Modifier.fillMaxWidth()) {
             Text("Individual upload files")
         }
-        Button(onClick = { viewModel.exportCombined(OutputMode.PRINT) }, enabled = canExport, modifier = Modifier.fillMaxWidth()) {
+        PrimaryButton(onClick = { viewModel.exportCombined(OutputMode.PRINT) }, enabled = canExport, modifier = Modifier.fillMaxWidth()) {
             Text("Combined PDF — print (actual size)")
         }
-        Button(onClick = { viewModel.exportCombined(OutputMode.UPLOAD) }, enabled = canExport, modifier = Modifier.fillMaxWidth()) {
+        PrimaryButton(onClick = { viewModel.exportCombined(OutputMode.UPLOAD) }, enabled = canExport, modifier = Modifier.fillMaxWidth()) {
             Text("Combined PDF — upload (fit width)")
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-            OutlinedButton(onClick = { viewModel.shareIndividual() }, enabled = canExport, modifier = Modifier.weight(1f)) {
+            GhostButton(onClick = { viewModel.shareIndividual() }, enabled = canExport, modifier = Modifier.weight(1f)) {
                 Text("Share individual")
             }
-            OutlinedButton(onClick = { viewModel.shareCombined(OutputMode.UPLOAD) }, enabled = canExport, modifier = Modifier.weight(1f)) {
+            GhostButton(onClick = { viewModel.shareCombined(OutputMode.UPLOAD) }, enabled = canExport, modifier = Modifier.weight(1f)) {
                 Text("Share combined")
             }
         }
@@ -167,9 +172,9 @@ private fun EntryRow(
     isLast: Boolean,
     onEdit: () -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    BayaanCard(contentPadding = PaddingValues(12.dp), modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -182,11 +187,15 @@ private fun EntryRow(
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
-                Text(entry.personName.ifBlank { "(no name)" }, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    entry.personName.ifBlank { "(no name)" },
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TextHeading,
+                )
                 Text(
                     typeLabel(entry),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = TextMuted,
                 )
             }
             TextButton(onClick = { viewModel.moveEntry(entry.id, -1) }, enabled = !isFirst) { Text("↑") }
@@ -205,14 +214,13 @@ private fun typeLabel(entry: DocumentEntry): String = when (entry.kind) {
 @Composable
 private fun DefaultMaxKbField(value: Int?, onChange: (Int?) -> Unit) {
     var text by remember(value) { mutableStateOf(value?.toString() ?: "") }
-    OutlinedTextField(
+    BayaanTextField(
         value = text,
         onValueChange = {
             text = it
             onChange(it.trim().toIntOrNull()?.takeIf { n -> n > 0 })
         },
-        label = { Text("Default upload max size (KB) — optional") },
-        singleLine = true,
+        label = "Default upload max size (KB) — optional",
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         modifier = Modifier.fillMaxWidth(),
     )
@@ -226,34 +234,37 @@ private fun EntryEditDialog(
 ) {
     var name by remember { mutableStateOf(entry.personName) }
     var kbText by remember { mutableStateOf(entry.maxFileSizeKbOverride?.toString() ?: "") }
-    androidx.compose.material3.AlertDialog(
+    AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit document") },
+        shape = RoundedCornerShape(16.dp),
+        containerColor = Color.White,
+        titleContentColor = TextHeading,
+        textContentColor = Ink,
+        title = { Text("Edit document", style = MaterialTheme.typography.titleMedium) },
         text = {
             Column {
-                OutlinedTextField(
+                BayaanTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Person name") },
-                    singleLine = true,
+                    label = "Person name",
                     modifier = Modifier.fillMaxWidth(),
                 )
-                OutlinedTextField(
+                Spacer(Modifier.height(8.dp))
+                BayaanTextField(
                     value = kbText,
                     onValueChange = { kbText = it },
-                    label = { Text("Max size override (KB)") },
-                    singleLine = true,
+                    label = "Max size override (KB)",
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
         },
         confirmButton = {
-            TextButton(onClick = {
+            PrimaryButton(onClick = {
                 onSave(name.trim(), kbText.trim().toIntOrNull()?.takeIf { it > 0 })
             }) { Text("Save") }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { GhostButton(onClick = onDismiss) { Text("Cancel") } },
     )
 }
 
@@ -265,14 +276,16 @@ private fun TaskExportStatus(state: TaskExportState) {
             CircularProgressIndicator()
             Text("Working…")
         }
-        is TaskExportState.Saved -> Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-                Text("Saved ${state.files.size} file(s):", style = MaterialTheme.typography.titleSmall)
-                state.files.forEach { file ->
-                    Text("• ${file.fileName}", style = MaterialTheme.typography.bodySmall)
-                    file.warning?.let {
-                        Text("  $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-                    }
+        is TaskExportState.Saved -> TealCallout(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                "Saved ${state.files.size} file(s):",
+                style = MaterialTheme.typography.labelLarge,
+                color = Teal700,
+            )
+            state.files.forEach { file ->
+                Text("• ${file.fileName}", style = MaterialTheme.typography.bodySmall, color = Teal700)
+                file.warning?.let {
+                    Text("  $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                 }
             }
         }
