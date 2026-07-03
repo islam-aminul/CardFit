@@ -1,0 +1,146 @@
+import Container from '../components/Container'
+import Button from '../components/Button'
+import Eyebrow from '../components/Eyebrow'
+import Reveal from '../components/Reveal'
+import ArcField from '../components/ArcField'
+import CaseStudyCard from '../components/CaseStudyCard'
+import CardFitVisual from '../components/CardFitVisual'
+import Tag from '../components/Tag'
+
+export const metadata = {
+  title: 'Work',
+  description:
+    'Our work, including CardFit — a privacy-first, fully-offline Android app for laying out ID cards and photos at true size.',
+}
+
+export default function WorkPage() {
+  return (
+    <>
+      <section className="relative overflow-hidden border-b border-midnight-100 bg-white">
+        <ArcField tone="light" cx={960} cy={260} />
+        <Container className="relative py-20">
+          <Eyebrow>Work</Eyebrow>
+          <h1 className="mt-4 max-w-3xl text-4xl font-semibold text-midnight-800 sm:text-5xl">
+            What we have built.
+          </h1>
+          <p className="mt-5 max-w-xl text-lg text-midnight-600/90">
+            We prove our approach by shipping our own software first — then bring the same standard to client work.
+          </p>
+        </Container>
+      </section>
+
+      <section>
+        <Container className="py-16">
+          {/* Our products */}
+          <Eyebrow>Our products</Eyebrow>
+          <h2 className="mt-3 text-2xl font-semibold text-midnight-800 sm:text-3xl">Built and shipped by us.</h2>
+          <Reveal className="mt-8">
+            <CaseStudyCard
+              href="/cardfit"
+              label="Android app"
+              status="Coming soon to Google Play"
+              title="CardFit"
+              body="A privacy-first, fully-offline app for everyday document paperwork: scan ID cards, build passport-style photos, and export print-ready PDFs at exact physical size — all on-device."
+              tags={['Fully offline', 'No accounts', 'No tracking', 'On-device ML']}
+              visual={<CardFitVisual />}
+            />
+          </Reveal>
+
+          {/* FoundMe — live web product */}
+          <Reveal className="mt-6">
+            <div className="overflow-hidden rounded-3xl border border-midnight-100 bg-white">
+              <div className="grid items-stretch gap-0 lg:grid-cols-[1.3fr_1fr]">
+                <div className="p-8 sm:p-10">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-sage-500/10 px-3 py-1 text-xs font-medium text-sage-700">
+                      <span className="h-1.5 w-1.5 rounded-full bg-sage-500" />
+                      Web app
+                    </span>
+                    <span className="text-xs font-medium text-midnight-600/70">Live now</span>
+                  </div>
+                  <h3 className="mt-5 text-3xl font-semibold text-midnight-800">FoundMe</h3>
+                  <p className="mt-2 text-sm font-medium text-sage-700">Where every moment finds you</p>
+                  <p className="mt-3 max-w-md text-midnight-600/90">
+                    An AI platform that helps event-goers find their own photos: scan a QR code at the event, send a
+                    selfie, and instantly get every shot you are in — shareable straight to WhatsApp, with no app to
+                    install.
+                  </p>
+                  <ul className="mt-6 flex flex-wrap gap-2">
+                    {['Facial recognition', 'QR check-in', 'No app needed', 'Share to WhatsApp'].map((tag) => (
+                      <Tag key={tag} className="list-none">
+                        {tag}
+                      </Tag>
+                    ))}
+                  </ul>
+                  <div className="mt-7 flex flex-wrap gap-5 text-sm">
+                    <a
+                      href="https://www.getfoundme.online/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 font-medium text-teal-600 hover:underline"
+                    >
+                      Visit site ↗
+                    </a>
+                    <a
+                      href="https://github.com/islam-aminul/foundme-app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 font-medium text-midnight-600 hover:underline"
+                    >
+                      View source on GitHub ↗
+                    </a>
+                  </div>
+                </div>
+                <div className="flex items-center justify-center bg-midnight-800 p-8 sm:p-10">
+                  <svg viewBox="0 0 280 220" className="w-full max-w-xs" role="img" aria-label="FoundMe matching a face across event photos">
+                    <rect x="44" y="46" width="150" height="112" rx="12" fill="#2A2F6B" transform="rotate(-7 119 102)" />
+                    <rect x="74" y="52" width="150" height="112" rx="12" fill="#1E2150" stroke="#3a3f78" />
+                    <circle cx="120" cy="96" r="22" fill="#14B8A6" />
+                    <circle cx="120" cy="96" r="22" fill="none" stroke="#5DCAA5" strokeWidth="3" />
+                    <path d="M150 70 h14 v14 M150 122 h14 v-14 M204 70 h-14 v14 M204 122 h-14 v-14" fill="none" stroke="#2DC7B5" strokeWidth="2.5" strokeLinecap="round" />
+                    <rect x="98" y="128" width="100" height="8" rx="4" fill="#5DCAA5" />
+                    <rect x="98" y="142" width="64" height="6" rx="3" fill="#0B7568" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+
+          <div className="mt-8 rounded-2xl border border-dashed border-midnight-200 p-8">
+            <h3 className="text-lg font-semibold text-midnight-800">More products on the way</h3>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-midnight-600/90">
+              CardFit and FoundMe are the start — more apps are in the pipeline. Want to be notified when the next one
+              ships? Reach out and we will keep you posted.
+            </p>
+          </div>
+
+          {/* Client engagements */}
+          <div className="mt-16">
+            <Eyebrow tone="sage">Client engagements</Eyebrow>
+            <h2 className="mt-3 text-2xl font-semibold text-midnight-800 sm:text-3xl">Delivered privately.</h2>
+            <div className="mt-8 grid gap-6 sm:grid-cols-2">
+              <div className="rounded-2xl border border-midnight-100 bg-white p-8">
+                <h3 className="text-lg font-semibold text-midnight-800">Under NDA</h3>
+                <p className="mt-3 text-sm leading-relaxed text-midnight-600/90">
+                  Most of our consulting and build work is delivered privately. We are happy to walk you through
+                  relevant experience on a call.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-midnight-100 bg-white p-8">
+                <h3 className="text-lg font-semibold text-midnight-800">The same standard</h3>
+                <p className="mt-3 text-sm leading-relaxed text-midnight-600/90">
+                  Whatever the brief, client work is held to the privacy-first, clarity-first bar we set on our own
+                  products.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-12 flex justify-center">
+            <Button href="/contact">Start a project with us</Button>
+          </div>
+        </Container>
+      </section>
+    </>
+  )
+}

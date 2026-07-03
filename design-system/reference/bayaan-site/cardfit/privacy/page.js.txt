@@ -1,0 +1,96 @@
+import Link from 'next/link'
+import Container from '../../components/Container'
+
+export const metadata = {
+  title: 'CardFit — Privacy Policy',
+  description:
+    'CardFit does all of its work on your device and does not collect, transmit, or share any of your personal data.',
+  alternates: { canonical: '/cardfit/privacy' },
+  robots: { index: true, follow: true },
+}
+
+const sections = [
+  {
+    heading: '1. No data collection',
+    body: 'We do not collect, store on any server, or transmit your personal data. The app has no user accounts and no login, and contains no analytics, advertising, or tracking of any kind. The app does not request internet access permission.',
+  },
+  {
+    heading: '2. What the app processes, and where',
+    body: 'CardFit lets you scan identity cards and capture or select photos, lay them out, and export them as PDF or JPEG files. All of this — image capture, cropping, text recognition, optional background removal, layout, and file generation — happens entirely on your device. Your documents and photos never leave your device through the app.',
+  },
+  {
+    heading: '3. Camera and photos',
+    body: 'The camera permission is used only to capture documents and photos at your request. Images you capture or select are processed on your device and saved only where you choose (such as your device’s Downloads or Documents). The app does not upload them anywhere.',
+  },
+  {
+    heading: '4. On-device intelligence',
+    body: 'CardFit uses Google’s on-device machine-learning components for document scanning, text recognition, and optional background removal. These run locally on your device. The underlying models are provided and updated by Google Play services as part of your device’s platform; the app itself does not send your images or text to any server.',
+  },
+  {
+    heading: '5. Files and sharing',
+    body: 'Exported files are stored on your device. If you choose to share or upload a file, that happens through whatever other app you select (for example your email app or a web browser). From that point, the receiving app’s and service’s own policies apply, not ours.',
+  },
+  {
+    heading: '6. Task data',
+    body: 'If you use Task mode, the documents, photos, and names you enter are stored locally on your device only. They are never transmitted. Deleting a task, or uninstalling the app, removes this data from your device.',
+  },
+  {
+    heading: '7. Children',
+    body: 'CardFit is a utility for handling official documents and is intended for adults. It is not directed at children.',
+  },
+  {
+    heading: '8. Your control and data retention',
+    body: 'Because all data stays on your device, you remain in full control of it. Uninstalling the app removes its data. We hold no copy of anything you process.',
+  },
+  {
+    heading: '9. Changes to this policy',
+    body: 'We may update this policy from time to time. The “Last updated” date above reflects the latest version.',
+  },
+]
+
+export default function CardFitPrivacyPage() {
+  return (
+    <section className="bg-white">
+      <Container className="py-16 sm:py-20">
+        <div className="mx-auto max-w-prose">
+          <Link href="/cardfit" className="text-sm font-medium text-teal-600 hover:underline">
+            ← Back to CardFit
+          </Link>
+
+          <h1 className="mt-6 text-4xl font-semibold text-midnight-800">Privacy Policy for CardFit</h1>
+          <p className="mt-2 text-sm text-midnight-600/70">Last updated: 13 June 2026</p>
+
+          <p className="mt-8 rounded-2xl bg-paper p-6 text-lg leading-relaxed text-midnight-800">
+            CardFit is developed and published by Bayaan Consultancy. The short version: CardFit does all of its work on
+            your device and does not collect, transmit, or share any of your personal data.
+          </p>
+
+          <div className="mt-10 space-y-8">
+            {sections.map((s) => (
+              <div key={s.heading}>
+                <h2 className="text-xl font-semibold text-midnight-800">{s.heading}</h2>
+                <p className="mt-2 leading-relaxed text-midnight-600/90">{s.body}</p>
+              </div>
+            ))}
+
+            <div>
+              <h2 className="text-xl font-semibold text-midnight-800">10. Contact</h2>
+              <p className="mt-2 leading-relaxed text-midnight-600/90">
+                Bayaan Consultancy —{' '}
+                <a href="mailto:bayaan@consultancy.firm.in" className="text-teal-600 hover:underline">
+                  bayaan@consultancy.firm.in
+                </a>
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-12 border-t border-midnight-100 pt-6 text-sm leading-relaxed text-midnight-600/70">
+            CardFit is an independent utility. It is not affiliated with, endorsed by, or connected to the Government of
+            India, the Election Commission of India, UIDAI, the Income Tax Department, or any other authority. All card
+            artwork in the app is generic and illustrative.
+          </p>
+        </div>
+      </Container>
+    </section>
+  )
+}

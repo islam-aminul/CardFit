@@ -1,0 +1,41 @@
+import Link from 'next/link'
+import Tag from './Tag'
+
+// Flagship / case-study card. The visual sits on a midnight panel so the
+// product reads as a real app, not a brochure block.
+export default function CaseStudyCard({ href, label, status, title, body, tags = [], visual }) {
+  return (
+    <Link
+      href={href}
+      className="group block overflow-hidden rounded-3xl border border-midnight-100 bg-white transition-colors hover:border-midnight-200"
+    >
+      <div className="grid items-stretch gap-0 lg:grid-cols-[1.3fr_1fr]">
+        <div className="p-8 sm:p-10">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="inline-flex items-center gap-2 rounded-full bg-teal-500/10 px-3 py-1 text-xs font-medium text-teal-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
+              {label}
+            </span>
+            {status && <span className="text-xs font-medium text-midnight-600/70">{status}</span>}
+          </div>
+          <h3 className="mt-5 text-3xl font-semibold text-midnight-800">{title}</h3>
+          <p className="mt-3 max-w-md text-midnight-600/90">{body}</p>
+          {tags.length > 0 && (
+            <ul className="mt-6 flex flex-wrap gap-2">
+              {tags.map((tag) => (
+                <Tag key={tag} className="list-none">
+                  {tag}
+                </Tag>
+              ))}
+            </ul>
+          )}
+          <span className="mt-7 inline-flex items-center gap-2 text-sm font-medium text-teal-600">
+            View the product
+            <span className="transition-transform group-hover:translate-x-1">→</span>
+          </span>
+        </div>
+        <div className="flex items-center justify-center bg-midnight-800 p-8 sm:p-10">{visual}</div>
+      </div>
+    </Link>
+  )
+}

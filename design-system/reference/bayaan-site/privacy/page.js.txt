@@ -1,0 +1,86 @@
+import Container from '../components/Container'
+import Eyebrow from '../components/Eyebrow'
+
+export const metadata = {
+  title: 'Privacy',
+  description:
+    'How the Bayaan Consultancy website handles data: minimal analytics, a contact form you choose to use, and nothing sold or shared.',
+  alternates: { canonical: '/privacy' },
+  robots: { index: true, follow: true },
+}
+
+const sections = [
+  {
+    heading: '1. The short version',
+    body: 'This is our marketing website. We keep data collection to a minimum, we never sell or share your information, and the only personal data we receive is what you choose to send us through the contact form.',
+  },
+  {
+    heading: '2. Analytics',
+    body: 'We use Microsoft Clarity to understand, in aggregate, how the site is used so we can improve it. Clarity records anonymised usage such as pages visited and general interaction patterns. We do not use it to identify you, and we do not combine it with the contents of your messages. If your browser sends a Do Not Track / Global Privacy Control signal, please treat that as our cue to minimise — and you are always welcome to block analytics with your browser or an extension.',
+  },
+  {
+    heading: '3. The contact form',
+    body: 'If you use the contact form, the name, email, and message you submit are sent to us via Netlify Forms (our hosting provider) and delivered to our inbox so we can reply. We use these details only to respond to you. We do not add you to any marketing list.',
+  },
+  {
+    heading: '4. Cookies & local storage',
+    body: 'The site itself does not set advertising cookies. Our analytics provider may set cookies or use local storage to function. No cookies are required to read the site.',
+  },
+  {
+    heading: '5. Data we never collect here',
+    body: 'No accounts, no passwords, no payment details. CardFit, our app, is covered by its own privacy policy — and it collects nothing at all.',
+  },
+  {
+    heading: '6. Your choices',
+    body: 'You can browse without contacting us, block analytics in your browser, and ask us to delete any message you have sent. Just email us and we will take care of it.',
+  },
+  {
+    heading: '7. Changes',
+    body: 'We may update this policy from time to time. The “Last updated” date below reflects the latest version.',
+  },
+]
+
+export default function PrivacyPage() {
+  return (
+    <section className="bg-white">
+      <Container className="py-16 sm:py-20">
+        <div className="mx-auto max-w-prose">
+          <Eyebrow>Privacy</Eyebrow>
+          <h1 className="mt-4 text-4xl font-semibold text-midnight-800">Website privacy</h1>
+          <p className="mt-2 text-sm text-midnight-600/70">Last updated: 28 June 2026</p>
+
+          <p className="mt-8 rounded-2xl bg-paper p-6 text-lg leading-relaxed text-midnight-800">
+            We hold ourselves to the same privacy-first standard on this site that we build into our products: collect
+            little, be honest about it, and never sell or share what you share with us.
+          </p>
+
+          <div className="mt-10 space-y-8">
+            {sections.map((s) => (
+              <div key={s.heading}>
+                <h2 className="text-xl font-semibold text-midnight-800">{s.heading}</h2>
+                <p className="mt-2 leading-relaxed text-midnight-600/90">{s.body}</p>
+              </div>
+            ))}
+
+            <div>
+              <h2 className="text-xl font-semibold text-midnight-800">8. Contact</h2>
+              <p className="mt-2 leading-relaxed text-midnight-600/90">
+                Bayaan Consultancy —{' '}
+                <a href="mailto:bayaan@consultancy.firm.in" className="text-teal-600 hover:underline">
+                  bayaan@consultancy.firm.in
+                </a>
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-12 border-t border-midnight-100 pt-6 text-sm leading-relaxed text-midnight-600/70">
+            Looking for the CardFit app’s privacy policy?{' '}
+            <a href="/cardfit/privacy" className="text-teal-600 hover:underline">
+              Read it here →
+            </a>
+          </p>
+        </div>
+      </Container>
+    </section>
+  )
+}

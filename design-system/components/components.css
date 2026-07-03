@@ -1,0 +1,324 @@
+/* Bayaan component classes — one source of truth for both the web primitives
+   (lifted from the site's Tailwind markup) and the Bayaan-restyled CardFit app
+   primitives. All values reference tokens. Prefix: .bv- */
+
+/* ---------- Buttons (site Button.js) ---------- */
+.bv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-full);
+  padding: 12px var(--space-6);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  line-height: 20px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast);
+}
+.bv-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.bv-btn--primary { background: var(--color-midnight-800); color: #fff; }
+.bv-btn--primary:hover { background: var(--color-midnight-700); }
+.bv-btn--ghost {
+  background: transparent;
+  border: 1px solid var(--color-midnight-200);
+  color: var(--color-midnight-800);
+  padding: 11px calc(var(--space-6) - 1px);
+}
+.bv-btn--ghost:hover { border-color: var(--color-midnight-800); background: #fff; }
+.bv-btn--teal { background: var(--color-teal-500); color: var(--color-midnight-900); }
+.bv-btn--teal:hover { background: var(--color-teal-400); }
+.bv-btn--sage { background: var(--color-sage-600); color: #fff; }
+.bv-btn--sage:hover { background: var(--color-sage-500); }
+.bv-btn--light { background: #fff; color: var(--color-midnight-800); }
+.bv-btn--light:hover { background: var(--color-paper); }
+.bv-btn--block { width: 100%; }
+
+/* ---------- Eyebrow (site Eyebrow.js) ---------- */
+.bv-eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+  margin: 0;
+}
+.bv-eyebrow--teal { color: var(--color-teal-600); }
+.bv-eyebrow--sage { color: var(--color-sage-600); }
+.bv-eyebrow--light { color: var(--color-teal-300); }
+
+/* ---------- Tag (site Tag.js) ---------- */
+.bv-tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  padding: 4px var(--space-3);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: var(--color-midnight-600);
+}
+
+/* ---------- Status pill (case-study label / hero status) ---------- */
+.bv-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--accent-soft);
+  padding: 4px var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--color-teal-700);
+}
+.bv-pill .bv-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--color-teal-500); }
+
+/* ---------- ValueBlock accent bar ---------- */
+.bv-bar { height: 4px; width: 40px; border-radius: var(--radius-full); }
+.bv-bar--teal { background: var(--color-teal-500); }
+.bv-bar--sage { background: var(--color-sage-500); }
+
+/* ---------- Cards (site ServiceCard / CaseStudyCard) ---------- */
+.bv-card {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+  padding: var(--space-6);
+  transition: border-color var(--duration-fast);
+}
+.bv-card:hover { border-color: var(--border-hover); }
+.bv-icontile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  width: 44px;
+  border-radius: var(--radius-lg);
+  background: var(--color-midnight-50);
+  transition: background-color var(--duration-fast);
+}
+.bv-card:hover .bv-icontile { background: var(--accent-soft); }
+.bv-case-card {
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--duration-fast);
+}
+.bv-case-card:hover { border-color: var(--border-hover); }
+
+/* =========================================================
+   CardFit app primitives — Bayaan-restyled (from ui/components/*.kt)
+   Mobile scale: 16px screen padding, 12px gaps.
+   ========================================================= */
+
+/* ---------- App top bar (ScreenScaffold) ---------- */
+.bv-app-topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 14px var(--app-screen-pad);
+  background: var(--surface-page);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.bv-app-topbar h1 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: var(--weight-semibold);
+  color: var(--text-heading);
+  margin: 0;
+}
+.bv-app-bottombar {
+  padding: 12px var(--app-screen-pad);
+  background: var(--surface-card);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* ---------- Home tile (HomeScreen.HomeTile) ---------- */
+.bv-home-tile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+  padding: var(--space-4);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--duration-fast);
+  font-family: var(--font-sans);
+}
+.bv-home-tile:hover { border-color: var(--border-hover); }
+.bv-home-tile:active { border-color: var(--color-teal-500); }
+.bv-home-tile .bv-home-tile__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  flex: none;
+}
+
+/* ---------- Selectable card (SelectableCard.kt) ---------- */
+.bv-selectable {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-md);
+  border: var(--border-w-selected) solid transparent;
+  background: var(--color-midnight-50);
+  color: var(--color-midnight-600);
+  padding: 8px 14px;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background-color var(--duration-fast), border-color var(--duration-fast);
+}
+.bv-selectable[data-selected="true"] {
+  background: var(--accent-soft);
+  border-color: var(--color-teal-500);
+  color: var(--color-midnight-800);
+  font-weight: var(--weight-medium);
+}
+.bv-selectable[data-disabled="true"] {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* ---------- Illustrated tile (IllustratedTile.kt) ---------- */
+.bv-illustrated {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-lg);
+  border: var(--border-w-selected) solid transparent;
+  background: var(--color-midnight-50);
+  color: var(--color-midnight-600);
+  padding: 12px 10px;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  text-align: center;
+  transition: background-color var(--duration-fast), border-color var(--duration-fast);
+}
+.bv-illustrated[data-selected="true"] {
+  background: var(--accent-soft);
+  border-color: var(--color-teal-500);
+  color: var(--color-midnight-800);
+}
+.bv-illustrated[data-disabled="true"] { opacity: 0.4; cursor: default; pointer-events: none; }
+.bv-illustrated .bv-illustrated__label { font-size: var(--text-sm); font-weight: var(--weight-semibold); }
+.bv-illustrated .bv-illustrated__subtitle { font-size: var(--text-xs); opacity: 0.85; }
+
+/* ---------- Output chip (OutputChip.kt) ---------- */
+.bv-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--color-teal-700);
+  padding: 6px var(--space-3);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Switch (settings / configure toggles) ---------- */
+.bv-switch {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border-radius: 999px;
+  border: none;
+  background: var(--color-midnight-200);
+  cursor: pointer;
+  padding: 0;
+  flex: none;
+  transition: background-color var(--duration-fast);
+}
+.bv-switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #fff;
+  transition: transform var(--duration-fast) var(--ease-signal);
+}
+.bv-switch[data-on="true"] { background: var(--color-teal-500); }
+.bv-switch[data-on="true"]::after { transform: translateX(18px); }
+
+/* ---------- Stepper (photo copies − / value / +) ---------- */
+.bv-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px solid var(--color-midnight-200);
+  border-radius: var(--radius-full);
+  padding: 4px;
+  background: var(--surface-card);
+}
+.bv-stepper button {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: none;
+  background: var(--color-midnight-50);
+  color: var(--color-midnight-800);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--duration-fast);
+}
+.bv-stepper button:hover { background: var(--accent-soft); }
+.bv-stepper .bv-stepper__value {
+  min-width: 36px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-heading);
+}
+
+/* ---------- Text field ---------- */
+.bv-field { display: flex; flex-direction: column; gap: 6px; font-family: var(--font-sans); }
+.bv-field label {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-midnight-600);
+}
+.bv-field input {
+  border: 1px solid var(--color-midnight-200);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  color: var(--color-ink);
+  background: var(--surface-card);
+  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+}
+.bv-field input:focus {
+  outline: none;
+  border-color: var(--color-teal-500);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.bv-field .bv-field__help { font-size: var(--text-xs); color: var(--text-muted); }

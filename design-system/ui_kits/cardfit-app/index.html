@@ -1,0 +1,51 @@
+<!-- @dsCard group="CardFit App" viewport="420x780" name="CardFit app" subtitle="Bayaan-redesigned document flow — interactive click-through" -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CardFit — Bayaan redesign</title>
+<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  html, body { height: 100%; }
+  body { display: flex; align-items: center; justify-content: center; background: var(--color-midnight-50); }
+  .material-symbols-rounded { font-size: 26px; }
+  .phone { width: 390px; border-radius: 28px; border: 1px solid var(--border-hover); background: var(--surface-page); overflow: hidden; position: relative; box-shadow: var(--shadow-float); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="CardFitScreens.jsx"></script>
+<script type="text/babel">
+const initialApp = {
+  cardType: 'pan', front: false, back: false,
+  modes: new Set(['Print']), papers: new Set(['A4']), formats: new Set(['PDF']),
+  grayscale: false, roundCorners: true, cropMarks: false, searchable: true,
+  sizeCap: '', sizeOverride: 'Automatic', name: 'ANITA SHARMA',
+}
+
+function App() {
+  const [screen, setScreen] = React.useState('home')
+  const [app, setApp] = React.useState(initialApp)
+  const reset = () => setApp({ ...initialApp, modes: new Set(['Print']), papers: new Set(['A4']), formats: new Set(['PDF']) })
+  const go = setScreen
+  let view
+  if (screen === 'home') view = <CfHome go={go} />
+  else if (screen === 'cardType') view = <CfCardType go={go} setApp={setApp} />
+  else if (screen === 'scan') view = <CfScan go={go} app={app} setApp={setApp} />
+  else if (screen === 'configure') view = <CfConfigure go={go} app={app} setApp={setApp} />
+  else if (screen === 'name') view = <CfName go={go} app={app} setApp={setApp} />
+  else if (screen === 'preview') view = <CfPreview go={go} app={app} setApp={setApp} reset={reset} />
+  else if (screen === 'tasks') view = <CfTasks go={go} />
+  else if (screen === 'photo') view = <CfPlaceholder go={go} title="Photo" body="Photo flow (source → edit studio → export) — see PhotoEditScreen.kt / PhotoExportScreen.kt in the CardFit codebase." />
+  else view = <CfAbout go={go} />
+  return <div className="phone" data-screen-label={screen}>{view}</div>
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />)
+</script>
+</body>
+</html>

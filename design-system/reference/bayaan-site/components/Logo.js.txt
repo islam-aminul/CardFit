@@ -1,0 +1,18 @@
+import VoiceArcsMark from './VoiceArcsMark'
+
+// Full logo lockup: Voice arcs mark + "Bayaan / CONSULTANCY" wordmark.
+export default function Logo({ light = false, className = '' }) {
+  return (
+    <span className={`inline-flex items-center gap-2.5 ${className}`}>
+      <VoiceArcsMark className="h-9 w-9 shrink-0" light={light} />
+      <span className="flex flex-col leading-none">
+        <span className={`font-display text-xl font-semibold tracking-tight ${light ? 'text-white' : 'text-midnight-800'}`}>
+          Bayaan
+        </span>
+        <span className="mt-1 text-[10px] font-medium tracking-[0.28em] text-teal-500">
+          CONSULTANCY
+        </span>
+      </span>
+    </span>
+  )
+}

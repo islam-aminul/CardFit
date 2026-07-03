@@ -1,0 +1,65 @@
+import React from 'react'
+
+// The Voice-Arc field: concentric arcs radiating from a focal dot —
+// bayaan, a clear signal carried outward. Used behind heroes and CTAs.
+// Ported verbatim from the site's ArcField.js. Decorative only.
+const arcFieldTones = {
+  light: {
+    glow: '#14B8A6',
+    glowOpacity: 0.14,
+    dot: '#14B8A6',
+    arcs: [
+      { r: 150, stroke: '#2DC7B5', w: 2, o: 0.85 },
+      { r: 210, stroke: '#5DCAA5', w: 1.8, o: 0.7 },
+      { r: 275, stroke: '#5DCAA5', w: 1.6, o: 0.55 },
+      { r: 345, stroke: '#8E96C4', w: 1.5, o: 0.5 },
+      { r: 420, stroke: '#B9BEDC', w: 1.3, o: 0.45 },
+      { r: 500, stroke: '#B9BEDC', w: 1.2, o: 0.38 },
+      { r: 585, stroke: '#D9DCEC', w: 1, o: 0.35 },
+    ],
+  },
+  dark: {
+    glow: '#14B8A6',
+    glowOpacity: 0.2,
+    dot: '#14B8A6',
+    arcs: [
+      { r: 150, stroke: '#2DC7B5', w: 2, o: 0.9 },
+      { r: 210, stroke: '#5DCAA5', w: 1.8, o: 0.75 },
+      { r: 275, stroke: '#93AC99', w: 1.6, o: 0.6 },
+      { r: 345, stroke: '#6B8A74', w: 1.5, o: 0.5 },
+      { r: 420, stroke: '#8E96C4', w: 1.3, o: 0.45 },
+      { r: 500, stroke: '#B9BEDC', w: 1.2, o: 0.32 },
+      { r: 585, stroke: '#D9DCEC', w: 1, o: 0.22 },
+    ],
+  },
+}
+
+export function ArcField({ tone = 'light', cx = 880, cy = 300, className = '', style }) {
+  const t = arcFieldTones[tone] ?? arcFieldTones.light
+  const gid = `arc-glow-${tone}-${cx}-${cy}`
+  return (
+    <svg
+      viewBox="0 0 1040 560"
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true"
+      className={className}
+      style={{ pointerEvents: 'none', position: 'absolute', inset: 0, height: '100%', width: '100%', ...style }}
+    >
+      <defs>
+        <radialGradient id={gid} cx={cx} cy={cy} r="320" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={t.glow} stopOpacity={t.glowOpacity} />
+          <stop offset="55%" stopColor={t.glow} stopOpacity={t.glowOpacity * 0.28} />
+          <stop offset="100%" stopColor={t.glow} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="1040" height="560" fill={`url(#${gid})`} />
+      <g fill="none" strokeLinecap="round" transform={`translate(${cx} ${cy})`}>
+        {t.arcs.map((a, i) => (
+          <path key={i} d={`M0 -${a.r} A${a.r} ${a.r} 0 0 1 0 ${a.r}`} stroke={a.stroke} strokeWidth={a.w} opacity={a.o} />
+        ))}
+      </g>
+      <circle cx={cx} cy={cy} r="7" fill={t.dot} />
+      <circle cx={cx} cy={cy} r="15" fill="none" stroke={t.dot} strokeWidth="1.5" opacity="0.35" />
+    </svg>
+  )
+}

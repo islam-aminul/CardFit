@@ -1,0 +1,16 @@
+/* Radii, borders, shadows. The Bayaan site uses borders — not shadows — for edges. */
+:root {
+  --radius-sm: 8px;      /* output chips, small controls (app) */
+  --radius-md: 10px;     /* selectable cards (app) */
+  --radius-lg: 12px;     /* icon tiles, illustrated tiles */
+  --radius-xl: 16px;     /* cards (rounded-2xl) */
+  --radius-2xl: 24px;    /* feature/CTA panels (rounded-3xl) */
+  --radius-full: 9999px; /* buttons, pills, tags, accent bars */
+
+  --border-w: 1px;
+  --border-w-selected: 2px;   /* app selected-tile border */
+
+  /* Shadows: essentially none on the site; keep a whisper for floating UI only. */
+  --shadow-none: none;
+  --shadow-float: 0 8px 30px rgba(22, 24, 58, 0.12);
+}

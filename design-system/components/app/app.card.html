@@ -1,0 +1,61 @@
+<!-- @dsCard group="Components" viewport="700x520" name="App primitives" subtitle="ScreenScaffold, HomeTile, tiles, chips, switch, field, CardArtwork" -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>.material-symbols-rounded{font-size:26px}</style>
+</head>
+<body style="padding:16px;background:var(--surface-page)">
+<div id="root"></div>
+<script type="text/babel">
+const { HomeTile, SelectableCard, IllustratedTile, OutputChip, AppSwitch, AppTextField, CardArtwork } = window.BayaanCardFitDesignSystem_94a7f5
+
+function Demo() {
+  const [sel, setSel] = React.useState('Automatic')
+  const [on, setOn] = React.useState(true)
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <HomeTile title="Documents & cards" subtitle="Scan any document or ID — both sides on one page."
+          icon={<span className="material-symbols-rounded">document_scanner</span>} />
+        <div style={{ display: 'flex', gap: 8 }}>
+          {['Automatic', 'Force CR-80', 'Custom'].map((l) => (
+            <SelectableCard key={l} label={l} selected={sel === l} onClick={() => setSel(l)} />
+          ))}
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <OutputChip>Print · A4 · PDF</OutputChip>
+          <OutputChip>Upload · JPEG</OutputChip>
+        </div>
+        <AppSwitch label="Grayscale" checked={on} onChange={setOn} />
+        <AppTextField label="Max upload size" placeholder="Size cap in KB" help="Blank = no cap" />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <IllustratedTile label="Print" subtitle="Both sides, true size" selected style={{ flex: 1 }}
+            artwork={<CardArtwork type="pan" style={{ height: 44, width: 'auto', margin: '0 auto' }} />} />
+          <IllustratedTile label="Upload" subtitle="Compressed to a cap" style={{ flex: 1 }}
+            artwork={<CardArtwork type="free" style={{ height: 44, width: 'auto', margin: '0 auto' }} />} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+          <CardArtwork type="pan" />
+          <CardArtwork type="aadhaar" />
+          <CardArtwork type="epic" />
+          <CardArtwork type="admit" />
+          <CardArtwork type="custom" />
+          <CardArtwork type="free" />
+        </div>
+      </div>
+    </div>
+  )
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo />)
+</script>
+</body>
+</html>

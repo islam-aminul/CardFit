@@ -1,0 +1,46 @@
+import './globals.css'
+import { Inter, Space_Grotesk } from 'next/font/google'
+import ClarityProvider from './components/ClarityProvider'
+import Header from './components/Header'
+import Footer from './components/Footer'
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
+const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space', display: 'swap' })
+
+export const metadata = {
+  metadataBase: new URL('https://bayaan.consultancy.firm.in'),
+  title: {
+    default: 'Bayaan Consultancy — Product studio & software consultancy',
+    template: '%s · Bayaan Consultancy',
+  },
+  description:
+    'Bayaan Consultancy is a product studio and software consultancy. We design, build, and ship web and mobile software — including our own apps like CardFit.',
+  keywords: ['software consultancy', 'product studio', 'web development', 'mobile apps', 'CardFit', 'Bayaan'],
+  openGraph: {
+    title: 'Bayaan Consultancy — Product studio & software consultancy',
+    description:
+      'We design, build, and ship web and mobile software — including our own apps like CardFit.',
+    url: 'https://bayaan.consultancy.firm.in',
+    siteName: 'Bayaan Consultancy',
+    type: 'website',
+  },
+}
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+      <body className="flex min-h-screen flex-col">
+        {/* No-JS fallback: scroll-reveal elements start hidden via framer-motion;
+            force them visible when scripting is off so content is never lost. */}
+        <noscript>
+          <style>{`[data-reveal]{opacity:1 !important;transform:none !important}`}</style>
+        </noscript>
+        <ClarityProvider>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </ClarityProvider>
+      </body>
+    </html>
+  )
+}

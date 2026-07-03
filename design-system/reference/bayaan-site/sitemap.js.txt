@@ -1,0 +1,14 @@
+const base = 'https://bayaan.consultancy.firm.in'
+
+export const dynamic = 'force-static'
+
+export default function sitemap() {
+  const routes = ['', '/services', '/work', '/about', '/contact', '/cardfit', '/cardfit/privacy', '/privacy']
+  const now = new Date()
+  return routes.map((path) => ({
+    url: `${base}${path}`,
+    lastModified: now,
+    changeFrequency: 'monthly',
+    priority: path === '' ? 1 : 0.7,
+  }))
+}

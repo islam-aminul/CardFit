@@ -1,0 +1,55 @@
+import Container from '../components/Container'
+import ContactForm from '../components/ContactForm'
+import Eyebrow from '../components/Eyebrow'
+import ArcField from '../components/ArcField'
+
+export const metadata = {
+  title: 'Contact',
+  description: 'Get in touch with Bayaan Consultancy about your project, or to ask us anything.',
+}
+
+export default function ContactPage() {
+  return (
+    <section className="relative overflow-hidden border-b border-midnight-100 bg-white">
+      <ArcField tone="light" cx={120} cy={220} />
+      <Container className="relative py-20">
+        <div className="grid gap-14 lg:grid-cols-[1fr_1.1fr]">
+          {/* Left: intro + direct details */}
+          <div>
+            <Eyebrow>Contact</Eyebrow>
+            <h1 className="mt-4 text-4xl font-semibold text-midnight-800 sm:text-5xl">Let&apos;s talk.</h1>
+            <p className="mt-5 max-w-md text-lg text-midnight-600/90">
+              Tell us about your project, or ask us anything. We read every message and reply with clear next steps.
+            </p>
+
+            <dl className="mt-10 space-y-6">
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-[0.18em] text-midnight-600/60">Email</dt>
+                <dd className="mt-1">
+                  <a href="mailto:bayaan@consultancy.firm.in" className="text-lg text-midnight-800 hover:text-teal-600">
+                    bayaan@consultancy.firm.in
+                  </a>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-[0.18em] text-midnight-600/60">Phone</dt>
+                <dd className="mt-1">
+                  <a href="tel:+916399009003" className="text-lg text-midnight-800 hover:text-teal-600">
+                    +91 6399 009 003
+                  </a>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-[0.18em] text-midnight-600/60">Based in</dt>
+                <dd className="mt-1 text-lg text-midnight-800">India</dd>
+              </div>
+            </dl>
+          </div>
+
+          {/* Right: Netlify-handled form (AJAX submit, inline success) */}
+          <ContactForm />
+        </div>
+      </Container>
+    </section>
+  )
+}

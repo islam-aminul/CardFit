@@ -1,0 +1,192 @@
+<!-- @dsCard group="Bayaan Website" viewport="1280x800" name="Homepage" subtitle="bayaan.consultancy.firm.in — recreated from source" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bayaan Consultancy — homepage recreation</title>
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  .nav-link { font-size: 14px; text-decoration: none; color: rgba(42,47,107,0.8); transition: color 150ms; }
+  .nav-link:hover, .nav-link.active { color: var(--color-midnight-800); }
+  .nav-link.active { font-weight: 500; }
+  .footer-link { display: block; font-size: 14px; color: rgba(217,220,236,0.7); text-decoration: none; transition: color 150ms; }
+  .footer-link:hover { color: #fff; }
+  .all-link { font-size: 14px; font-weight: 500; color: var(--color-teal-600); text-decoration: none; }
+  .all-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { Logo, ArcField, Button, Eyebrow, Container, ServiceCard, ValueBlock, CaseStudyCard } = window.BayaanCardFitDesignSystem_94a7f5
+
+const services = [
+  { title: 'Web development', body: 'Fast, accessible web apps and sites built on modern frameworks — from marketing pages to data-heavy dashboards.' },
+  { title: 'Mobile apps', body: 'Native and cross-platform Android apps, taken from concept to a published, store-ready release.' },
+  { title: 'Product engineering', body: 'We turn an idea into a real product — architecture, build, and ship — the same way we build our own.' },
+  { title: 'Technical consulting', body: 'Clear, practical guidance on architecture, delivery, and the trade-offs that actually matter.' },
+]
+const values = [
+  { title: 'Privacy by design', tone: 'teal', body: 'We default to collecting nothing. Our products are built to run offline and track nobody wherever we can — and that is the bar we hold every build to.' },
+  { title: 'Clarity over complexity', tone: 'sage', body: 'Bayaan means clear, eloquent expression. We build software that is simple to use and honest about what it does.' },
+  { title: 'Direct collaboration', tone: 'teal', body: 'You work with the people building your product — no layers, no hand-offs, no lost context.' },
+]
+
+function Header() {
+  return (
+    <header style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: '1px solid var(--border-subtle)', background: 'rgba(244,246,251,0.8)', backdropFilter: 'blur(8px)' }}>
+      <Container style={{ display: 'flex', height: 64, alignItems: 'center', justifyContent: 'space-between' }}>
+        <a href="#" aria-label="Bayaan Consultancy home" style={{ textDecoration: 'none' }}><Logo /></a>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+          <a className="nav-link active" href="#">Home</a>
+          <a className="nav-link" href="#">Services</a>
+          <a className="nav-link" href="#">Work</a>
+          <a className="nav-link" href="#">About</a>
+          <a className="nav-link" href="#">Contact</a>
+          <a href="#" className="bv-btn bv-btn--primary" style={{ padding: '8px 20px' }}>Start a project</a>
+        </nav>
+      </Container>
+    </header>
+  )
+}
+
+function SectionHead({ eyebrow, tone, title, sub, link }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
+      <div>
+        <Eyebrow tone={tone}>{eyebrow}</Eyebrow>
+        <h2 style={{ margin: '12px 0 0', fontSize: 30, fontWeight: 600, color: 'var(--text-heading)', maxWidth: 560 }}>{title}</h2>
+        <p style={{ margin: '8px 0 0', maxWidth: 560, color: 'var(--text-body)' }}>{sub}</p>
+      </div>
+      {link ? <a className="all-link" href="#">{link} →</a> : null}
+    </div>
+  )
+}
+
+function CardFitVisual() {
+  return <img src="../../assets/cardfit-visual.svg" alt="" style={{ width: '100%', maxWidth: 320 }} />
+}
+
+function Home() {
+  return (
+    <div>
+      <Header />
+      <section style={{ position: 'relative', overflow: 'hidden' }} data-screen-label="hero">
+        <ArcField tone="light" cx={900} cy={300} />
+        <Container style={{ position: 'relative', paddingTop: 112, paddingBottom: 112 }}>
+          <p style={{ display: 'inline-flex', alignItems: 'center', gap: 8, margin: 0, borderRadius: 999, border: '1px solid var(--border-subtle)', background: '#fff', padding: '6px 16px', fontSize: 12, fontWeight: 500, color: 'var(--color-midnight-600)' }}>
+            <span style={{ width: 6, height: 6, borderRadius: 999, background: 'var(--color-teal-500)' }}></span>
+            Product studio &amp; software consultancy
+          </p>
+          <h1 style={{ margin: '24px 0 0', maxWidth: 768, fontSize: 60, fontWeight: 600, lineHeight: 1.1, color: 'var(--text-heading)' }}>We build software that speaks clearly.</h1>
+          <p style={{ margin: '24px 0 0', maxWidth: 576, fontSize: 18, lineHeight: 1.625, color: 'var(--text-body)' }}>
+            Bayaan Consultancy designs, builds, and ships web and mobile software. We build our own products, and bring that same craft to yours.
+          </p>
+          <div style={{ marginTop: 36, display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+            <Button>Start a project</Button>
+            <Button variant="ghost">See our work</Button>
+          </div>
+        </Container>
+      </section>
+
+      <section style={{ borderTop: '1px solid var(--border-subtle)', background: '#fff' }} data-screen-label="services">
+        <Container style={{ paddingTop: 80, paddingBottom: 80 }}>
+          <SectionHead eyebrow="What we do" title="Four ways we help" sub="Whether you need a whole product or a sharp second opinion." link="All services" />
+          <div style={{ marginTop: 40, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+            {services.map((s) => <ServiceCard key={s.title} title={s.title} body={s.body} />)}
+          </div>
+        </Container>
+      </section>
+
+      <section style={{ borderTop: '1px solid var(--border-subtle)', background: '#fff' }} data-screen-label="proof">
+        <Container style={{ paddingTop: 80, paddingBottom: 80 }}>
+          <SectionHead eyebrow="Proof, not promises" tone="sage" title="We ship our own software first." sub="CardFit is built to the same privacy-first, clarity-first standard we bring to client work." link="All work" />
+          <div style={{ marginTop: 40 }}>
+            <CaseStudyCard
+              href="#" label="Android app" status="Coming soon to Google Play" title="CardFit"
+              body="A privacy-first, fully-offline app for everyday document paperwork: scan ID cards, build passport-style photos, and export print-ready PDFs at exact physical size — all on-device."
+              tags={['Fully offline', 'No accounts', 'No tracking', 'On-device ML']}
+              visual={<CardFitVisual />}
+            />
+          </div>
+        </Container>
+      </section>
+
+      <section style={{ borderTop: '1px solid var(--border-subtle)', background: '#fff' }} data-screen-label="values">
+        <Container style={{ paddingTop: 80, paddingBottom: 80 }}>
+          <Eyebrow>How we work</Eyebrow>
+          <h2 style={{ margin: '12px 0 0', maxWidth: 672, fontSize: 30, fontWeight: 600, color: 'var(--text-heading)' }}>The standards behind every build.</h2>
+          <div style={{ marginTop: 40, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32 }}>
+            {values.map((v) => <ValueBlock key={v.title} title={v.title} body={v.body} tone={v.tone} />)}
+          </div>
+        </Container>
+      </section>
+
+      <section data-screen-label="cta">
+        <Container style={{ paddingTop: 80, paddingBottom: 80 }}>
+          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 24, background: 'var(--color-midnight-900)', padding: 64, textAlign: 'center' }}>
+            <ArcField tone="dark" cx={120} cy={300} />
+            <div style={{ position: 'relative' }}>
+              <h2 style={{ margin: 0, fontSize: 36, fontWeight: 600, color: '#fff' }}>Have something to build?</h2>
+              <p style={{ margin: '16px auto 0', maxWidth: 448, color: 'var(--text-on-dark-muted)' }}>Tell us what you have in mind. We will reply with clear next steps — no sales runaround.</p>
+              <div style={{ marginTop: 32, display: 'flex', justifyContent: 'center' }}>
+                <Button variant="teal">Get in touch</Button>
+              </div>
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      <footer style={{ marginTop: 96, background: 'var(--color-midnight-900)', color: 'var(--color-midnight-100)' }} data-screen-label="footer">
+        <Container style={{ paddingTop: 56, paddingBottom: 56 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr', gap: 40 }}>
+            <div>
+              <Logo light />
+              <p style={{ margin: '16px 0 0', maxWidth: 320, fontSize: 14, lineHeight: 1.625, color: 'rgba(217,220,236,0.7)' }}>
+                A product studio and software consultancy. We build our own apps — and yours — with clarity from idea to ship.
+              </p>
+            </div>
+            <div>
+              <h3 className="bv-eyebrow bv-eyebrow--light" style={{ margin: 0 }}>Explore</h3>
+              <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <a className="footer-link" href="#">Services</a>
+                <a className="footer-link" href="#">Work</a>
+                <a className="footer-link" href="#">About</a>
+                <a className="footer-link" href="#">Contact</a>
+              </div>
+            </div>
+            <div>
+              <h3 className="bv-eyebrow bv-eyebrow--light" style={{ margin: 0 }}>Products</h3>
+              <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <a className="footer-link" href="#">CardFit</a>
+                <a className="footer-link" href="#">FoundMe</a>
+              </div>
+            </div>
+            <div>
+              <h3 className="bv-eyebrow bv-eyebrow--light" style={{ margin: 0 }}>Get in touch</h3>
+              <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <a className="footer-link" href="mailto:bayaan@consultancy.firm.in">bayaan@consultancy.firm.in</a>
+                <a className="footer-link" href="tel:+916399009003">+91 6399 009 003</a>
+              </div>
+            </div>
+          </div>
+          <div style={{ marginTop: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-on-dark)', paddingTop: 24, fontSize: 12, color: 'rgba(217,220,236,0.5)' }}>
+            <p style={{ margin: 0 }}>© 2026 Bayaan Consultancy. All rights reserved.</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+              <a className="footer-link" style={{ fontSize: 12 }} href="#">Privacy</a>
+              <span>Built with clarity in India.</span>
+            </div>
+          </div>
+        </Container>
+      </footer>
+    </div>
+  )
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Home />)
+</script>
+</body>
+</html>

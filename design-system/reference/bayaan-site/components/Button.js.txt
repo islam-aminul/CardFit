@@ -1,0 +1,37 @@
+import Link from 'next/link'
+import { cn } from '../lib/cn'
+
+const base =
+  'inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-paper'
+
+const variants = {
+  primary: 'bg-midnight-800 text-white hover:bg-midnight-700',
+  ghost: 'border border-midnight-200 text-midnight-800 hover:border-midnight-800 hover:bg-white',
+  teal: 'bg-teal-500 text-midnight-900 hover:bg-teal-400',
+  sage: 'bg-sage-600 text-white hover:bg-sage-500',
+  light: 'bg-white text-midnight-800 hover:bg-paper',
+}
+
+export default function Button({ href, children, variant = 'primary', className = '', ...props }) {
+  const cls = cn(base, variants[variant], className)
+  if (href) {
+    const external = href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:')
+    if (external) {
+      return (
+        <a href={href} className={cls} {...props}>
+          {children}
+        </a>
+      )
+    }
+    return (
+      <Link href={href} className={cls} {...props}>
+        {children}
+      </Link>
+    )
+  }
+  return (
+    <button className={cls} {...props}>
+      {children}
+    </button>
+  )
+}

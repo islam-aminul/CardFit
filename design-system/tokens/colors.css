@@ -1,0 +1,57 @@
+/* Bayaan "Clear Voice" color tokens — lifted verbatim from the site's globals.css
+   (bayaanconsultancy/bayaan-consultancy → app/globals.css @theme block). */
+:root {
+  /* Neutrals */
+  --color-ink: #1a1c2e;
+  --color-paper: #f4f6fb;
+  --color-white: #ffffff;
+
+  /* Midnight — indigo, authority */
+  --color-midnight-50: #eef0f8;
+  --color-midnight-100: #d9dcec;
+  --color-midnight-200: #b9bedc;
+  --color-midnight-300: #8e96c4;
+  --color-midnight-600: #2a2f6b;
+  --color-midnight-700: #23275b;
+  --color-midnight-800: #1e2150;
+  --color-midnight-900: #16183a;
+
+  /* Teal — the clear signal (primary accent) */
+  --color-teal-300: #5dcaa5;
+  --color-teal-400: #2dc7b5;
+  --color-teal-500: #14b8a6;
+  --color-teal-600: #0e9384;
+  --color-teal-700: #0b7568;
+
+  /* Sage — the calm second voice (supporting) */
+  --color-sage-300: #bacbbc;
+  --color-sage-400: #93ac99;
+  --color-sage-500: #6b8a74;
+  --color-sage-600: #4f6b59;
+  --color-sage-700: #3e5648;
+
+  /* Semantic aliases */
+  --surface-page: var(--color-paper);
+  --surface-card: var(--color-white);
+  --surface-inverse: var(--color-midnight-900);
+  --surface-panel: var(--color-midnight-800);
+  --surface-tile: var(--color-midnight-50);
+
+  --text-heading: var(--color-midnight-800);
+  --text-body: rgba(42, 47, 107, 0.9);        /* midnight-600/90 */
+  --text-muted: rgba(42, 47, 107, 0.7);        /* midnight-600/70 */
+  --text-on-dark: #ffffff;
+  --text-on-dark-muted: rgba(217, 220, 236, 0.8); /* midnight-100/80 */
+
+  --accent: var(--color-teal-500);
+  --accent-strong: var(--color-teal-600);
+  --accent-soft: rgba(20, 184, 166, 0.1);      /* teal-500/10 */
+  --accent-second: var(--color-sage-500);
+
+  --border-subtle: var(--color-midnight-100);
+  --border-hover: var(--color-midnight-200);
+  --border-on-dark: rgba(255, 255, 255, 0.1);
+
+  --focus-ring: var(--color-teal-500);
+  --selection: rgba(93, 202, 165, 0.5);        /* teal-300/50 */
+}

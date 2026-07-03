@@ -1,0 +1,17 @@
+/* Base element styles mirroring the site's @layer base. */
+body {
+  background: var(--surface-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: var(--tracking-tight);
+}
+
+::selection {
+  background: var(--selection);
+}

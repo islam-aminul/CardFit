@@ -1,0 +1,16 @@
+<!-- @dsCard group="Brand" viewport="700x150" subtitle="600ms fade + 12px rise on ease-signal; 150ms hover color shifts" name="Motion" -->
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+.demo { animation: reveal-rise 600ms var(--ease-signal) both; }
+.demo:nth-child(2) { animation-delay: 150ms; }
+.demo:nth-child(3) { animation-delay: 300ms; }
+</style></head>
+<body style="padding:20px 24px;background:var(--surface-page)">
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+  <div class="demo bv-card" style="padding:16px;font:13px var(--font-sans);color:var(--text-body)">reveal 1 · 0ms</div>
+  <div class="demo bv-card" style="padding:16px;font:13px var(--font-sans);color:var(--text-body)">reveal 2 · +150ms</div>
+  <div class="demo bv-card" style="padding:16px;font:13px var(--font-sans);color:var(--text-body)">reveal 3 · +300ms</div>
+</div>
+<p style="margin:12px 0 0;font:11px var(--font-sans);color:var(--text-muted)">cubic-bezier(0.22, 1, 0.36, 1) — arcs draw in with stroke-dashoffset; no bounces, no parallax</p>
+</body></html>

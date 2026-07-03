@@ -1,0 +1,19 @@
+<!-- @dsCard group="Spacing" viewport="700x160" subtitle="Edges are 1px borders, not shadows; hover darkens the border" name="Borders & cards" -->
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css"></head>
+<body style="padding:20px 24px;background:var(--surface-page)">
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;font:11px var(--font-sans);color:var(--text-muted)">
+  <div>
+    <div class="bv-card" style="height:70px"></div>
+    <div style="margin-top:6px;text-align:center">rest · border midnight-100</div>
+  </div>
+  <div>
+    <div class="bv-card" style="height:70px;border-color:var(--border-hover)"></div>
+    <div style="margin-top:6px;text-align:center">hover · border midnight-200</div>
+  </div>
+  <div>
+    <div style="height:70px;border-radius:10px;border:2px solid var(--color-teal-500);background:var(--accent-soft)"></div>
+    <div style="margin-top:6px;text-align:center">selected (app) · teal 2px + tint</div>
+  </div>
+</div>
+</body></html>

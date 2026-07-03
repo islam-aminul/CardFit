@@ -1,0 +1,17 @@
+import { cn } from '../lib/cn'
+
+// Small uppercase label above a heading. Teal by default; sage as the
+// supporting second voice; light on dark surfaces.
+const tones = {
+  teal: 'text-teal-600',
+  sage: 'text-sage-600',
+  light: 'text-teal-300',
+}
+
+export default function Eyebrow({ children, tone = 'teal', className = '' }) {
+  return (
+    <p className={cn('text-xs font-medium uppercase tracking-[0.2em]', tones[tone], className)}>
+      {children}
+    </p>
+  )
+}

@@ -1,0 +1,160 @@
+import Link from 'next/link'
+import Container from '../components/Container'
+import Button from '../components/Button'
+import Eyebrow from '../components/Eyebrow'
+import Reveal from '../components/Reveal'
+import ArcField from '../components/ArcField'
+
+export const metadata = {
+  title: 'CardFit — ID Card & Photo',
+  description:
+    'CardFit lays out ID cards and photos at their exact physical size and exports print-ready PDF or size-capped JPEG. Fully offline, no accounts, no tracking.',
+}
+
+const features = [
+  {
+    title: 'Documents & cards',
+    points: [
+      'Scan one or both sides and place them centered on a single page — at true physical size for print, or compressed under a KB cap you set for upload.',
+      'Print mode renders a card at its exact real-world size (e.g. 85.6 × 54 mm), so a printed copy matches the original.',
+      'Automatic card-type and orientation detection, with manual override and custom sizes in cm or inch.',
+      'Rounded-corner trim cleans up the off-colour corner spots left when a PVC card is scanned on a coloured surface.',
+      'Optional searchable-text layer, and an OCR name suggestion for the filename — identity numbers are never extracted.',
+    ],
+  },
+  {
+    title: 'ID-photo studio',
+    points: [
+      'Capture or pick a photo, held upright automatically, then frame the face with pinch-zoom, drag crop, and rotate.',
+      'Press and hold Compare to see the original; auto-enhance plus fine brightness, contrast, and saturation.',
+      'Optional one-tap background removal to white.',
+      'Preset sizes — Passport, Visa, Stamp — plus custom in cm or inch, with the crop locked to your chosen size.',
+      'Export a single sized upload JPEG, or a print sheet with the number of copies you need.',
+    ],
+  },
+  {
+    title: 'Tasks',
+    points: [
+      'Group several people’s documents and photos into one named application set, saved on your device.',
+      'Reorder, rename, and set per-item upload limits.',
+      'Export each item separately or as one combined multi-page PDF.',
+    ],
+  },
+]
+
+export default function CardFitPage() {
+  return (
+    <>
+      {/* Hero — the product world */}
+      <section className="relative overflow-hidden bg-midnight-900 text-white">
+        <ArcField tone="dark" cx={120} cy={300} />
+        <Container className="relative py-20 sm:py-24">
+          <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_1fr]">
+            <div>
+              <Eyebrow tone="light">A Bayaan product</Eyebrow>
+              <h1 className="mt-4 text-4xl font-semibold text-white sm:text-5xl">CardFit</h1>
+              <p className="mt-3 text-lg font-medium text-teal-300">ID Card &amp; Photo</p>
+              <p className="mt-5 max-w-md text-midnight-100/80">
+                Put both sides of an ID card on a single page, perfectly centered and at the card’s true physical size —
+                ready to print or to upload. Plus an ID-photo studio and a task mode for whole sets of documents.
+              </p>
+              <p className="mt-4 max-w-md text-midnight-100/80">
+                Everything happens on your device. CardFit works fully offline, with no ads, no accounts, and no
+                tracking, and it never sends your documents or photos anywhere.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-3 text-sm font-medium text-white">
+                  <span className="h-2 w-2 rounded-full bg-teal-400" />
+                  Coming soon to Google Play
+                </span>
+                <Button href="/cardfit/privacy" variant="teal">
+                  Privacy policy
+                </Button>
+              </div>
+            </div>
+            <div className="flex justify-center lg:justify-end">
+              <svg viewBox="0 0 280 220" className="w-full max-w-sm" role="img" aria-label="CardFit laying two ID cards on a page">
+                <rect x="40" y="20" width="200" height="180" rx="16" fill="#1E2150" />
+                <rect x="60" y="44" width="160" height="58" rx="10" fill="#2A2F6B" />
+                <rect x="60" y="118" width="160" height="58" rx="10" fill="#14B8A6" />
+                <rect x="74" y="58" width="54" height="8" rx="4" fill="#5DCAA5" />
+                <rect x="74" y="76" width="92" height="6" rx="3" fill="#8E96C4" />
+                <circle cx="196" cy="73" r="14" fill="#16183A" />
+                <rect x="74" y="132" width="54" height="8" rx="4" fill="#0B7568" />
+                <rect x="74" y="150" width="92" height="6" rx="3" fill="#0B7568" opacity="0.6" />
+                <circle cx="196" cy="147" r="14" fill="#0B7568" />
+              </svg>
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      {/* Privacy highlight */}
+      <section className="border-b border-midnight-100 bg-white">
+        <Container className="py-14">
+          <div className="grid gap-6 sm:grid-cols-3">
+            {[
+              { title: 'Fully offline', body: 'The app does not request internet access. Works end to end in airplane mode.' },
+              { title: 'No data collection', body: 'No accounts, no analytics, no ads. Nothing leaves your device.' },
+              { title: 'On-device ML', body: 'Scanning, OCR, and background removal all run locally, on your phone.' },
+            ].map((item, i) => (
+              <Reveal key={item.title} delay={i * 0.06}>
+                <div className="h-full rounded-2xl border border-midnight-100 p-6">
+                  <h2 className="text-lg font-semibold text-midnight-800">{item.title}</h2>
+                  <p className="mt-2 text-sm leading-relaxed text-midnight-600/90">{item.body}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      {/* Feature sections */}
+      <section>
+        <Container className="py-16">
+          <div className="space-y-12">
+            {features.map((f) => (
+              <div key={f.title} className="grid gap-6 lg:grid-cols-[280px_1fr]">
+                <div>
+                  <div className="h-1 w-10 rounded-full bg-teal-500" />
+                  <h2 className="mt-4 text-2xl font-semibold text-midnight-800">{f.title}</h2>
+                </div>
+                <ul className="space-y-3">
+                  {f.points.map((p) => (
+                    <li key={p} className="flex gap-3 leading-relaxed text-midnight-600/90">
+                      <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-500" />
+                      <span>{p}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          {/* Supported cards + disclaimer */}
+          <div className="mt-14 rounded-2xl border border-midnight-100 bg-paper p-8">
+            <p className="text-sm leading-relaxed text-midnight-600/90">
+              Supported identity cards include PAN, Aadhaar (PVC card), and voter ID cards, as well as admit cards,
+              custom sizes, and free sizing.
+            </p>
+          </div>
+
+          <p className="mt-8 max-w-prose text-xs leading-relaxed text-midnight-600/70">
+            CardFit is an independent utility. It is not affiliated with, endorsed by, or connected to the Government of
+            India, the Election Commission of India, UIDAI, the Income Tax Department, or any other authority. All card
+            artwork in the app is generic and illustrative.
+          </p>
+
+          <div className="mt-10 flex flex-wrap gap-4 text-sm">
+            <Link href="/cardfit/privacy" className="font-medium text-teal-600 hover:underline">
+              Read the privacy policy →
+            </Link>
+            <Link href="/contact" className="font-medium text-midnight-600 hover:underline">
+              Questions? Contact us →
+            </Link>
+          </div>
+        </Container>
+      </section>
+    </>
+  )
+}

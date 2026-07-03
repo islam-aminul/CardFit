@@ -1,0 +1,26 @@
+'use client'
+
+import { motion, useReducedMotion } from 'framer-motion'
+
+// Purposeful scroll reveal — a quiet fade + lift, signature easing.
+// Honours prefers-reduced-motion by rendering static markup.
+export default function Reveal({ children, as = 'div', delay = 0, y = 16, className = '' }) {
+  const reduce = useReducedMotion()
+  if (reduce) {
+    const Tag = as
+    return <Tag className={className}>{children}</Tag>
+  }
+  const M = motion[as] ?? motion.div
+  return (
+    <M
+      data-reveal=""
+      className={className}
+      initial={{ opacity: 0, y }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-80px' }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay }}
+    >
+      {children}
+    </M>
+  )
+}

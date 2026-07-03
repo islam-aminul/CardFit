@@ -1,0 +1,189 @@
+import Link from 'next/link'
+import Container from './components/Container'
+import Button from './components/Button'
+import Eyebrow from './components/Eyebrow'
+import Reveal from './components/Reveal'
+import ArcField from './components/ArcField'
+import ServiceCard from './components/ServiceCard'
+import ValueBlock from './components/ValueBlock'
+import CaseStudyCard from './components/CaseStudyCard'
+import CardFitVisual from './components/CardFitVisual'
+
+export const metadata = {
+  description:
+    'Bayaan Consultancy is a product studio and software consultancy. We design, build, and ship web and mobile software — including our own apps like CardFit.',
+}
+
+const services = [
+  {
+    title: 'Web development',
+    body: 'Fast, accessible web apps and sites built on modern frameworks — from marketing pages to data-heavy dashboards.',
+  },
+  {
+    title: 'Mobile apps',
+    body: 'Native and cross-platform Android apps, taken from concept to a published, store-ready release.',
+  },
+  {
+    title: 'Product engineering',
+    body: 'We turn an idea into a real product — architecture, build, and ship — the same way we build our own.',
+  },
+  {
+    title: 'Technical consulting',
+    body: 'Clear, practical guidance on architecture, delivery, and the trade-offs that actually matter.',
+  },
+]
+
+const values = [
+  {
+    title: 'Privacy by design',
+    tone: 'teal',
+    body: 'We default to collecting nothing. Our products are built to run offline and track nobody wherever we can — and that is the bar we hold every build to.',
+  },
+  {
+    title: 'Clarity over complexity',
+    tone: 'sage',
+    body: 'Bayaan means clear, eloquent expression. We build software that is simple to use and honest about what it does.',
+  },
+  {
+    title: 'Direct collaboration',
+    tone: 'teal',
+    body: 'You work with the people building your product — no layers, no hand-offs, no lost context.',
+  },
+]
+
+export default function Home() {
+  return (
+    <>
+      {/* Hero */}
+      <section className="relative overflow-hidden">
+        <ArcField tone="light" cx={900} cy={300} />
+        <Container className="relative py-20 sm:py-28">
+          <Reveal>
+            <p className="inline-flex items-center gap-2 rounded-full border border-midnight-100 bg-white px-4 py-1.5 text-xs font-medium text-midnight-600">
+              <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
+              Product studio &amp; software consultancy
+            </p>
+          </Reveal>
+          <Reveal delay={0.05}>
+            <h1 className="mt-6 max-w-3xl text-4xl font-semibold leading-[1.1] text-midnight-800 sm:text-6xl">
+              We build software that speaks clearly.
+            </h1>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-midnight-600/90">
+              Bayaan Consultancy designs, builds, and ships web and mobile software. We build our own products, and bring
+              that same craft to yours.
+            </p>
+          </Reveal>
+          <Reveal delay={0.15}>
+            <div className="mt-9 flex flex-wrap gap-3">
+              <Button href="/contact">Start a project</Button>
+              <Button href="/work" variant="ghost">
+                See our work
+              </Button>
+            </div>
+          </Reveal>
+        </Container>
+      </section>
+
+      {/* Services */}
+      <section className="border-t border-midnight-100 bg-white">
+        <Container className="py-20">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <Eyebrow>What we do</Eyebrow>
+              <h2 className="mt-3 text-3xl font-semibold text-midnight-800">Four ways we help</h2>
+              <p className="mt-2 max-w-xl text-midnight-600/90">
+                Whether you need a whole product or a sharp second opinion.
+              </p>
+            </div>
+            <Link
+              href="/services"
+              className="text-sm font-medium text-teal-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+            >
+              All services →
+            </Link>
+          </div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {services.map((s, i) => (
+              <Reveal key={s.title} delay={i * 0.06}>
+                <ServiceCard title={s.title} body={s.body} />
+              </Reveal>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      {/* Proof — the flagship product */}
+      <section className="border-t border-midnight-100 bg-white">
+        <Container className="py-20">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <Eyebrow tone="sage">Proof, not promises</Eyebrow>
+              <h2 className="mt-3 max-w-xl text-3xl font-semibold text-midnight-800">
+                We ship our own software first.
+              </h2>
+              <p className="mt-2 max-w-xl text-midnight-600/90">
+                CardFit is built to the same privacy-first, clarity-first standard we bring to client work.
+              </p>
+            </div>
+            <Link
+              href="/work"
+              className="text-sm font-medium text-teal-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+            >
+              All work →
+            </Link>
+          </div>
+          <Reveal className="mt-10">
+            <CaseStudyCard
+              href="/cardfit"
+              label="Android app"
+              status="Coming soon to Google Play"
+              title="CardFit"
+              body="A privacy-first, fully-offline app for everyday document paperwork: scan ID cards, build passport-style photos, and export print-ready PDFs at exact physical size — all on-device."
+              tags={['Fully offline', 'No accounts', 'No tracking', 'On-device ML']}
+              visual={<CardFitVisual />}
+            />
+          </Reveal>
+        </Container>
+      </section>
+
+      {/* Values */}
+      <section className="border-t border-midnight-100 bg-white">
+        <Container className="py-20">
+          <Eyebrow>How we work</Eyebrow>
+          <h2 className="mt-3 max-w-2xl text-3xl font-semibold text-midnight-800">
+            The standards behind every build.
+          </h2>
+          <div className="mt-10 grid gap-8 sm:grid-cols-3">
+            {values.map((v, i) => (
+              <Reveal key={v.title} delay={i * 0.06}>
+                <ValueBlock title={v.title} body={v.body} tone={v.tone} />
+              </Reveal>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      {/* CTA */}
+      <section>
+        <Container className="py-20">
+          <div className="relative overflow-hidden rounded-3xl bg-midnight-900 p-10 text-center sm:p-16">
+            <ArcField tone="dark" cx={120} cy={300} />
+            <div className="relative">
+              <h2 className="text-3xl font-semibold text-white sm:text-4xl">Have something to build?</h2>
+              <p className="mx-auto mt-4 max-w-md text-midnight-100/80">
+                Tell us what you have in mind. We will reply with clear next steps — no sales runaround.
+              </p>
+              <div className="mt-8 flex justify-center">
+                <Button href="/contact" variant="teal">
+                  Get in touch
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Container>
+      </section>
+    </>
+  )
+}

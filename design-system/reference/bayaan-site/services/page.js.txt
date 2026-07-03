@@ -1,0 +1,138 @@
+import Container from '../components/Container'
+import Button from '../components/Button'
+import Eyebrow from '../components/Eyebrow'
+import Reveal from '../components/Reveal'
+import ArcField from '../components/ArcField'
+
+export const metadata = {
+  title: 'Services',
+  description:
+    'Web development, mobile apps, product engineering, and technical consulting — from a studio that ships its own software.',
+}
+
+const services = [
+  {
+    title: 'Web development',
+    summary: 'Modern, accessible web apps and sites that load fast and stay maintainable.',
+    points: [
+      'Marketing sites, landing pages, and content sites',
+      'Data-driven dashboards and internal tools',
+      'Next.js / React front-ends with clean, typed code',
+      'SEO, performance, and accessibility built in',
+    ],
+  },
+  {
+    title: 'Mobile apps',
+    summary: 'Android apps taken from idea to a published, store-ready release.',
+    points: [
+      'Native Android (Kotlin) and cross-platform builds',
+      'On-device, privacy-first architecture where it fits',
+      'Play Console setup, signing, and release management',
+      'We have shipped our own app — we know the full path',
+    ],
+  },
+  {
+    title: 'Product engineering',
+    summary: 'Turning an idea into a real, shippable product end to end.',
+    points: [
+      'Scoping, architecture, and technical planning',
+      'Full build — front-end, back-end, and integrations',
+      'Iterative delivery you can see and steer',
+      'Launch, plus the unglamorous work of shipping',
+    ],
+  },
+  {
+    title: 'Technical consulting',
+    summary: 'A clear, practical second opinion when the stakes are high.',
+    points: [
+      'Architecture and technology choices',
+      'Code and delivery reviews',
+      'Untangling stalled or inherited projects',
+      'Honest trade-offs, not jargon',
+    ],
+  },
+]
+
+const steps = [
+  { n: '01', title: 'Talk', body: 'A short call or message. You describe the problem; we tell you honestly if we are the right fit.' },
+  { n: '02', title: 'Scope', body: 'We agree what to build, the trade-offs, and a plan you can actually read.' },
+  { n: '03', title: 'Build', body: 'Iterative delivery you can see and steer — working software, not status decks.' },
+  { n: '04', title: 'Ship', body: 'Launch and the unglamorous parts: release, hardening, and handover.' },
+]
+
+export default function ServicesPage() {
+  return (
+    <>
+      <section className="relative overflow-hidden border-b border-midnight-100 bg-white">
+        <ArcField tone="light" cx={960} cy={260} />
+        <Container className="relative py-20">
+          <Eyebrow>Services</Eyebrow>
+          <h1 className="mt-4 max-w-3xl text-4xl font-semibold text-midnight-800 sm:text-5xl">
+            From a sharp second opinion to a shipped product.
+          </h1>
+          <p className="mt-5 max-w-xl text-lg text-midnight-600/90">
+            We are a small studio that builds and ships its own software. That means you get people who have been all
+            the way through — not just to a prototype, but to a real release.
+          </p>
+        </Container>
+      </section>
+
+      <section>
+        <Container className="py-16">
+          <div className="grid gap-6 lg:grid-cols-2">
+            {services.map((s, i) => (
+              <Reveal key={s.title} delay={(i % 2) * 0.06}>
+                <div className="h-full rounded-2xl border border-midnight-100 bg-white p-8">
+                  <h2 className="text-2xl font-semibold text-midnight-800">{s.title}</h2>
+                  <p className="mt-3 text-midnight-600/90">{s.summary}</p>
+                  <ul className="mt-6 space-y-3">
+                    {s.points.map((p) => (
+                      <li key={p} className="flex gap-3 text-sm text-midnight-600/90">
+                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-500" />
+                        {p}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+
+          {/* How an engagement works */}
+          <div className="mt-16">
+            <Eyebrow tone="sage">How an engagement works</Eyebrow>
+            <h2 className="mt-3 text-2xl font-semibold text-midnight-800 sm:text-3xl">
+              Four clear steps, no runaround.
+            </h2>
+            <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+              {steps.map((step, i) => (
+                <Reveal key={step.n} delay={i * 0.06}>
+                  <div className="border-t border-midnight-100 pt-5">
+                    <span className="font-display text-sm font-semibold text-teal-600">{step.n}</span>
+                    <h3 className="mt-2 text-lg font-semibold text-midnight-800">{step.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-midnight-600/90">{step.body}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative mt-16 overflow-hidden rounded-3xl bg-midnight-900 p-10 text-center sm:p-14">
+            <ArcField tone="dark" cx={140} cy={280} />
+            <div className="relative">
+              <h2 className="text-2xl font-semibold text-white sm:text-3xl">Not sure where to start?</h2>
+              <p className="mx-auto mt-3 max-w-md text-midnight-100/80">
+                Send us a short description of your project. We will tell you honestly whether — and how — we can help.
+              </p>
+              <div className="mt-7 flex justify-center">
+                <Button href="/contact" variant="teal">
+                  Talk to us
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Container>
+      </section>
+    </>
+  )
+}

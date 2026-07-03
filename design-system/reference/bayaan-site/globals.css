@@ -1,0 +1,90 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+/* Make sure Tailwind scans the app sources for class usage. */
+@source './**/*.{js,jsx}';
+
+/*
+  Bayaan Consultancy — "Clear Voice" design tokens.
+  A disciplined tri-tone: midnight (authority), teal (the clear signal),
+  sage (the calm second voice). Tokens map 1:1 to utility names so existing
+  markup and new components share one source of truth.
+*/
+@theme {
+  /* Neutrals */
+  --color-ink: #1a1c2e;
+  --color-paper: #f4f6fb;
+
+  /* Midnight — indigo, authority */
+  --color-midnight-50: #eef0f8;
+  --color-midnight-100: #d9dcec;
+  --color-midnight-200: #b9bedc;
+  --color-midnight-300: #8e96c4;
+  --color-midnight-600: #2a2f6b;
+  --color-midnight-700: #23275b;
+  --color-midnight-800: #1e2150;
+  --color-midnight-900: #16183a;
+
+  /* Teal — the clear signal (primary accent) */
+  --color-teal-300: #5dcaa5;
+  --color-teal-400: #2dc7b5;
+  --color-teal-500: #14b8a6;
+  --color-teal-600: #0e9384;
+  --color-teal-700: #0b7568;
+
+  /* Sage — the calm second voice (supporting) */
+  --color-sage-300: #bacbbc;
+  --color-sage-400: #93ac99;
+  --color-sage-500: #6b8a74;
+  --color-sage-600: #4f6b59;
+  --color-sage-700: #3e5648;
+
+  /* Type — loaded via next/font in layout.js */
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-space), var(--font-inter), sans-serif;
+
+  /* Motion */
+  --ease-signal: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight;
+  }
+  ::selection {
+    @apply bg-teal-300/50;
+  }
+}
+
+/* The signature: voice arcs draw on. Used by the loader and arc fields. */
+@keyframes arc-draw {
+  from {
+    stroke-dashoffset: var(--arc-len, 600);
+    opacity: 0;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+/* Honour reduced-motion everywhere, including framer-motion fallbacks. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

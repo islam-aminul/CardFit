@@ -1,0 +1,23 @@
+/* Spacing — Tailwind default scale as used on the site. */
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-14: 56px;
+  --space-16: 64px;
+  --space-20: 80px;   /* section vertical rhythm (py-20) */
+  --space-24: 96px;
+
+  --container-max: 1120px;  /* site Container: max-w-6xl-ish with px-6 */
+  --container-pad: 24px;
+
+  /* App (mobile) rhythm from the Compose code */
+  --app-screen-pad: 16px;   /* ScreenScaffold content padding */
+  --app-gap: 12px;          /* vertical arrangement spacing */
+}
