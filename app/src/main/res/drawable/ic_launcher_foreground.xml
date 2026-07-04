@@ -1,24 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Adaptive icon foreground: an ORIGINAL, generic stylized ID-card motif (rounded card with a photo
-  box and abstract text bars). No real emblem, logo, hologram, or seal. Content sits within the
-  72dp safe zone.
--->
+<!-- Adaptive icon foreground: the Bayaan voice-arcs mark (focal dot + three arcs in teal/midnight/
+     sage), ported from design-system/assets/brand/icon.svg. The group centres the mark (40-viewport
+     bounds x 9.4..29.3, y 2.7..37.3, centre ~(19.35, 20)) and scales it to sit within the 66dp
+     adaptive-icon safe zone. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Card body -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M29,36 H79 A7,7 0 0 1 86,43 V65 A7,7 0 0 1 79,72 H29 A7,7 0 0 1 22,65 V43 A7,7 0 0 1 29,36 Z" />
-    <!-- Photo placeholder -->
-    <path
-        android:fillColor="#90CAF9"
-        android:pathData="M28,44 h16 v22 h-16 z" />
-    <!-- Abstract text bars -->
-    <path
-        android:fillColor="#1E88E5"
-        android:pathData="M50,46 h30 v3 h-30 z M50,53 h30 v3 h-30 z M50,60 h22 v3 h-22 z" />
+    <group
+        android:scaleX="1.35"
+        android:scaleY="1.35"
+        android:translateX="27.88"
+        android:translateY="27">
+        <path
+            android:fillColor="#1E2150"
+            android:pathData="M9.4,20 a2.6,2.6 0 1,0 5.2,0 a2.6,2.6 0 1,0 -5.2,0" />
+        <path
+            android:strokeColor="#14B8A6"
+            android:strokeWidth="2.6"
+            android:strokeLineCap="round"
+            android:pathData="M12,15 A5,5 0 0 1 12,25" />
+        <path
+            android:strokeColor="#2A2F6B"
+            android:strokeWidth="2.6"
+            android:strokeLineCap="round"
+            android:pathData="M12,9.5 A10.5,10.5 0 0 1 12,30.5" />
+        <path
+            android:strokeColor="#5DCAA5"
+            android:strokeWidth="2.6"
+            android:strokeLineCap="round"
+            android:pathData="M12,4 A16,16 0 0 1 12,36" />
+    </group>
 </vector>

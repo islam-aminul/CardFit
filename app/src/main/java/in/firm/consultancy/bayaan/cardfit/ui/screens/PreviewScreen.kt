@@ -9,23 +9,30 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -35,9 +42,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import `in`.firm.consultancy.bayaan.cardfit.data.export.ShareItem
+import `in`.firm.consultancy.bayaan.cardfit.domain.model.CardType
+import `in`.firm.consultancy.bayaan.cardfit.domain.model.PageOrientation
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.ExportSettingsViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.ExportUiState
 import `in`.firm.consultancy.bayaan.cardfit.ui.ExportViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.PersistCardSettingsEffect
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanCard
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.OutputChip
@@ -45,6 +56,8 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.components.PrimaryButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.SectionLabel
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.SelectableCard
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextHeading
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.TealCallout
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.outputChipLabel
 import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Teal700
@@ -63,6 +76,7 @@ fun PreviewScreen(
     onNewScan: () -> Unit,
     onStartFresh: () -> Unit,
     exportViewModel: ExportViewModel = viewModel(),
+    exportSettingsViewModel: ExportSettingsViewModel = viewModel(),
 ) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -88,6 +102,9 @@ fun PreviewScreen(
         }
     }
 
+    // Persist setting changes made on this screen (orientation/size) to the type's blob.
+    PersistCardSettingsEffect(viewModel, exportSettingsViewModel)
+
     // (Re)generate the preview whenever the session or render settings change.
     LaunchedEffect(
         session,
@@ -97,6 +114,8 @@ fun PreviewScreen(
         state.grayscale,
         state.maxFileSizeKb,
         state.sizeOverride,
+        state.pageOrientation,
+        state.contentScalePercent,
     ) {
         if (session != null && configs.isNotEmpty()) {
             exportViewModel.generatePreview(session, configs)
@@ -163,32 +182,77 @@ fun PreviewScreen(
             return@ScreenScaffold
         }
 
-        val bytes = previewBytes
-        when {
-            // The rendered page sits inside a white bordered "sheet" card, per the UI kit.
-            bytes != null -> BayaanCard(
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(12.dp),
-                modifier = Modifier.fillMaxWidth(),
+        val documentPages = session.documentPages
+        if (documentPages.size > 1) {
+            // Multiple pages: show only the page thumbnails with a count (no large preview).
+            SectionLabel("${documentPages.size} pages")
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                AsyncImage(
-                    model = bytes,
-                    contentDescription = "Output preview",
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(280.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                )
+                documentPages.forEach { page ->
+                    androidx.compose.foundation.layout.Box(
+                        modifier = Modifier
+                            .size(width = 72.dp, height = 100.dp)
+                            .clip(RoundedCornerShape(6.dp)),
+                    ) {
+                        AsyncImage(
+                            model = page.side.imageUri,
+                            contentDescription = null,
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(100.dp)
+                                .rotate(page.edit.rotationDegrees.toFloat()),
+                        )
+                    }
+                }
             }
-            previewFailed -> Text(
-                "Couldn't render a preview from this scan. Try re-scanning the card.",
-                color = MaterialTheme.colorScheme.error,
-            )
-            else -> Text("Generating preview…")
+        } else {
+            // Single page or card: show the large rendered preview inside a bordered "sheet" card.
+            val bytes = previewBytes
+            when {
+                bytes != null -> BayaanCard(
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(12.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    AsyncImage(
+                        model = bytes,
+                        contentDescription = "Output preview",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(280.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                    )
+                }
+                previewFailed -> Text(
+                    "Couldn't render a preview from this scan. Try re-scanning the card.",
+                    color = MaterialTheme.colorScheme.error,
+                )
+                else -> Text("Generating preview…")
+            }
         }
 
-        Text("Card: ${session.cardType.name}", style = MaterialTheme.typography.bodyMedium)
+        // Full document: choose the page orientation; the preview above re-renders live.
+        if (session.cardType == CardType.FULL_PAGE_DOCUMENT) {
+            SectionLabel("Page orientation")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SelectableCard(
+                    label = "Portrait",
+                    selected = state.pageOrientation == PageOrientation.PORTRAIT,
+                    onClick = { viewModel.setPageOrientation(PageOrientation.PORTRAIT) },
+                )
+                SelectableCard(
+                    label = "Landscape",
+                    selected = state.pageOrientation == PageOrientation.LANDSCAPE,
+                    onClick = { viewModel.setPageOrientation(PageOrientation.LANDSCAPE) },
+                )
+            }
+        }
+
+        Text("Type: ${session.cardType.label}", style = MaterialTheme.typography.bodyMedium)
         Text("Name: ${state.name.ifBlank { "(document)" }}", style = MaterialTheme.typography.bodyMedium)
 
         if (configs.isNotEmpty()) {

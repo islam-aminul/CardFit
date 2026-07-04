@@ -25,13 +25,14 @@ import `in`.firm.consultancy.bayaan.cardfit.domain.model.CardType
  */
 
 // Original accent palette remapped onto Bayaan midnight/teal/sage (not tied to any real document).
-private val PanAccent = Color(0xFF2A2F6B) // midnight-600
-private val AadhaarAccent = Color(0xFF14B8A6) // teal-500
-private val EpicAccent = Color(0xFF23275B) // midnight-700
-private val AdmitAccent = Color(0xFF0E9384) // teal-600
-private val CustomAccent = Color(0xFF8E96C4) // midnight-300
-private val FreeAccent = Color(0xFF6B8A74) // sage-500
-private val ChipGold = Color(0xFFCBA135)
+// Internal: shared with the output-sheet illustrations in CardOutputArtwork.kt.
+internal val PanAccent = Color(0xFF2A2F6B) // midnight-600
+internal val AadhaarAccent = Color(0xFF14B8A6) // teal-500
+internal val VoterIdAccent = Color(0xFF23275B) // midnight-700
+internal val FullPageDocumentAccent = Color(0xFF0E9384) // teal-600
+internal val CustomAccent = Color(0xFF8E96C4) // midnight-300
+internal val ReceiptAccent = Color(0xFF6B8A74) // sage-500
+internal val ChipGold = Color(0xFFCBA135)
 
 @Composable
 fun CardArtwork(type: CardType, modifier: Modifier = Modifier) {
@@ -39,10 +40,10 @@ fun CardArtwork(type: CardType, modifier: Modifier = Modifier) {
         when (type) {
             CardType.PAN -> drawIdCard(PanAccent, withChip = true, photoOnRight = false)
             CardType.AADHAAR -> drawIdCard(AadhaarAccent, withChip = false, photoOnRight = true)
-            CardType.EPIC -> drawIdCard(EpicAccent, withChip = false, photoOnRight = false)
-            CardType.ADMIT_CARD -> drawDocumentPage(AdmitAccent)
+            CardType.VOTER_ID -> drawIdCard(VoterIdAccent, withChip = false, photoOnRight = false)
+            CardType.FULL_PAGE_DOCUMENT -> drawDocumentPage(FullPageDocumentAccent)
             CardType.CUSTOM -> drawCustomCard(CustomAccent)
-            CardType.FREE -> drawFreeCard(FreeAccent)
+            CardType.RECEIPT -> drawReceiptCard(ReceiptAccent)
         }
     }
 }
@@ -50,20 +51,7 @@ fun CardArtwork(type: CardType, modifier: Modifier = Modifier) {
 private fun DrawScope.cardPath(w: Float, h: Float, corner: Float): Path =
     Path().apply { addRoundRect(RoundRect(0f, 0f, w, h, CornerRadius(corner, corner))) }
 
-private fun DrawScope.roundedBar(
-    color: Color,
-    left: Float,
-    top: Float,
-    width: Float,
-    height: Float,
-) {
-    drawRoundRect(
-        color = color,
-        topLeft = Offset(left, top),
-        size = Size(width, height),
-        cornerRadius = CornerRadius(height / 2f, height / 2f),
-    )
-}
+// (Field bars are drawn with the shared package-internal `roundedBar` from ExportArtwork.kt.)
 
 /** A generic horizontal ID card: tinted body, header band, photo with silhouette, field bars. */
 private fun DrawScope.drawIdCard(accent: Color, withChip: Boolean, photoOnRight: Boolean) {
@@ -189,7 +177,7 @@ private fun DrawScope.drawCustomCard(accent: Color) {
 }
 
 /** A loose, free-form layout: dashed border with content blocks placed freely. */
-private fun DrawScope.drawFreeCard(accent: Color) {
+private fun DrawScope.drawReceiptCard(accent: Color) {
     val w = size.width
     val h = size.height
     val corner = h * 0.09f
@@ -220,7 +208,7 @@ private fun DrawScope.drawFreeCard(accent: Color) {
 }
 
 /** Draws a straight line with arrowheads at both ends. */
-private fun DrawScope.arrowLine(color: Color, start: Offset, end: Offset, strokeWidth: Float, headSize: Float) {
+internal fun DrawScope.arrowLine(color: Color, start: Offset, end: Offset, strokeWidth: Float, headSize: Float) {
     drawLine(color, start, end, strokeWidth)
     arrowHead(color, tip = start, towards = end, strokeWidth, headSize)
     arrowHead(color, tip = end, towards = start, strokeWidth, headSize)

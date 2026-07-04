@@ -16,6 +16,9 @@ package `in`.firm.consultancy.bayaan.cardfit.domain
 data class PhotoEditParams(
     val rotationDegrees: Int = 0,
     val crop: CropRect? = null,
+    // Resolution-independent free crop (fractions of the rotated image). Preferred over [crop] by the
+    // processor, so the crop lands correctly no matter how far the source was downsampled.
+    val cropNorm: CropFraction? = null,
     val brightnessPercent: Int = 0,
     val contrastPercent: Int = 0,
     val saturationPercent: Int = 0,
@@ -24,7 +27,7 @@ data class PhotoEditParams(
 ) {
     /** True when no adjustment, crop, rotation or background change is set (output equals original). */
     val isIdentity: Boolean
-        get() = rotationDegrees == 0 && crop == null && brightnessPercent == 0 &&
+        get() = rotationDegrees == 0 && crop == null && cropNorm == null && brightnessPercent == 0 &&
             contrastPercent == 0 && saturationPercent == 0 && !autoEnhance && !removeBackground
 }
 

@@ -45,6 +45,9 @@ fun IllustratedTile(
     enabled: Boolean = true,
     subtitle: String? = null,
     artHeight: Dp = 56.dp,
+    // Invoked when a DISABLED tile is tapped (e.g. to surface a "why is this off?" hint). When null,
+    // a disabled tile ignores taps entirely.
+    onDisabledClick: (() -> Unit)? = null,
 ) {
     val container = when {
         !enabled -> Midnight50.copy(alpha = 0.4f)
@@ -58,12 +61,19 @@ fun IllustratedTile(
     }
     // Transparent 2dp border at rest so the teal selection ring doesn't shift the layout.
     val border = BorderStroke(2.dp, if (selected) Teal500 else Color.Transparent)
+    // A disabled tile with an [onDisabledClick] stays tappable (to show a hint) but keeps its
+    // disabled styling; otherwise the enabled tile fires [onClick].
+    val clickModifier = when {
+        enabled -> modifier.clickable(onClick = onClick)
+        onDisabledClick != null -> modifier.clickable(onClick = onDisabledClick)
+        else -> modifier
+    }
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = container,
         contentColor = content,
         border = border,
-        modifier = modifier.clickable(enabled = enabled, onClick = onClick),
+        modifier = clickModifier,
     ) {
         Column(
             modifier = Modifier

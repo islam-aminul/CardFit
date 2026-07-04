@@ -31,7 +31,7 @@ object NameParser {
             CardType.PAN -> valueAfterLabel(cleaned) { lower ->
                 (lower.contains("name") && !lower.contains("father")) || lower.contains("नाम")
             }
-            CardType.EPIC ->
+            CardType.VOTER_ID ->
                 // Prefer the specific "Elector's Name" label so the card's title
                 // ("ELECTOR PHOTO IDENTITY CARD" — has "elector" but no "name") is never matched;
                 // fall back to a plain "Name" label.
@@ -40,7 +40,7 @@ object NameParser {
                         lower.contains("name") && !lower.contains("father")
                     }
             CardType.AADHAAR -> valueBeforeDob(cleaned)
-            CardType.ADMIT_CARD, CardType.CUSTOM, CardType.FREE -> null
+            CardType.FULL_PAGE_DOCUMENT, CardType.CUSTOM, CardType.RECEIPT -> null
         }
     }
 

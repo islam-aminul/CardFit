@@ -78,11 +78,20 @@ class AndroidPhotoProcessor(
     }
 
     private fun applyCrop(src: Bitmap, params: PhotoEditParams): Bitmap {
-        val crop = params.crop ?: return src
-        val x = crop.xPx.coerceIn(0, src.width - 1)
-        val y = crop.yPx.coerceIn(0, src.height - 1)
-        val w = crop.widthPx.coerceIn(1, src.width - x)
-        val h = crop.heightPx.coerceIn(1, src.height - y)
+        // Prefer the resolution-independent fractional crop (correct regardless of decode downsampling);
+        // fall back to the legacy pixel rect only when no fractional crop is provided.
+        val (x, y, w, h) = params.cropNorm?.let { frac ->
+            val cx = (frac.left * src.width).toInt().coerceIn(0, src.width - 1)
+            val cy = (frac.top * src.height).toInt().coerceIn(0, src.height - 1)
+            val cw = (frac.width * src.width).toInt().coerceIn(1, src.width - cx)
+            val ch = (frac.height * src.height).toInt().coerceIn(1, src.height - cy)
+            listOf(cx, cy, cw, ch)
+        } ?: params.crop?.let { crop ->
+            val cx = crop.xPx.coerceIn(0, src.width - 1)
+            val cy = crop.yPx.coerceIn(0, src.height - 1)
+            listOf(cx, cy, crop.widthPx.coerceIn(1, src.width - cx), crop.heightPx.coerceIn(1, src.height - cy))
+        } ?: return src
+
         if (x == 0 && y == 0 && w == src.width && h == src.height) return src
         val cropped = Bitmap.createBitmap(src, x, y, w, h)
         if (cropped !== src) src.recycle()

@@ -1,5 +1,9 @@
 package `in`.firm.consultancy.bayaan.cardfit.data
 
+import `in`.firm.consultancy.bayaan.cardfit.domain.CardExportSettings
+import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoExportSettings
+import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoSize
+import `in`.firm.consultancy.bayaan.cardfit.domain.model.CardType
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputFormat
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.PaperSize
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.RenderConfig
@@ -79,6 +83,18 @@ data class UserPrefs(
 interface Prefs {
     val prefs: Flow<UserPrefs>
     suspend fun update(transform: (UserPrefs) -> UserPrefs)
+}
+
+/**
+ * Per-option export settings: one remembered blob per card/document type and per photo size, so
+ * reopening an option restores its own last-used selections (null = nothing stored yet). Backed by
+ * DataStore in the real implementation.
+ */
+interface ExportSettingsStore {
+    fun cardSettings(type: CardType): Flow<CardExportSettings?>
+    suspend fun saveCardSettings(type: CardType, settings: CardExportSettings)
+    fun photoSettings(size: PhotoSize): Flow<PhotoExportSettings?>
+    suspend fun savePhotoSettings(size: PhotoSize, settings: PhotoExportSettings)
 }
 
 /** MIME types for saved outputs. */

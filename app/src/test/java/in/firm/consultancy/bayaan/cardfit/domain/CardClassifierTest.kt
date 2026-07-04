@@ -74,9 +74,9 @@ class CardClassifierTest {
     fun defaultOverride_isAutomaticExceptCustom() {
         assertEquals(SizeOverride.AUTOMATIC, CardClassifier.defaultOverride(CardType.PAN))
         assertEquals(SizeOverride.AUTOMATIC, CardClassifier.defaultOverride(CardType.AADHAAR))
-        assertEquals(SizeOverride.AUTOMATIC, CardClassifier.defaultOverride(CardType.EPIC))
-        assertEquals(SizeOverride.AUTOMATIC, CardClassifier.defaultOverride(CardType.ADMIT_CARD))
-        assertEquals(SizeOverride.AUTOMATIC, CardClassifier.defaultOverride(CardType.FREE))
+        assertEquals(SizeOverride.AUTOMATIC, CardClassifier.defaultOverride(CardType.VOTER_ID))
+        assertEquals(SizeOverride.AUTOMATIC, CardClassifier.defaultOverride(CardType.FULL_PAGE_DOCUMENT))
+        assertEquals(SizeOverride.AUTOMATIC, CardClassifier.defaultOverride(CardType.RECEIPT))
         assertEquals(SizeOverride.CUSTOM, CardClassifier.defaultOverride(CardType.CUSTOM))
     }
 
@@ -110,12 +110,12 @@ class CardClassifierTest {
         // EPIC scanned as CR-80 -> CR80
         assertEquals(
             SizingMode.CR80,
-            CardClassifier.resolveSizingMode(CardType.EPIC, 856, 540, SizeOverride.AUTOMATIC),
+            CardClassifier.resolveSizingMode(CardType.VOTER_ID, 856, 540, SizeOverride.AUTOMATIC),
         )
         // EPIC scanned as large portrait paper (ratio 1.4) -> NON_STANDARD
         assertEquals(
             SizingMode.NON_STANDARD,
-            CardClassifier.resolveSizingMode(CardType.EPIC, 2100, 2970, SizeOverride.AUTOMATIC),
+            CardClassifier.resolveSizingMode(CardType.VOTER_ID, 2100, 2970, SizeOverride.AUTOMATIC),
         )
     }
 
@@ -131,7 +131,7 @@ class CardClassifierTest {
     fun resolve_automatic_noFront_isNonStandard() {
         assertEquals(
             SizingMode.NON_STANDARD,
-            CardClassifier.resolveSizingMode(CardType.EPIC, null, null, SizeOverride.AUTOMATIC),
+            CardClassifier.resolveSizingMode(CardType.VOTER_ID, null, null, SizeOverride.AUTOMATIC),
         )
     }
 }

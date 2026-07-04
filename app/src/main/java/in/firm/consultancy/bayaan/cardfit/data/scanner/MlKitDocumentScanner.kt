@@ -46,16 +46,25 @@ class MlKitDocumentScanner(private val appContext: Context) : Scanner {
         client.getStartScanIntent(activity)
 
     override suspend fun persistFirstPage(resultIntent: Intent?, slot: ScanSlot): ScannedSide? =
+        // Card slots reuse one prefix per side; prune the previous file so a retake replaces it.
+        persist(resultIntent, prefix = slot.name.lowercase(), prune = true)
+
+    override suspend fun persistPage(resultIntent: Intent?, prefix: String): ScannedSide? =
+        // Multi-page documents keep every page: unique prefix per page, no sibling pruning.
+        persist(resultIntent, prefix = prefix, prune = false)
+
+    private suspend fun persist(resultIntent: Intent?, prefix: String, prune: Boolean): ScannedSide? =
         withContext(Dispatchers.IO) {
             val result = GmsDocumentScanningResult.fromActivityResultIntent(resultIntent)
                 ?: return@withContext null
             val pageUri = result.pages?.firstOrNull()?.imageUri ?: return@withContext null
 
             val dir = File(appContext.filesDir, SCAN_DIR).apply { mkdirs() }
-            val prefix = "${slot.name.lowercase()}-"
-            // Prune any previous file for this slot (e.g. a retake) before writing the new one.
-            dir.listFiles()?.filter { it.name.startsWith(prefix) }?.forEach { it.delete() }
-            val dest = File(dir, "$prefix${System.currentTimeMillis()}.jpg")
+            val namePrefix = "$prefix-"
+            if (prune) {
+                dir.listFiles()?.filter { it.name.startsWith(namePrefix) }?.forEach { it.delete() }
+            }
+            val dest = File(dir, "$namePrefix${System.currentTimeMillis()}.jpg")
 
             val copied = appContext.contentResolver.openInputStream(pageUri)?.use { input ->
                 dest.outputStream().use { output -> input.copyTo(output) }

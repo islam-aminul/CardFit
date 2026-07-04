@@ -5,15 +5,20 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import kotlinx.coroutines.launch
+import `in`.firm.consultancy.bayaan.cardfit.domain.model.FitMode
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.PhotoViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.TaskViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.CardTypeScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.ConfigureScreen
+import `in`.firm.consultancy.bayaan.cardfit.ui.screens.DocumentEditScreen
+import `in`.firm.consultancy.bayaan.cardfit.ui.screens.DocumentPagesScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.HomeScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.LicensesScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.NameScreen
@@ -21,6 +26,7 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.screens.PhotoEditScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.PhotoExportScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.PhotoSourceScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.PreviewScreen
+import `in`.firm.consultancy.bayaan.cardfit.ui.screens.ReceiptWidthScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.ScanScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.SettingsScreen
 import `in`.firm.consultancy.bayaan.cardfit.ui.screens.TaskDetailScreen
@@ -32,6 +38,10 @@ object Routes {
     // Document (ID-card) flow.
     const val CARD_TYPE = "card_type"
     const val SCAN = "scan"
+    // Standalone document (full-page / receipt) capture flow.
+    const val DOC_PAGES = "doc_pages"
+    const val DOC_EDIT = "doc_edit" // + "/{index}"
+    const val RECEIPT_WIDTH = "receipt_width" // + "/{index}"
     const val CONFIGURE = "configure"
     const val NAME = "name"
     const val PREVIEW = "preview"
@@ -89,6 +99,7 @@ fun CardFitNavGraph(
             CardTypeScreen(
                 viewModel = appViewModel,
                 onNext = { navController.navigate(Routes.SCAN) },
+                onDocumentSelected = { navController.navigate(Routes.DOC_PAGES) },
                 // Dynamic: returns to Home (the entry that launched this) via the back stack.
                 onBack = { navController.popBackStack() },
             )
@@ -97,6 +108,40 @@ fun CardFitNavGraph(
             ScanScreen(
                 viewModel = appViewModel,
                 onNext = { navController.navigate(Routes.CONFIGURE) },
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        // Standalone document capture: multi-page loop, per-page edit, receipt width.
+        composable(Routes.DOC_PAGES) {
+            DocumentPagesScreen(
+                viewModel = appViewModel,
+                allowMultiPage = true,
+                onNext = { navController.navigate(Routes.CONFIGURE) },
+                onEditPage = { i -> navController.navigate("${Routes.DOC_EDIT}/$i") },
+                onPickReceiptWidth = { i -> navController.navigate("${Routes.RECEIPT_WIDTH}/$i") },
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable(
+            "${Routes.DOC_EDIT}/{index}",
+            arguments = listOf(navArgument("index") { type = NavType.IntType }),
+        ) { entry ->
+            DocumentEditScreen(
+                viewModel = appViewModel,
+                pageIndex = entry.arguments?.getInt("index") ?: 0,
+                onDone = { navController.popBackStack() },
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable(
+            "${Routes.RECEIPT_WIDTH}/{index}",
+            arguments = listOf(navArgument("index") { type = NavType.IntType }),
+        ) { entry ->
+            ReceiptWidthScreen(
+                viewModel = appViewModel,
+                pageIndex = entry.arguments?.getInt("index") ?: 0,
+                onDone = { navController.popBackStack() },
                 onBack = { navController.popBackStack() },
             )
         }
@@ -165,30 +210,46 @@ fun CardFitNavGraph(
             )
         }
 
-        // Task: add a scanned document (reuses the card-type + scan screens).
+        // Application set: add a scanned document (reuses the card-type + scan/document screens).
         composable(Routes.TASK_CARD_TYPE) {
             CardTypeScreen(
                 viewModel = appViewModel,
                 onNext = { navController.navigate(Routes.TASK_SCAN) },
-                // Dynamic: returns to the active Task detail via the back stack.
+                onDocumentSelected = { navController.navigate(Routes.TASK_SCAN) },
+                // Dynamic: returns to the active set detail via the back stack.
                 onBack = { navController.popBackStack() },
             )
         }
         composable(Routes.TASK_SCAN) {
             val scope = rememberCoroutineScope()
-            ScanScreen(
-                viewModel = appViewModel,
-                onNext = {
-                    val s = appViewModel.state.value
-                    val session = s.session
-                    scope.launch {
-                        if (session != null) taskViewModel.addDocumentEntry(session, s.sizeOverride)
-                        appViewModel.reset()
-                        navController.popBackStack(Routes.TASK_DETAIL, inclusive = false)
-                    }
-                },
-                onBack = { navController.popBackStack() },
-            )
+            // A set holds single documents: capture exactly one page (no "Add") for document types,
+            // and use the existing card scanner for card types.
+            val addToSet: () -> Unit = {
+                val s = appViewModel.state.value
+                val session = s.session
+                scope.launch {
+                    if (session != null) taskViewModel.addDocumentEntry(session, s.sizeOverride)
+                    appViewModel.reset()
+                    navController.popBackStack(Routes.TASK_DETAIL, inclusive = false)
+                }
+            }
+            val isDocument = appViewModel.state.value.session?.cardType?.fitMode != FitMode.ACTUAL_SIZE
+            if (isDocument) {
+                DocumentPagesScreen(
+                    viewModel = appViewModel,
+                    allowMultiPage = false,
+                    onNext = addToSet,
+                    onEditPage = { i -> navController.navigate("${Routes.DOC_EDIT}/$i") },
+                    onPickReceiptWidth = { i -> navController.navigate("${Routes.RECEIPT_WIDTH}/$i") },
+                    onBack = { navController.popBackStack() },
+                )
+            } else {
+                ScanScreen(
+                    viewModel = appViewModel,
+                    onNext = addToSet,
+                    onBack = { navController.popBackStack() },
+                )
+            }
         }
 
         // Task: add an edited photo (reuses the photo source/edit screens; size is chosen on edit).

@@ -11,6 +11,17 @@ import kotlin.math.roundToInt
 data class CropRect(val xPx: Int, val yPx: Int, val widthPx: Int, val heightPx: Int)
 
 /**
+ * A crop rectangle as fractions (0..1) of the (rotated) image — left/top/right/bottom. Being
+ * resolution-independent, it applies correctly regardless of how far the source was downsampled for
+ * decoding (the pixel [CropRect] is tied to a specific source size and mis-lands on a downsampled
+ * bitmap). Preferred by the edit pipeline for the user's free crop.
+ */
+data class CropFraction(val left: Float, val top: Float, val right: Float, val bottom: Float) {
+    val width: Float get() = right - left
+    val height: Float get() = bottom - top
+}
+
+/**
  * The largest centred crop of a [srcWidthPx] × [srcHeightPx] image whose aspect ratio equals
  * [aspectWidth] : [aspectHeight] (e.g. 35 : 45 for an India passport photo). Crops the minimal amount
  * — shaves width when the source is too wide, height when it is too tall — and never upscales or

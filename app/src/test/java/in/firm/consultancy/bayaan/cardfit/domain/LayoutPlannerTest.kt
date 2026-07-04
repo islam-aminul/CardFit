@@ -3,8 +3,10 @@ package `in`.firm.consultancy.bayaan.cardfit.domain
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.CardType
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.FitMode
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputMode
+import `in`.firm.consultancy.bayaan.cardfit.domain.model.PageOrientation
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.PaperSize
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LayoutPlannerTest {
@@ -55,9 +57,9 @@ class LayoutPlannerTest {
     }
 
     @Test
-    fun epicAutomatic_cr80Capture_isActualSize() {
+    fun voterIdAutomatic_cr80Capture_isActualSize() {
         val input = LayoutPlanner.plan(
-            cardType = CardType.EPIC,
+            cardType = CardType.VOTER_ID,
             mode = OutputMode.PRINT,
             paper = PaperSize.A4,
             sides = listOf(cr80Landscape),
@@ -68,9 +70,9 @@ class LayoutPlannerTest {
     }
 
     @Test
-    fun epicAutomatic_paperCapture_print_isFitPage() {
+    fun voterIdAutomatic_paperCapture_print_isFitPage() {
         val input = LayoutPlanner.plan(
-            cardType = CardType.EPIC,
+            cardType = CardType.VOTER_ID,
             mode = OutputMode.PRINT,
             paper = PaperSize.A4,
             sides = listOf(a4Portrait),
@@ -83,7 +85,7 @@ class LayoutPlannerTest {
     @Test
     fun nonStandardUpload_isFitWidth() {
         val input = LayoutPlanner.plan(
-            cardType = CardType.EPIC,
+            cardType = CardType.VOTER_ID,
             mode = OutputMode.UPLOAD,
             paper = PaperSize.A4,
             sides = listOf(a4Portrait),
@@ -106,6 +108,73 @@ class LayoutPlannerTest {
         assertEquals(FitMode.ACTUAL_SIZE, input.fitMode)
         assertEquals(listOf(100.0 to 70.0), input.perSideSizesMm)
         assertEquals(148.0, input.pageWidthMm, 0.0)
+    }
+
+    @Test
+    fun landscapeOrientation_swapsPageDimensions() {
+        val input = LayoutPlanner.plan(
+            cardType = CardType.FULL_PAGE_DOCUMENT,
+            mode = OutputMode.PRINT,
+            paper = PaperSize.A4,
+            sides = listOf(a4Portrait),
+            sizeOverride = SizeOverride.AUTOMATIC,
+            pageOrientation = PageOrientation.LANDSCAPE,
+        )
+        assertEquals(297.0, input.pageWidthMm, 0.0)
+        assertEquals(210.0, input.pageHeightMm, 0.0)
+        assertEquals(FitMode.FIT_PAGE, input.fitMode)
+    }
+
+    @Test
+    fun smallDocument_appliesContentScale_othersDoNot() {
+        val free = LayoutPlanner.plan(
+            cardType = CardType.RECEIPT,
+            mode = OutputMode.PRINT,
+            paper = PaperSize.A4,
+            sides = listOf(a4Portrait),
+            sizeOverride = SizeOverride.AUTOMATIC,
+            contentScalePercent = 60,
+        )
+        assertEquals(0.6, free.widthScale, 0.0)
+
+        val admit = LayoutPlanner.plan(
+            cardType = CardType.FULL_PAGE_DOCUMENT,
+            mode = OutputMode.PRINT,
+            paper = PaperSize.A4,
+            sides = listOf(a4Portrait),
+            sizeOverride = SizeOverride.AUTOMATIC,
+            contentScalePercent = 60, // ignored: size control is FREE-only
+        )
+        assertEquals(1.0, admit.widthScale, 0.0)
+    }
+
+    @Test
+    fun smallDocumentContentScale_clampedToLowerBound() {
+        val input = LayoutPlanner.plan(
+            cardType = CardType.RECEIPT,
+            mode = OutputMode.UPLOAD,
+            paper = PaperSize.A4,
+            sides = listOf(a4Portrait),
+            sizeOverride = SizeOverride.AUTOMATIC,
+            contentScalePercent = 5,
+        )
+        assertEquals(LayoutPlanner.MIN_CONTENT_SCALE_PERCENT / 100.0, input.widthScale, 0.0)
+    }
+
+    @Test
+    fun smallDocumentScaledPrint_neverOverflowsPage() {
+        val input = LayoutPlanner.plan(
+            cardType = CardType.RECEIPT,
+            mode = OutputMode.PRINT,
+            paper = PaperSize.A4,
+            sides = listOf(a4Portrait, a4Portrait), // two tall sides: auto-fit must shrink first
+            sizeOverride = SizeOverride.AUTOMATIC,
+            contentScalePercent = 100,
+        )
+        val layout = LayoutCalculator.calculate(input)
+        assertEquals(297.0, layout.pageHeightMm, 0.0)
+        val bottom = layout.cards.maxOf { it.yMm + it.heightMm }
+        assertTrue("content overflows the page", bottom <= 297.0 + 0.0001)
     }
 
     @Test

@@ -24,7 +24,15 @@ interface Scanner {
     /**
      * Extract the first cropped page from a scanner result and copy it into stable app storage for
      * the given [slot]; returns the persisted [ScannedSide] (URI + pixel dimensions for aspect-ratio
-     * classification), or `null` if there was no page.
+     * classification), or `null` if there was no page. Prunes any previous file for the same slot
+     * (a retake replaces the earlier capture).
      */
     suspend fun persistFirstPage(resultIntent: Intent?, slot: ScanSlot): ScannedSide?
+
+    /**
+     * Like [persistFirstPage] but keyed by an arbitrary unique [prefix] and WITHOUT pruning sibling
+     * files — each captured page keeps its own file. Used by the multi-page document flow, where a
+     * shared slot prefix would otherwise delete earlier pages. Pass a fresh prefix per page.
+     */
+    suspend fun persistPage(resultIntent: Intent?, prefix: String): ScannedSide?
 }

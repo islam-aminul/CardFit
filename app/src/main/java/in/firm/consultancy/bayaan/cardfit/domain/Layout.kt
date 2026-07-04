@@ -50,6 +50,9 @@ data class LayoutInput(
     // Phase 12: for ACTUAL_SIZE, crop the canvas tightly to the content (upload) instead of
     // centring on the full page (print).
     val cropToContent: Boolean = false,
+    // Small-document size control: fraction of the maximum content size, (0, 1]. FIT_WIDTH
+    // scales the content width by it (centred); FIT_PAGE multiplies its auto-fit scale by it.
+    val widthScale: Double = 1.0,
 )
 
 /**
@@ -111,20 +114,22 @@ object LayoutCalculator {
     }
 
     /**
-     * Each card scaled to (page width - 2*margin), aspect preserved; stacked with a gap; canvas
-     * height cropped to content (+ margins). Page width stays the paper width.
+     * Each card scaled to (page width - 2*margin) x [LayoutInput.widthScale], aspect preserved and
+     * centred horizontally; stacked with a gap; canvas height cropped to content (+ margins). Page
+     * width stays the paper width. At the default scale of 1.0 this is the classic full-width fit.
      */
     private fun fitWidth(input: LayoutInput): PageLayout {
-        val contentW = input.pageWidthMm - 2 * input.marginMm
+        val contentW = (input.pageWidthMm - 2 * input.marginMm) * input.widthScale.coerceIn(0.01, 1.0)
         val heights = input.cards.map { contentW / it.aspectRatio }
         val n = input.cards.size
         val contentHeight = heights.sum() + (n - 1) * input.gapMm
         val pageHeight = contentHeight + 2 * input.marginMm
+        val x = (input.pageWidthMm - contentW) / 2.0
 
         val rects = ArrayList<LayoutRect>(n)
         var y = input.marginMm
         for (i in 0 until n) {
-            rects.add(LayoutRect(input.marginMm, y, contentW, heights[i]))
+            rects.add(LayoutRect(x, y, contentW, heights[i]))
             y += heights[i] + input.gapMm
         }
         return PageLayout(input.pageWidthMm, pageHeight, rects)
@@ -148,8 +153,9 @@ object LayoutCalculator {
         val gapsTotal = (n - 1) * input.gapMm
         val refStackHeight = refHeights.sum() + gapsTotal
 
-        // Uniform scale of the whole stack (cards + gaps); never upscale beyond full width.
-        val scale = minOf(1.0, availH / refStackHeight)
+        // Uniform scale of the whole stack (cards + gaps); never upscale beyond full width. The
+        // user's widthScale shrinks the auto-fit result further (small-document size control).
+        val scale = minOf(1.0, availH / refStackHeight) * input.widthScale.coerceIn(0.01, 1.0)
         val scaledWidth = availW * scale
         val scaledHeights = refHeights.map { it * scale }
         val scaledGap = input.gapMm * scale

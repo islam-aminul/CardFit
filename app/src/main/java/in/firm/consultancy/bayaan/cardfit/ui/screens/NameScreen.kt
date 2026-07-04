@@ -33,9 +33,12 @@ fun NameScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val suggestion by nameViewModel.suggestion.collectAsStateWithLifecycle()
     val session = state.session
+    // Documents (full page / receipt) aren't identity cards: no holder-name OCR, a neutral file label.
+    val isDocument = session?.cardType?.fitMode != null &&
+        session.cardType.fitMode != `in`.firm.consultancy.bayaan.cardfit.domain.model.FitMode.ACTUAL_SIZE
 
     LaunchedEffect(session?.front?.imageUri) {
-        if (session != null) nameViewModel.suggestFrom(session)
+        if (session != null && !isDocument) nameViewModel.suggestFrom(session)
     }
 
     // Apply each new OCR suggestion: it replaces a blank or previously auto-filled name (so a new
@@ -59,21 +62,25 @@ fun NameScreen(
         BayaanTextField(
             value = state.name,
             onValueChange = viewModel::setName,
-            label = "Holder name (optional)",
+            label = if (isDocument) "File name (optional)" else "Holder name (optional)",
             modifier = Modifier.fillMaxWidth(),
         )
 
-        when (val s = suggestion) {
-            NameSuggestion.Loading -> HelpText("Reading the name from your scan…")
-            is NameSuggestion.Ready -> {
-                val message = if (s.name != null) {
-                    "Suggested from the scan — edit if it's not quite right."
-                } else {
-                    "No name detected — type it in if you'd like."
+        if (isDocument) {
+            HelpText("Name the exported file — the person's name isn't needed for documents.")
+        } else {
+            when (val s = suggestion) {
+                NameSuggestion.Loading -> HelpText("Reading the name from your scan…")
+                is NameSuggestion.Ready -> {
+                    val message = if (s.name != null) {
+                        "Suggested from the scan — edit if it's not quite right."
+                    } else {
+                        "No name detected — type it in if you'd like."
+                    }
+                    HelpText(message)
                 }
-                HelpText(message)
+                NameSuggestion.Idle -> Unit
             }
-            NameSuggestion.Idle -> Unit
         }
     }
 }

@@ -134,6 +134,48 @@ class LayoutTest {
         assertEquals(h + 12.0, result.pageHeightMm, tol)
     }
 
+    @Test
+    fun fitWidth_widthScale_shrinksAndCentresContent() {
+        val result = LayoutCalculator.calculate(
+            LayoutInput(
+                fitMode = FitMode.FIT_WIDTH,
+                pageWidthMm = a4.widthMm,
+                pageHeightMm = a4.heightMm,
+                cards = listOf(CardImage(cr80Aspect)),
+                widthScale = 0.5,
+            ),
+        )
+        val contentW = 198.0 * 0.5
+        val h = contentW / cr80Aspect
+        assertRect(LayoutRect((210.0 - contentW) / 2.0, 6.0, contentW, h), result.cards[0])
+        assertEquals(h + 12.0, result.pageHeightMm, tol)
+    }
+
+    @Test
+    fun fitPage_widthScale_multipliesAutoFitScale() {
+        val full = LayoutCalculator.calculate(
+            LayoutInput(
+                fitMode = FitMode.FIT_PAGE,
+                pageWidthMm = a4.widthMm,
+                pageHeightMm = a4.heightMm,
+                cards = listOf(CardImage(cr80Aspect)),
+            ),
+        )
+        val scaled = LayoutCalculator.calculate(
+            LayoutInput(
+                fitMode = FitMode.FIT_PAGE,
+                pageWidthMm = a4.widthMm,
+                pageHeightMm = a4.heightMm,
+                cards = listOf(CardImage(cr80Aspect)),
+                widthScale = 0.5,
+            ),
+        )
+        assertEquals(full.cards[0].widthMm * 0.5, scaled.cards[0].widthMm, tol)
+        // Still centred on the full, uncropped page.
+        assertEquals(a4.heightMm, scaled.pageHeightMm, tol)
+        assertEquals((a4.widthMm - scaled.cards[0].widthMm) / 2.0, scaled.cards[0].xMm, tol)
+    }
+
     // ---------- FIT_PAGE ----------
 
     @Test

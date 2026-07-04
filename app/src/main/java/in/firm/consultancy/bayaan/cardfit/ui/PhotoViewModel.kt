@@ -4,7 +4,9 @@ import android.app.Application
 import android.graphics.Bitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import `in`.firm.consultancy.bayaan.cardfit.data.AndroidExportSettingsStore
 import `in`.firm.consultancy.bayaan.cardfit.data.AndroidFileSaver
+import `in`.firm.consultancy.bayaan.cardfit.data.ExportSettingsStore
 import `in`.firm.consultancy.bayaan.cardfit.data.export.ExportedFile
 import `in`.firm.consultancy.bayaan.cardfit.data.export.ShareItem
 import `in`.firm.consultancy.bayaan.cardfit.data.photo.AndroidPhotoProcessor
@@ -12,9 +14,11 @@ import `in`.firm.consultancy.bayaan.cardfit.data.photo.MlKitBackgroundSegmenter
 import `in`.firm.consultancy.bayaan.cardfit.data.photo.PhotoExporter
 import `in`.firm.consultancy.bayaan.cardfit.data.render.decodeSampledBitmap
 import `in`.firm.consultancy.bayaan.cardfit.domain.CopiesResult
+import `in`.firm.consultancy.bayaan.cardfit.domain.CropFraction
 import `in`.firm.consultancy.bayaan.cardfit.domain.CropRect
 import `in`.firm.consultancy.bayaan.cardfit.domain.FileTimestamp
 import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoEditParams
+import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoExportSettings
 import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoGrid
 import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoPaper
 import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoSize
@@ -27,6 +31,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -81,10 +86,12 @@ data class PhotoState(
         return w.toFloat() / h.toFloat()
     }
 
-    /** Build the pure edit params; rotation/crop applied first, then colour/segmentation. */
+    /** Build the pure edit params; rotation/crop applied first, then colour/segmentation. The crop is
+     *  carried as fractions of the rotated frame (resolution-independent) so it lands correctly on the
+     *  export bitmap regardless of decode downsampling. */
     fun editParams(): PhotoEditParams = PhotoEditParams(
         rotationDegrees = rotationDegrees,
-        crop = cropPx(),
+        cropNorm = cropNorm?.let { CropFraction(it.left, it.top, it.right, it.bottom) },
         brightnessPercent = brightnessPercent,
         contrastPercent = contrastPercent,
         saturationPercent = saturationPercent,
@@ -92,7 +99,7 @@ data class PhotoState(
         removeBackground = removeBackground,
     )
 
-    /** Convert the normalized crop to pixels in the rotated source's space. */
+    /** Convert the normalized crop to pixels in the rotated source's space. Retained for reference/tests. */
     fun cropPx(): CropRect? {
         val c = cropNorm ?: return null
         if (sourceWidthPx <= 0 || sourceHeightPx <= 0) return null
@@ -134,6 +141,11 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
     private val segmenter = MlKitBackgroundSegmenter()
     private val processor = AndroidPhotoProcessor(application, segmenter)
     private val exporter = PhotoExporter(application, AndroidFileSaver(application), ::now)
+    private val exportSettings: ExportSettingsStore = AndroidExportSettingsStore(application)
+
+    // The photo size whose persisted export settings have been applied (seed-once per size; saves
+    // are gated on it so the defaults never race the seed and wipe a stored blob).
+    private var settingsSeededFor: PhotoSize? = null
 
     private val _state = MutableStateFlow(PhotoState())
     val state: StateFlow<PhotoState> = _state.asStateFlow()
@@ -165,11 +177,17 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
             val size = processor.sourceSize(uri)
             // The crop frame (pan/zoom) is owned by the edit screen, which pushes the resulting crop
             // via [setCropNorm]; we only record the source + its dimensions here.
+            settingsSeededFor = null
+            // Prefill the last-used custom mm so the edit screen's Custom dialog opens on them.
+            val rememberedCustom = exportSettings.photoSettings(PhotoSize.CUSTOM).first()
             _state.value = PhotoState(
                 sourceUri = uri,
                 sourceWidthPx = size?.first ?: 0,
                 sourceHeightPx = size?.second ?: 0,
+                customWidthMm = rememberedCustom?.customWidthMm,
+                customHeightMm = rememberedCustom?.customHeightMm,
             )
+            seedPhotoSettings(_state.value.size)
             loadOriginal(uri)
             refreshPreview()
             refreshComparePreview()
@@ -228,7 +246,7 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
             _previewBusy.value = true
             // The crop is shown as an overlay rectangle, so the preview renders the full (uncropped)
             // frame; the crop is applied only at export time.
-            val params = s.editParams().copy(crop = null)
+            val params = s.editParams().copy(crop = null, cropNorm = null)
             val result = processor.process(uri, params, PREVIEW_MAX_DIM)
             val old = _preview.value
             _preview.value = result
@@ -253,21 +271,91 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
     // --- size + export config ---
 
     /** Pick a size; the edit screen re-centres its crop frame to the new aspect (no preview re-render). */
-    fun selectSize(size: PhotoSize) = _state.update { it.copy(size = size) }
+    fun selectSize(size: PhotoSize) {
+        _state.update { it.copy(size = size) }
+        seedPhotoSettings(size)
+    }
 
-    fun setCustomSizeMm(widthMm: Double, heightMm: Double) = _state.update {
-        it.copy(size = PhotoSize.CUSTOM, customWidthMm = widthMm, customHeightMm = heightMm)
+    fun setCustomSizeMm(widthMm: Double, heightMm: Double) {
+        _state.update {
+            it.copy(size = PhotoSize.CUSTOM, customWidthMm = widthMm, customHeightMm = heightMm)
+        }
+        // Remember the dimensions immediately (merged into the stored blob — the export-settings
+        // save below may not run until the CUSTOM seed lands).
+        viewModelScope.launch {
+            val stored = exportSettings.photoSettings(PhotoSize.CUSTOM).first()
+            exportSettings.savePhotoSettings(
+                PhotoSize.CUSTOM,
+                (stored ?: PhotoExportSettings()).copy(customWidthMm = widthMm, customHeightMm = heightMm),
+            )
+        }
+        seedPhotoSettings(PhotoSize.CUSTOM)
     }
 
     fun setName(name: String) = _state.update { it.copy(name = name) }
-    fun toggleMode(mode: OutputMode) = _state.update {
-        val modes = if (mode in it.modes) it.modes - mode else it.modes + mode
-        it.copy(modes = modes)
+    fun toggleMode(mode: OutputMode) {
+        _state.update {
+            val modes = if (mode in it.modes) it.modes - mode else it.modes + mode
+            it.copy(modes = modes)
+        }
+        persistPhotoSettings()
     }
-    fun setUploadMaxKb(kb: Int?) = _state.update { it.copy(uploadMaxKb = kb) }
-    fun setPrintPaper(paper: PhotoPaper) = _state.update { it.copy(printPaper = paper) }
-    fun setRequestedCopies(n: Int) = _state.update { it.copy(requestedCopies = n) }
-    fun setCutMarks(v: Boolean) = _state.update { it.copy(cutMarks = v) }
+    fun setUploadMaxKb(kb: Int?) {
+        _state.update { it.copy(uploadMaxKb = kb) }
+        persistPhotoSettings()
+    }
+    fun setPrintPaper(paper: PhotoPaper) {
+        _state.update { it.copy(printPaper = paper) }
+        persistPhotoSettings()
+    }
+    fun setRequestedCopies(n: Int) {
+        _state.update { it.copy(requestedCopies = n) }
+        persistPhotoSettings()
+    }
+    fun setCutMarks(v: Boolean) {
+        _state.update { it.copy(cutMarks = v) }
+        persistPhotoSettings()
+    }
+
+    /**
+     * Apply the persisted export settings for [size] (seed-once per size). A missing blob resets the
+     * export fields to their defaults so nothing leaks from the previously selected size. The stale
+     * guard skips the update when the user has already switched sizes again mid-load.
+     */
+    private fun seedPhotoSettings(size: PhotoSize) {
+        if (settingsSeededFor == size) return
+        viewModelScope.launch {
+            val stored = exportSettings.photoSettings(size).first()
+            _state.update { cur ->
+                if (cur.size != size) return@update cur
+                settingsSeededFor = size
+                if (stored == null) {
+                    cur.copy(
+                        modes = emptySet(),
+                        uploadMaxKb = null,
+                        printPaper = PhotoPaper.A4,
+                        requestedCopies = 4,
+                        cutMarks = true,
+                    )
+                } else {
+                    cur.copy(
+                        modes = stored.modes,
+                        uploadMaxKb = stored.uploadMaxKb,
+                        printPaper = stored.printPaper,
+                        requestedCopies = stored.requestedCopies,
+                        cutMarks = stored.cutMarks,
+                    )
+                }
+            }
+        }
+    }
+
+    /** Persist the current export settings under the current size, once that size has been seeded. */
+    private fun persistPhotoSettings() {
+        val s = _state.value
+        if (settingsSeededFor != s.size) return
+        viewModelScope.launch { exportSettings.savePhotoSettings(s.size, s.toPhotoExportSettings()) }
+    }
 
     // --- save / share ---
 
@@ -340,6 +428,7 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Clear everything for a fresh photo and delete cached edited images. */
     fun reset() {
+        settingsSeededFor = null
         previewJob?.cancel()
         _preview.value?.recycle(); _preview.value = null
         _original.value?.recycle(); _original.value = null
@@ -377,3 +466,14 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
         const val EXPORT_MAX_DIM = 2400
     }
 }
+
+/** Snapshot of the photo export settings as this size's persistable blob. */
+fun PhotoState.toPhotoExportSettings(): PhotoExportSettings = PhotoExportSettings(
+    modes = modes,
+    uploadMaxKb = uploadMaxKb,
+    printPaper = printPaper,
+    requestedCopies = requestedCopies,
+    cutMarks = cutMarks,
+    customWidthMm = customWidthMm,
+    customHeightMm = customHeightMm,
+)

@@ -6,10 +6,15 @@ import android.content.IntentSender
 import com.google.android.gms.tasks.Task
 import `in`.firm.consultancy.bayaan.cardfit.data.scanner.ScanSlot
 import `in`.firm.consultancy.bayaan.cardfit.data.scanner.Scanner
+import `in`.firm.consultancy.bayaan.cardfit.domain.CardExportSettings
+import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoExportSettings
+import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoSize
+import `in`.firm.consultancy.bayaan.cardfit.domain.model.CardType
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.RenderConfig
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.ScanSession
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 
 /**
  * In-memory fakes of the data-layer interfaces for JVM tests. They avoid invoking Android APIs, so
@@ -30,6 +35,20 @@ class FakeScanner : Scanner {
         persisted += slot
         return `in`.firm.consultancy.bayaan.cardfit.domain.model.ScannedSide(
             imageUri = "content://fake/${slot.name.lowercase()}",
+            widthPx = 856,
+            heightPx = 540,
+        )
+    }
+
+    val persistedPrefixes = mutableListOf<String>()
+
+    override suspend fun persistPage(
+        resultIntent: Intent?,
+        prefix: String,
+    ): `in`.firm.consultancy.bayaan.cardfit.domain.model.ScannedSide {
+        persistedPrefixes += prefix
+        return `in`.firm.consultancy.bayaan.cardfit.domain.model.ScannedSide(
+            imageUri = "content://fake/$prefix",
             widthPx = 856,
             heightPx = 540,
         )
@@ -96,4 +115,24 @@ class FakePrefs(initial: UserPrefs = UserPrefs()) : Prefs {
     }
 
     fun current(): UserPrefs = _prefs.value
+}
+
+class FakeExportSettingsStore : ExportSettingsStore {
+    private val cards = MutableStateFlow<Map<CardType, CardExportSettings>>(emptyMap())
+    private val photos = MutableStateFlow<Map<PhotoSize, PhotoExportSettings>>(emptyMap())
+
+    override fun cardSettings(type: CardType): Flow<CardExportSettings?> = cards.map { it[type] }
+
+    override suspend fun saveCardSettings(type: CardType, settings: CardExportSettings) {
+        cards.value = cards.value + (type to settings)
+    }
+
+    override fun photoSettings(size: PhotoSize): Flow<PhotoExportSettings?> = photos.map { it[size] }
+
+    override suspend fun savePhotoSettings(size: PhotoSize, settings: PhotoExportSettings) {
+        photos.value = photos.value + (size to settings)
+    }
+
+    fun currentCard(type: CardType): CardExportSettings? = cards.value[type]
+    fun currentPhoto(size: PhotoSize): PhotoExportSettings? = photos.value[size]
 }

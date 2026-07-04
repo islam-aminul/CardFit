@@ -62,7 +62,7 @@ fun PaperArt(ratio: Float, accent: Color, modifier: Modifier = Modifier) =
 // --- drawing helpers (millimetre-agnostic; everything is relative to the canvas size) ---
 
 /** Largest rectangle of the given aspect (w/h) that fits centred within [heightFraction] of height. */
-private fun DrawScope.pageRect(aspect: Float, heightFraction: Float = 0.92f): Rect {
+internal fun DrawScope.pageRect(aspect: Float, heightFraction: Float = 0.92f): Rect {
     val maxH = size.height * heightFraction
     val maxW = size.width * 0.92f
     var ph = maxH
@@ -77,7 +77,7 @@ private fun DrawScope.pageRect(aspect: Float, heightFraction: Float = 0.92f): Re
 }
 
 /** A faintly-filled page outline (theme-agnostic: tint + stroke in the accent colour). */
-private fun DrawScope.drawPage(r: Rect, accent: Color) {
+internal fun DrawScope.drawPage(r: Rect, accent: Color) {
     val corner = r.width * 0.05f
     drawRoundRect(
         color = accent.copy(alpha = 0.08f),
@@ -94,7 +94,7 @@ private fun DrawScope.drawPage(r: Rect, accent: Color) {
     )
 }
 
-private fun DrawScope.roundedBar(color: Color, left: Float, top: Float, width: Float, height: Float) {
+internal fun DrawScope.roundedBar(color: Color, left: Float, top: Float, width: Float, height: Float) {
     drawRoundRect(
         color = color,
         topLeft = Offset(left, top),

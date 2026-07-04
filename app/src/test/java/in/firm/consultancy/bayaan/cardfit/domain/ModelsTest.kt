@@ -12,30 +12,38 @@ class ModelsTest {
 
     @Test
     fun cr80CardTypes_haveCorrectDimsSlugAndFitMode() {
-        for (type in listOf(CardType.PAN, CardType.AADHAAR, CardType.EPIC)) {
+        for (type in listOf(CardType.PAN, CardType.AADHAAR, CardType.VOTER_ID)) {
             assertEquals(85.6, type.widthMm!!, 0.0)
             assertEquals(54.0, type.heightMm!!, 0.0)
             assertEquals(FitMode.ACTUAL_SIZE, type.fitMode)
         }
         assertEquals("pan", CardType.PAN.slug)
         assertEquals("aadhaar", CardType.AADHAAR.slug)
-        assertEquals("epic", CardType.EPIC.slug)
+        assertEquals("voter-id", CardType.VOTER_ID.slug)
     }
 
     @Test
-    fun admitCard_isFitPage_withNoFixedDims() {
-        assertNull(CardType.ADMIT_CARD.widthMm)
-        assertNull(CardType.ADMIT_CARD.heightMm)
-        assertEquals("admit-card", CardType.ADMIT_CARD.slug)
-        assertEquals(FitMode.FIT_PAGE, CardType.ADMIT_CARD.fitMode)
+    fun fullPageDocument_isFitPage_withNoFixedDims() {
+        assertNull(CardType.FULL_PAGE_DOCUMENT.widthMm)
+        assertNull(CardType.FULL_PAGE_DOCUMENT.heightMm)
+        assertEquals("full-page-document", CardType.FULL_PAGE_DOCUMENT.slug)
+        assertEquals(FitMode.FIT_PAGE, CardType.FULL_PAGE_DOCUMENT.fitMode)
     }
 
     @Test
-    fun custom_isActualSize_free_isFitWidth() {
+    fun custom_isActualSize_receipt_isFitWidth() {
         assertEquals(FitMode.ACTUAL_SIZE, CardType.CUSTOM.fitMode)
         assertEquals("custom", CardType.CUSTOM.slug)
-        assertEquals(FitMode.FIT_WIDTH, CardType.FREE.fitMode)
-        assertEquals("free", CardType.FREE.slug)
+        assertEquals(FitMode.FIT_WIDTH, CardType.RECEIPT.fitMode)
+        assertEquals("receipt", CardType.RECEIPT.slug)
+    }
+
+    @Test
+    fun cardTypes_haveDisplayLabels() {
+        assertEquals("Voter ID (EPIC)", CardType.VOTER_ID.label)
+        assertEquals("Full page document", CardType.FULL_PAGE_DOCUMENT.label)
+        assertEquals("Receipt", CardType.RECEIPT.label)
+        assertEquals("Custom card", CardType.CUSTOM.label)
     }
 
     @Test

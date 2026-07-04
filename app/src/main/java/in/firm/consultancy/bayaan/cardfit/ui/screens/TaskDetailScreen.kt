@@ -85,23 +85,23 @@ fun TaskDetailScreen(
     var editingEntry by remember { mutableStateOf<DocumentEntry?>(null) }
 
     ScreenScaffold(
-        title = "Task",
+        title = "Application set",
         scrollState = rememberScrollState(),
         bottomBar = {
             ScaffoldBottomBar {
-                GhostButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back to tasks") }
+                GhostButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back to sets") }
             }
         },
     ) {
         if (task == null) {
-            Text("Task not found.")
+            Text("Set not found.")
             return@ScreenScaffold
         }
 
         BayaanTextField(
             value = task.name,
             onValueChange = viewModel::renameTask,
-            label = "Task name",
+            label = "Set name",
             modifier = Modifier.fillMaxWidth(),
         )
         DefaultMaxKbField(task.defaultMaxFileSizeKb, viewModel::setDefaultMaxKb)
@@ -208,7 +208,7 @@ private fun EntryRow(
 
 private fun typeLabel(entry: DocumentEntry): String = when (entry.kind) {
     EntryKind.PHOTO -> "Photo"
-    EntryKind.DOCUMENT -> entry.cardType?.name?.lowercase()?.replaceFirstChar { it.uppercase() } ?: "Document"
+    EntryKind.DOCUMENT -> entry.cardType?.label ?: "Document"
 }
 
 @Composable

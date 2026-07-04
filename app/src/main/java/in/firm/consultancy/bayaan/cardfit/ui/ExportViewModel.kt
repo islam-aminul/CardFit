@@ -10,6 +10,8 @@ import `in`.firm.consultancy.bayaan.cardfit.data.export.ShareItem
 import `in`.firm.consultancy.bayaan.cardfit.data.ocr.MlKitOcr
 import `in`.firm.consultancy.bayaan.cardfit.data.render.AndroidJpegRenderer
 import `in`.firm.consultancy.bayaan.cardfit.data.render.AndroidPdfRenderer
+import `in`.firm.consultancy.bayaan.cardfit.data.render.DocumentJpegRenderer
+import `in`.firm.consultancy.bayaan.cardfit.data.render.DocumentPdfRenderer
 import `in`.firm.consultancy.bayaan.cardfit.domain.FileTimestamp
 import `in`.firm.consultancy.bayaan.cardfit.domain.PassThroughTextFilter
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.RenderConfig
@@ -42,6 +44,8 @@ class ExportViewModel(application: Application) : AndroidViewModel(application) 
     private val exporter = Exporter(
         pdfRenderer = AndroidPdfRenderer(application, ocr, PassThroughTextFilter),
         jpegRenderer = AndroidJpegRenderer(application),
+        documentPdfRenderer = DocumentPdfRenderer(application),
+        documentJpegRenderer = DocumentJpegRenderer(application),
         fileSaver = AndroidFileSaver(application),
         clock = ::now,
     )

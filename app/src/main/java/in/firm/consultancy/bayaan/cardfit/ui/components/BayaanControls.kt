@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
@@ -26,6 +28,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -40,6 +47,7 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Midnight200
 import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Midnight600
 import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Midnight800
 import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Paper
+import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Sage600
 import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Teal500
 import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Teal600
 import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Teal700
@@ -70,6 +78,30 @@ fun PrimaryButton(
             containerColor = Midnight800,
             contentColor = Color.White,
             disabledContainerColor = Midnight800.copy(alpha = 0.4f),
+            disabledContentColor = Color.White.copy(alpha = 0.8f),
+        ),
+        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
+        modifier = modifier,
+        content = content,
+    )
+}
+
+/** Sage filled action (.bv-btn--sage): sage-600 pill, white label — the calm secondary "add" accent. */
+@Composable
+fun SageButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    content: @Composable RowScope.() -> Unit,
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        shape = PillShape,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Sage600,
+            contentColor = Color.White,
+            disabledContainerColor = Sage600.copy(alpha = 0.4f),
             disabledContentColor = Color.White.copy(alpha = 0.8f),
         ),
         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
@@ -253,6 +285,36 @@ fun TealCallout(modifier: Modifier = Modifier, content: @Composable ColumnScope.
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             content = content,
+        )
+    }
+}
+
+/**
+ * Small-document size on the page (25–100% of the maximum). Tracks a smooth local value while
+ * dragging and commits when the gesture ends, so the (heavy) page render re-runs once per
+ * adjustment. Shared by the Configure and Preview steps.
+ */
+@Composable
+fun DocumentSizeSlider(percent: Int, onCommit: (Int) -> Unit, modifier: Modifier = Modifier) {
+    var local by remember(percent) { mutableFloatStateOf(percent.toFloat()) }
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            SectionLabel("Document size")
+            Text(
+                "${local.toInt()}%",
+                style = MaterialTheme.typography.labelLarge,
+                color = TextHeading,
+            )
+        }
+        Slider(
+            value = local,
+            onValueChange = { local = it },
+            onValueChangeFinished = { onCommit(local.toInt()) },
+            valueRange = 25f..100f,
         )
     }
 }

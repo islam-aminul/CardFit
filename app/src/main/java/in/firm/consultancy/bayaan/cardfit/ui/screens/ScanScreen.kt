@@ -41,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import `in`.firm.consultancy.bayaan.cardfit.data.scanner.MlKitDocumentScanner
 import `in`.firm.consultancy.bayaan.cardfit.data.scanner.ScanSlot
+import `in`.firm.consultancy.bayaan.cardfit.domain.model.FitMode
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.ScannedSide
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanCard
@@ -133,8 +134,12 @@ fun ScanScreen(
         }
     }
 
+    // Document types get document language, portrait-page framing, and a single side — a document
+    // has no "back" to lay out; cards keep their front + optional back CR-80 slots.
+    val isDocument = session != null && session.cardType.fitMode != FitMode.ACTUAL_SIZE
+
     ScreenScaffold(
-        title = "Scan card",
+        title = if (isDocument) "Scan document" else "Scan card",
         bottomBar = {
             ScaffoldBottomBar {
                 PrimaryButton(
@@ -149,21 +154,35 @@ fun ScanScreen(
         // Hide the helper text once the front is captured, to free vertical space for Next on
         // small (≈5") screens.
         if (session?.front == null) {
-            HelpText("Capture the front of the card. The back is optional.")
+            HelpText(
+                if (isDocument) "Capture the document." else "Capture the front of the card. The back is optional.",
+            )
         }
 
-        ScanSlotCard(
-            label = "Front",
-            required = true,
-            side = session?.front,
-            onCapture = { requestScan(ScanSlot.FRONT) },
-        )
-        ScanSlotCard(
-            label = "Back",
-            required = false,
-            side = session?.back,
-            onCapture = { requestScan(ScanSlot.BACK) },
-        )
+        if (isDocument) {
+            ScanSlotCard(
+                label = "Document",
+                required = true,
+                side = session?.front,
+                isDocument = true,
+                onCapture = { requestScan(ScanSlot.FRONT) },
+            )
+        } else {
+            ScanSlotCard(
+                label = "Front",
+                required = true,
+                side = session?.front,
+                isDocument = false,
+                onCapture = { requestScan(ScanSlot.FRONT) },
+            )
+            ScanSlotCard(
+                label = "Back",
+                required = false,
+                side = session?.back,
+                isDocument = false,
+                onCapture = { requestScan(ScanSlot.BACK) },
+            )
+        }
 
         errorMessage?.let { message ->
             Text(text = message, color = MaterialTheme.colorScheme.error)
@@ -177,6 +196,7 @@ private fun ScanSlotCard(
     label: String,
     required: Boolean,
     side: ScannedSide?,
+    isDocument: Boolean,
     onCapture: () -> Unit,
 ) {
     BayaanCard(contentPadding = PaddingValues(12.dp), modifier = Modifier.fillMaxWidth()) {
@@ -198,7 +218,7 @@ private fun ScanSlotCard(
         }
         Spacer(Modifier.height(10.dp))
         if (side == null) {
-            NotScannedPlaceholder()
+            NotScannedPlaceholder(isDocument)
         } else {
             AsyncImage(
                 model = side.imageUri,
@@ -206,7 +226,7 @@ private fun ScanSlotCard(
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1.585f)
+                    .aspectRatio(if (isDocument) DOCUMENT_SLOT_ASPECT else CARD_ASPECT)
                     .clip(RoundedCornerShape(8.dp)),
             )
         }
@@ -223,9 +243,14 @@ private fun ScanSlotCard(
     }
 }
 
-/** Empty slot: card-ratio box with a 2dp dashed midnight-200 rounded border. */
+private const val CARD_ASPECT = 1.585f // CR-80
+// Documents show a single full-width slot; a square frame gives it maximum room while suiting
+// both portrait and landscape scans.
+private const val DOCUMENT_SLOT_ASPECT = 1f
+
+/** Empty slot: a full-width dashed midnight-200 frame — CR-80 landscape for cards, square for documents. */
 @Composable
-private fun NotScannedPlaceholder() {
+private fun NotScannedPlaceholder(isDocument: Boolean) {
     val density = LocalDensity.current
     val strokeWidth = with(density) { 2.dp.toPx() }
     val dash = with(density) { 12.dp.toPx() }
@@ -234,7 +259,7 @@ private fun NotScannedPlaceholder() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(1.585f)
+            .aspectRatio(if (isDocument) DOCUMENT_SLOT_ASPECT else CARD_ASPECT)
             .drawBehind {
                 drawRoundRect(
                     color = Midnight200,

@@ -31,8 +31,11 @@ import `in`.firm.consultancy.bayaan.cardfit.domain.model.CardType
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputFormat
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputMode
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.PaperSize
+import `in`.firm.consultancy.bayaan.cardfit.domain.papersDisabledForReceipts
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppState
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.ExportSettingsViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.PersistCardSettingsEffect
 import `in`.firm.consultancy.bayaan.cardfit.ui.SettingsViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanTextField
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.CardPrintArt
@@ -69,6 +72,7 @@ fun ConfigureScreen(
     onNext: () -> Unit,
     onBack: () -> Unit,
     settingsViewModel: SettingsViewModel = viewModel(),
+    exportSettingsViewModel: ExportSettingsViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val printSelected = OutputMode.PRINT in state.selectedModes
@@ -88,6 +92,24 @@ fun ConfigureScreen(
         }
     }
 
+    // Seed this card type's remembered export settings once per type (the in-state flag survives
+    // Preview -> "Edit config" revisits, so in-session edits are never clobbered), then persist
+    // every subsequent change back to the type's blob.
+    val cardType = state.session?.cardType
+    LaunchedEffect(cardType) {
+        val type = cardType ?: return@LaunchedEffect
+        if (viewModel.state.value.settingsSeededFor != type) {
+            viewModel.applyPersistedSettings(type, exportSettingsViewModel.loadCardSettings(type))
+        }
+    }
+    // The size-cap field mirrors state through local text; re-sync it once the seed lands.
+    LaunchedEffect(state.settingsSeededFor) {
+        if (state.settingsSeededFor != null) {
+            maxSizeText = viewModel.state.value.maxFileSizeKb?.toString().orEmpty()
+        }
+    }
+    PersistCardSettingsEffect(viewModel, exportSettingsViewModel)
+
     ScreenScaffold(
         title = "Configure output",
         bottomBar = {
@@ -101,6 +123,35 @@ fun ConfigureScreen(
             }
         },
     ) {
+        // Document-specific gating: documents have no card-size section; receipts constrain paper by
+        // fit; multi-page documents can't export per-page JPEGs.
+        val isDocument = cardType?.fitMode != null && cardType.fitMode != FitMode.ACTUAL_SIZE
+        val isReceipt = cardType == CardType.RECEIPT
+        val documentPages = state.session?.documentPages ?: emptyList()
+        val multiPage = documentPages.size > 1
+        val disabledPapers = if (isReceipt) {
+            papersDisabledForReceipts(documentPages, PaperSize.entries)
+        } else {
+            emptySet()
+        }
+        var hint by remember { mutableStateOf<String?>(null) }
+
+        // If a chosen paper became invalid (e.g. a receipt width changed), drop it.
+        LaunchedEffect(disabledPapers) {
+            val clash = state.selectedPapers.intersect(disabledPapers)
+            clash.forEach { viewModel.togglePaper(it) }
+        }
+
+        // A multi-page document can only export as one PDF: force PDF on and JPEG off.
+        LaunchedEffect(multiPage) {
+            if (multiPage) {
+                if (OutputFormat.JPEG in state.selectedFormats) viewModel.toggleFormat(OutputFormat.JPEG)
+                if (OutputFormat.PDF !in state.selectedFormats) viewModel.toggleFormat(OutputFormat.PDF)
+            }
+        }
+
+        hint?.let { HelpText(it) }
+
         // --- Purpose (multi) ---
         SectionLabel("Purpose")
         Row(
@@ -132,11 +183,18 @@ fun ConfigureScreen(
         ) {
             PaperSize.entries.forEach { paper ->
                 val selected = paper in state.selectedPapers
+                val fits = paper !in disabledPapers
+                val underCap = selected || state.selectedPapers.size < AppViewModel.MAX_PAPERS
                 IllustratedTile(
                     label = paper.name,
                     selected = selected,
-                    enabled = selected || state.selectedPapers.size < AppViewModel.MAX_PAPERS,
-                    onClick = { viewModel.togglePaper(paper) },
+                    enabled = underCap && fits,
+                    onClick = { hint = null; viewModel.togglePaper(paper) },
+                    onDisabledClick = if (!fits) {
+                        { hint = "This receipt doesn't fit ${paper.name} at its true size — pick larger paper." }
+                    } else {
+                        null
+                    },
                     artwork = { accent ->
                         PaperArt(
                             ratio = (paper.widthMm / paper.heightMm).toFloat(),
@@ -156,11 +214,20 @@ fun ConfigureScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             OutputFormat.entries.forEach { format ->
+                // A multi-page document can only export as one multi-page PDF; JPEG would need a file
+                // per page, which is what Application sets are for.
+                val jpegBlocked = multiPage && format == OutputFormat.JPEG
                 IllustratedTile(
                     label = format.name,
                     subtitle = format.subtitle(),
                     selected = format in state.selectedFormats,
-                    onClick = { viewModel.toggleFormat(format) },
+                    enabled = !jpegBlocked,
+                    onClick = { hint = null; viewModel.toggleFormat(format) },
+                    onDisabledClick = if (jpegBlocked) {
+                        { hint = "JPEG is one image per file. Use Application sets to export per-page JPEGs." }
+                    } else {
+                        null
+                    },
                     artwork = { accent ->
                         when (format) {
                             OutputFormat.PDF -> PdfArt(accent, Modifier.fillMaxSize())
@@ -231,26 +298,28 @@ fun ConfigureScreen(
             }
         }
 
-        // --- Card size (just above Next) ---
-        SectionLabel("Card size")
-        CardSizeSection(
-            state = state,
-            onOverride = viewModel::setSizeOverride,
-            onCustom = { showSizeDialog = true },
-        )
-
-        if (showSizeDialog) {
-            val session = state.session
-            CustomSizeDialog(
-                onDismiss = { showSizeDialog = false },
-                onConfirm = { widthMm, heightMm ->
-                    viewModel.setCustomSize(widthMm, heightMm)
-                    viewModel.setSizeOverride(SizeOverride.CUSTOM)
-                    showSizeDialog = false
-                },
-                initialWidthMm = session?.customWidthMm ?: 85.6,
-                initialHeightMm = session?.customHeightMm ?: 54.0,
+        // --- Card size (just above Next) — cards only; documents have no card-size override ---
+        if (!isDocument) {
+            SectionLabel("Card size")
+            CardSizeSection(
+                state = state,
+                onOverride = viewModel::setSizeOverride,
+                onCustom = { showSizeDialog = true },
             )
+
+            if (showSizeDialog) {
+                val session = state.session
+                CustomSizeDialog(
+                    onDismiss = { showSizeDialog = false },
+                    onConfirm = { widthMm, heightMm ->
+                        viewModel.setCustomSize(widthMm, heightMm)
+                        viewModel.setSizeOverride(SizeOverride.CUSTOM)
+                        showSizeDialog = false
+                    },
+                    initialWidthMm = session?.customWidthMm ?: 85.6,
+                    initialHeightMm = session?.customHeightMm ?: 54.0,
+                )
+            }
         }
     }
 }

@@ -33,6 +33,8 @@ data class ShareItem(val uri: String, val mimeType: String)
 class Exporter(
     private val pdfRenderer: PdfRenderer,
     private val jpegRenderer: JpegRenderer,
+    private val documentPdfRenderer: PdfRenderer,
+    private val documentJpegRenderer: JpegRenderer,
     private val fileSaver: FileSaver,
     private val clock: () -> FileTimestamp,
 ) {
@@ -42,7 +44,7 @@ class Exporter(
         configs: List<RenderConfig>,
     ): List<ExportedFile> = withContext(Dispatchers.Default) {
         configs.map { config ->
-            val output = rendererFor(config).render(session, config)
+            val output = rendererFor(session, config).render(session, config)
             val mimeType = MimeTypes.forFormat(config.format)
             val fileName = FilenameBuilder.build(
                 name = name,
@@ -64,7 +66,7 @@ class Exporter(
         configs: List<RenderConfig>,
     ): List<ShareItem> = withContext(Dispatchers.Default) {
         configs.map { config ->
-            val output = rendererFor(config).render(session, config)
+            val output = rendererFor(session, config).render(session, config)
             val mimeType = MimeTypes.forFormat(config.format)
             val fileName = FilenameBuilder.build(
                 name = name,
@@ -86,11 +88,20 @@ class Exporter(
                 dpi = PREVIEW_DPI,
                 maxFileSizeKb = null,
             )
-            jpegRenderer.render(session, previewConfig).bytes
+            rendererFor(session, previewConfig).render(session, previewConfig).bytes
         }
 
-    private fun rendererFor(config: RenderConfig) =
-        if (config.format == OutputFormat.PDF) pdfRenderer else jpegRenderer
+    /**
+     * Pick the renderer for [session]/[config]. A standalone multi-page document (documentPages set)
+     * uses the document renderers (multi-page PDF; single-page JPEG); cards use the existing renderers.
+     */
+    private fun rendererFor(session: ScanSession, config: RenderConfig): `in`.firm.consultancy.bayaan.cardfit.data.Renderer {
+        val isDocument = session.documentPages.isNotEmpty()
+        return when {
+            config.format == OutputFormat.PDF -> if (isDocument) documentPdfRenderer else pdfRenderer
+            else -> if (isDocument) documentJpegRenderer else jpegRenderer
+        }
+    }
 
     private companion object {
         const val PREVIEW_DPI = 110

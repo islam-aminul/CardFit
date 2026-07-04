@@ -88,8 +88,8 @@ fun HomeScreen(
             onClick = onChoosePhoto,
         )
         HomeTile(
-            title = "Tasks",
-            subtitle = "Collect several people's documents into one application set.",
+            title = "Application sets",
+            subtitle = "Bundle several different documents for one purpose.",
             icon = Icons.Filled.FolderCopy,
             iconBg = Midnight50,
             iconTint = Midnight600,

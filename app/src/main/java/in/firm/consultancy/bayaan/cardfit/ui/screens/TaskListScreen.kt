@@ -46,13 +46,13 @@ fun TaskListScreen(
     var showCreate by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<String?>(null) }
 
-    ScreenScaffold(title = "Tasks", onBack = onBack) {
-        Text("Group several people's documents into one application set, then export them together.")
+    ScreenScaffold(title = "Application sets", onBack = onBack) {
+        Text("Bundle several different documents for one purpose, then export them together.")
 
-        PrimaryButton(onClick = { showCreate = true }, modifier = Modifier.fillMaxWidth()) { Text("New task") }
+        PrimaryButton(onClick = { showCreate = true }, modifier = Modifier.fillMaxWidth()) { Text("New set") }
 
         if (tasks.isEmpty()) {
-            HelpText("No tasks yet. Create one to get started.")
+            HelpText("No sets yet. Create one to get started.")
         }
 
         tasks.forEach { task ->
@@ -70,7 +70,7 @@ fun TaskListScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
-                            task.name.ifBlank { "(untitled task)" },
+                            task.name.ifBlank { "(untitled set)" },
                             style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp),
                             color = TextHeading,
                             maxLines = 1,
@@ -90,8 +90,8 @@ fun TaskListScreen(
 
     if (showCreate) {
         NameDialog(
-            title = "New task",
-            label = "Task name",
+            title = "New set",
+            label = "Set name",
             initial = "",
             confirmLabel = "Create",
             onDismiss = { showCreate = false },
@@ -109,8 +109,8 @@ fun TaskListScreen(
             containerColor = Color.White,
             titleContentColor = TextHeading,
             textContentColor = Ink,
-            title = { Text("Delete task?", style = MaterialTheme.typography.titleMedium) },
-            text = { Text("This removes the task and all of its captured images from the device.") },
+            title = { Text("Delete set?", style = MaterialTheme.typography.titleMedium) },
+            text = { Text("This removes the set and all of its captured images from the device.") },
             confirmButton = {
                 PrimaryButton(onClick = {
                     viewModel.deleteTask(id)

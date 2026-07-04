@@ -1,15 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Monochrome (themed icon) layer: the card silhouette; the system applies its own tint. -->
+<!-- Monochrome (themed icon) layer: the voice-arcs mark; the system applies its own tint. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#000000"
-        android:pathData="M29,36 H79 A7,7 0 0 1 86,43 V65 A7,7 0 0 1 79,72 H29 A7,7 0 0 1 22,65 V43 A7,7 0 0 1 29,36 Z" />
-    <path
-        android:fillColor="#000000"
-        android:fillType="evenOdd"
-        android:pathData="M50,46 h30 v3 h-30 z M50,53 h30 v3 h-30 z M50,60 h22 v3 h-22 z" />
+    <group
+        android:scaleX="1.35"
+        android:scaleY="1.35"
+        android:translateX="27.88"
+        android:translateY="27">
+        <path
+            android:fillColor="#000000"
+            android:pathData="M9.4,20 a2.6,2.6 0 1,0 5.2,0 a2.6,2.6 0 1,0 -5.2,0" />
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="2.6"
+            android:strokeLineCap="round"
+            android:pathData="M12,15 A5,5 0 0 1 12,25" />
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="2.6"
+            android:strokeLineCap="round"
+            android:pathData="M12,9.5 A10.5,10.5 0 0 1 12,30.5" />
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="2.6"
+            android:strokeLineCap="round"
+            android:pathData="M12,4 A16,16 0 0 1 12,36" />
+    </group>
 </vector>

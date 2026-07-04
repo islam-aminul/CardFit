@@ -81,7 +81,7 @@ class NameParserTest {
     // ---------- EPIC ----------
 
     @Test
-    fun epic_electorsNameLabel() {
+    fun voterId_electorsNameLabel() {
         val lines = listOf(
             "ELECTION COMMISSION OF INDIA",
             "Elector's Name",
@@ -89,23 +89,23 @@ class NameParserTest {
             "Father's Name",
             "RICHARD",
         )
-        assertEquals("JOHN DOE", NameParser.parse(CardType.EPIC, lines))
+        assertEquals("JOHN DOE", NameParser.parse(CardType.VOTER_ID, lines))
     }
 
     @Test
-    fun epic_inlineElectorsName() {
+    fun voterId_inlineElectorsName() {
         val lines = listOf("Elector's Name: JOHN DOE")
-        assertEquals("JOHN DOE", NameParser.parse(CardType.EPIC, lines))
+        assertEquals("JOHN DOE", NameParser.parse(CardType.VOTER_ID, lines))
     }
 
     @Test
-    fun epic_plainNameLabel() {
+    fun voterId_plainNameLabel() {
         val lines = listOf("Name", "JOHN DOE")
-        assertEquals("JOHN DOE", NameParser.parse(CardType.EPIC, lines))
+        assertEquals("JOHN DOE", NameParser.parse(CardType.VOTER_ID, lines))
     }
 
     @Test
-    fun epic_titleContainingElector_doesNotStealTheName() {
+    fun voterId_titleContainingElector_doesNotStealTheName() {
         // Old paper voter cards have this title; it has "elector" but must NOT be matched.
         val lines = listOf(
             "ELECTOR PHOTO IDENTITY CARD",
@@ -113,22 +113,22 @@ class NameParserTest {
             "Elector's Name : JOHN DOE",
             "Father's Name : RICHARD",
         )
-        assertEquals("JOHN DOE", NameParser.parse(CardType.EPIC, lines))
+        assertEquals("JOHN DOE", NameParser.parse(CardType.VOTER_ID, lines))
     }
 
     @Test
-    fun epic_inlineElectorsName_withColonSpacing() {
-        assertEquals("JANE DOE", NameParser.parse(CardType.EPIC, listOf("Elector's Name :", "JANE DOE")))
+    fun voterId_inlineElectorsName_withColonSpacing() {
+        assertEquals("JANE DOE", NameParser.parse(CardType.VOTER_ID, listOf("Elector's Name :", "JANE DOE")))
     }
 
     // ---------- card types without a parser ----------
 
     @Test
-    fun admitCustomFree_returnNull() {
+    fun documentAndCustomTypes_returnNull() {
         val lines = listOf("Name", "JOHN DOE")
-        assertNull(NameParser.parse(CardType.ADMIT_CARD, lines))
+        assertNull(NameParser.parse(CardType.FULL_PAGE_DOCUMENT, lines))
         assertNull(NameParser.parse(CardType.CUSTOM, lines))
-        assertNull(NameParser.parse(CardType.FREE, lines))
+        assertNull(NameParser.parse(CardType.RECEIPT, lines))
     }
 
     @Test

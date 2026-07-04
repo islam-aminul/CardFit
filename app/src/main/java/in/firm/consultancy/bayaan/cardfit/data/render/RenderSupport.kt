@@ -150,6 +150,8 @@ internal fun planLayout(session: ScanSession, config: RenderConfig, sides: List<
         sizeOverride = config.sizeOverride,
         customWidthMm = session.customWidthMm,
         customHeightMm = session.customHeightMm,
+        pageOrientation = config.pageOrientation,
+        contentScalePercent = config.contentScalePercent,
     )
     return LayoutCalculator.calculate(input)
 }
