@@ -225,10 +225,23 @@ fun PhotoExportScreen(
                 }
             }
             val grid = state.grid()
+            // Copies are always printed a full row at a time, so snap the requested count to a
+            // per-row multiple (at least one row, at most one full page) once the grid is known.
+            // This makes the counter start at "one row" (e.g. 5) instead of a stray default.
+            val perRow = grid?.perRow ?: 0
+            val perPage = grid?.perPage ?: 0
+            LaunchedEffect(perRow, perPage) {
+                if (perRow > 0) {
+                    val rows = ((state.requestedCopies + perRow - 1) / perRow).coerceAtLeast(1)
+                    var snapped = rows * perRow
+                    if (perPage > 0) snapped = snapped.coerceAtMost(perPage)
+                    if (snapped != state.requestedCopies) viewModel.setRequestedCopies(snapped)
+                }
+            }
             CopiesStepper(
                 value = state.requestedCopies,
-                perRow = grid?.perRow ?: 0,
-                perPage = grid?.perPage ?: 0,
+                perRow = perRow,
+                perPage = perPage,
                 onChange = viewModel::setRequestedCopies,
             )
             Row(
@@ -296,10 +309,12 @@ private fun MaxKbField(value: Int?, onChange: (Int?) -> Unit) {
 @Composable
 private fun CopiesStepper(value: Int, perRow: Int, perPage: Int, onChange: (Int) -> Unit) {
     val step = perRow.coerceAtLeast(1)
-    val rows = Math.ceil(value.toDouble() / step).toInt().coerceAtLeast(1)
-    val decreased = ((rows - 1) * step).coerceAtLeast(step)
-    val increasedRaw = (rows + 1) * step
+    // Step to the next per-row multiple strictly above/below the current value, so +/- adds or
+    // removes exactly one row (e.g. 5 → 10 → 15, not 4 → 10). Bottom clamps to one row, top to a
+    // full page. Math.floorDiv keeps this correct even if [value] isn't yet a clean multiple.
+    val increasedRaw = (Math.floorDiv(value, step) + 1) * step
     val increased = if (perPage > 0) increasedRaw.coerceAtMost(perPage) else increasedRaw
+    val decreased = (Math.floorDiv(value - 1, step) * step).coerceAtLeast(step)
     val canDecrease = value > step
     val canIncrease = perPage <= 0 || value < perPage
     Row(

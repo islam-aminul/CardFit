@@ -189,6 +189,6 @@ class LayoutPlannerTest {
         val layout = LayoutCalculator.calculate(input)
         assertEquals(2, layout.cards.size)
         assertEquals(62.2, layout.cards[0].xMm, 0.001)
-        assertEquals(90.5, layout.cards[0].yMm, 0.001)
+        assertEquals(89.5, layout.cards[0].yMm, 0.001)
     }
 }

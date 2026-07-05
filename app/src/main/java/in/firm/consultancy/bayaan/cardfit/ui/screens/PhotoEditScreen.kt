@@ -132,6 +132,7 @@ fun PhotoEditScreen(
                 resetKey = resetKey,
                 busy = busy,
                 onCrop = viewModel::setCropNorm,
+                initialCrop = state.cropNorm,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
 

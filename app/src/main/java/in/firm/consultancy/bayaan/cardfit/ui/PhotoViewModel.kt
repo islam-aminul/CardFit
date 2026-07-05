@@ -16,6 +16,7 @@ import `in`.firm.consultancy.bayaan.cardfit.data.render.decodeSampledBitmap
 import `in`.firm.consultancy.bayaan.cardfit.domain.CopiesResult
 import `in`.firm.consultancy.bayaan.cardfit.domain.CropFraction
 import `in`.firm.consultancy.bayaan.cardfit.domain.CropRect
+import `in`.firm.consultancy.bayaan.cardfit.domain.Defaults
 import `in`.firm.consultancy.bayaan.cardfit.domain.FileTimestamp
 import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoEditParams
 import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoExportSettings
@@ -115,7 +116,13 @@ data class PhotoState(
 
     fun grid(): PhotoGrid? {
         val s = resolvedSize ?: return null
-        return gridLayout(s.widthMm, s.heightMm, printPaper.widthMm, printPaper.heightMm)
+        return gridLayout(
+            s.widthMm,
+            s.heightMm,
+            printPaper.widthMm,
+            printPaper.heightMm,
+            marginMm = Defaults.PHOTO_PRINT_MARGIN_MM,
+        )
     }
 
     fun copies(): CopiesResult? {

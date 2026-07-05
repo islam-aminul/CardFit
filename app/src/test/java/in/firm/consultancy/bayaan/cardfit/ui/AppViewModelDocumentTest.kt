@@ -1,5 +1,6 @@
 package `in`.firm.consultancy.bayaan.cardfit.ui
 
+import `in`.firm.consultancy.bayaan.cardfit.domain.CardExportSettings
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.CardType
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.DocumentPage
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputFormat
@@ -78,12 +79,47 @@ class AppViewModelDocumentTest {
         val vm = vm()
         vm.selectCardType(CardType.FULL_PAGE_DOCUMENT)
         vm.addDocumentPage(page("a"))
-        vm.addDocumentPage(page("b")) // 2 pages → multi-page
+        vm.addDocumentPage(page("b")) // 2 pages → multi-page (PDF auto-forced, JPEG blocked)
         vm.toggleMode(OutputMode.UPLOAD)
-        vm.toggleFormat(OutputFormat.PDF)
-        vm.toggleFormat(OutputFormat.JPEG)
+        vm.toggleFormat(OutputFormat.JPEG) // ignored — can't add JPEG to a multi-page document
         val formats = vm.renderConfigs().map { it.format }.toSet()
-        assertEquals(setOf(OutputFormat.PDF), formats) // JPEG dropped
+        assertEquals(setOf(OutputFormat.PDF), formats)
+    }
+
+    @Test
+    fun addingSecondPage_stripsJpeg_andForcesPdf() {
+        val vm = vm()
+        vm.selectCardType(CardType.FULL_PAGE_DOCUMENT)
+        vm.addDocumentPage(page("a"))
+        vm.toggleMode(OutputMode.UPLOAD)
+        vm.toggleFormat(OutputFormat.JPEG) // JPEG selected while single-page
+        assertEquals(setOf(OutputFormat.JPEG), vm.state.value.selectedFormats)
+
+        vm.addDocumentPage(page("b")) // now multi-page
+        assertEquals(setOf(OutputFormat.PDF), vm.state.value.selectedFormats)
+    }
+
+    @Test
+    fun toggleFormat_jpeg_isNoOp_whenMultiPage() {
+        val vm = vm()
+        vm.selectCardType(CardType.FULL_PAGE_DOCUMENT)
+        vm.addDocumentPage(page("a"))
+        vm.addDocumentPage(page("b"))
+        vm.toggleFormat(OutputFormat.JPEG) // ignored
+        assertTrue(OutputFormat.JPEG !in vm.state.value.selectedFormats)
+    }
+
+    @Test
+    fun applyPersistedSettings_multiPage_dropsStoredJpeg_forcesPdf() {
+        val vm = vm()
+        vm.selectCardType(CardType.FULL_PAGE_DOCUMENT)
+        vm.addDocumentPage(page("a"))
+        vm.addDocumentPage(page("b"))
+        vm.applyPersistedSettings(
+            CardType.FULL_PAGE_DOCUMENT,
+            CardExportSettings(formats = setOf(OutputFormat.JPEG)),
+        )
+        assertEquals(setOf(OutputFormat.PDF), vm.state.value.selectedFormats)
     }
 
     @Test

@@ -122,11 +122,19 @@ class AppViewModel : ViewModel() {
     fun applyPersistedSettings(type: CardType, settings: CardExportSettings?) {
         _state.update { current ->
             if (current.settingsSeededFor == type) return@update current
-            if (settings == null) return@update current.copy(settingsSeededFor = type)
+            if (settings == null) {
+                // Nothing stored: still enforce the multi-page invariant on whatever is selected.
+                return@update current.copy(
+                    selectedFormats = enforceMultiPageFormats(current, current.selectedFormats),
+                    settingsSeededFor = type,
+                )
+            }
             current.copy(
                 selectedModes = settings.modes,
                 selectedPapers = settings.papers.ifEmpty { setOf(PaperSize.A4) },
-                selectedFormats = settings.formats,
+                // A multi-page document can't produce per-page JPEGs: drop JPEG and force PDF so a
+                // stored JPEG selection never resurfaces as a disabled-but-selected tile.
+                selectedFormats = enforceMultiPageFormats(current, settings.formats),
                 grayscale = settings.grayscale,
                 cropMarks = settings.cropMarks,
                 roundCorners = settings.roundCorners ?: type.roundedByDefault,
@@ -157,9 +165,15 @@ class AppViewModel : ViewModel() {
     // All synchronous; only the new document flow touches these. Page 1 is mirrored into [front] by
     // the capture screen so OCR name-suggestion and the preview thumbnail keep working via [front].
 
-    /** Append a captured page to the current document. */
-    fun addDocumentPage(page: DocumentPage) =
-        updateSession { it.copy(documentPages = it.documentPages + page) }
+    /** Append a captured page. Reaching two pages makes this a multi-page document, so the format
+     *  invariant is enforced immediately (JPEG dropped, PDF forced) rather than waiting for Configure. */
+    fun addDocumentPage(page: DocumentPage) {
+        _state.update { current ->
+            val session = current.session ?: return@update current
+            val withPage = current.copy(session = session.copy(documentPages = session.documentPages + page))
+            withPage.copy(selectedFormats = enforceMultiPageFormats(withPage, withPage.selectedFormats))
+        }
+    }
 
     /** Replace the page at [index] (e.g. after editing it); no-op if out of range. */
     fun replaceDocumentPage(index: Int, page: DocumentPage) = updateSession { s ->
@@ -218,6 +232,8 @@ class AppViewModel : ViewModel() {
 
     fun toggleFormat(format: OutputFormat) {
         _state.update { current ->
+            // A multi-page document can only be one PDF; ignore attempts to add JPEG.
+            if (format == OutputFormat.JPEG && current.isMultiPageDocument) return@update current
             val formats = if (format in current.selectedFormats) {
                 current.selectedFormats - format
             } else {
@@ -226,6 +242,17 @@ class AppViewModel : ViewModel() {
             current.copy(selectedFormats = formats)
         }
     }
+
+    /** True when the session is a standalone document with more than one page. */
+    private val AppState.isMultiPageDocument: Boolean
+        get() = (session?.documentPages?.size ?: 0) > 1
+
+    /**
+     * Enforce the multi-page invariant on a format set: a multi-page document drops JPEG and always
+     * includes PDF (so the export is a single multi-page PDF); single-page/cards pass through.
+     */
+    private fun enforceMultiPageFormats(state: AppState, formats: Set<OutputFormat>): Set<OutputFormat> =
+        if (state.isMultiPageDocument) (formats - OutputFormat.JPEG) + OutputFormat.PDF else formats
 
     fun setGrayscale(value: Boolean) = _state.update { it.copy(grayscale = value) }
     fun setCropMarks(value: Boolean) = _state.update { it.copy(cropMarks = value) }

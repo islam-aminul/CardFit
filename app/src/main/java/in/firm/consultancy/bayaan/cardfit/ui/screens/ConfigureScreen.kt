@@ -142,13 +142,8 @@ fun ConfigureScreen(
             clash.forEach { viewModel.togglePaper(it) }
         }
 
-        // A multi-page document can only export as one PDF: force PDF on and JPEG off.
-        LaunchedEffect(multiPage) {
-            if (multiPage) {
-                if (OutputFormat.JPEG in state.selectedFormats) viewModel.toggleFormat(OutputFormat.JPEG)
-                if (OutputFormat.PDF !in state.selectedFormats) viewModel.toggleFormat(OutputFormat.PDF)
-            }
-        }
+        // Multi-page → PDF only is enforced in AppViewModel (addDocumentPage / applyPersistedSettings /
+        // toggleFormat), so the format set here is already valid — no screen-level migration needed.
 
         hint?.let { HelpText(it) }
 
@@ -220,7 +215,8 @@ fun ConfigureScreen(
                 IllustratedTile(
                     label = format.name,
                     subtitle = format.subtitle(),
-                    selected = format in state.selectedFormats,
+                    // A blocked JPEG can never read as selected, even if a stale set still held it.
+                    selected = format in state.selectedFormats && !jpegBlocked,
                     enabled = !jpegBlocked,
                     onClick = { hint = null; viewModel.toggleFormat(format) },
                     onDisabledClick = if (jpegBlocked) {

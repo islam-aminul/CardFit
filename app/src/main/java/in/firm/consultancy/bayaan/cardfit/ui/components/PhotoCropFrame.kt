@@ -45,6 +45,10 @@ private const val MAX_ZOOM = 6f
  *
  * The transform recentres whenever [cropAspect], [imageAspect] or [resetKey] changes (e.g. on size
  * change, rotation, or Revert); colour edits that swap [image] but keep [imageAspect] leave it alone.
+ *
+ * On first layout, if an [initialCrop] is supplied (a crop the user already made), the zoom/pan is
+ * reconstructed from it so the selection survives leaving and returning to the screen. A genuine
+ * reset (resetKey/aspect change) still recentres to the full aperture.
  */
 @Composable
 fun PhotoCropFrame(
@@ -55,6 +59,7 @@ fun PhotoCropFrame(
     busy: Boolean,
     onCrop: (NormCrop) -> Unit,
     modifier: Modifier = Modifier,
+    initialCrop: NormCrop? = null,
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -94,10 +99,27 @@ fun PhotoCropFrame(
             return Offset(o.x.coerceIn(-maxX, maxX), o.y.coerceIn(-maxY, maxY))
         }
 
-        // Recentre whenever the framing parameters change.
+        // Recentre whenever the framing parameters change. On the very first layout, restore the
+        // zoom/pan from [initialCrop] so a previously-made selection survives returning to the screen;
+        // every later run (a real resetKey/aspect change) recentres to the full aperture.
+        var restored by remember { mutableStateOf(false) }
         LaunchedEffect(cropAspect, imageAspect, resetKey, vw, vh) {
-            scale = 1f
-            offset = Offset.Zero
+            if (vw <= 0f || vh <= 0f) return@LaunchedEffect
+            val seed = initialCrop
+            if (!restored && seed != null) {
+                val cw = seed.right - seed.left
+                val s = if (cw > 0.0001f) (apW / (cw * coverW)).coerceIn(1f, MAX_ZOOM) else 1f
+                val imgW = coverW * s
+                val imgH = coverH * s
+                val ox = apLeft - seed.left * imgW - vw / 2f + imgW / 2f
+                val oy = apTop - seed.top * imgH - vh / 2f + imgH / 2f
+                scale = s
+                offset = clampOffset(Offset(ox, oy), s)
+            } else {
+                scale = 1f
+                offset = Offset.Zero
+            }
+            restored = true
         }
 
         // Report the visible region as a normalized crop whenever the transform/aperture changes.
