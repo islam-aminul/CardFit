@@ -20,10 +20,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -87,7 +89,8 @@ fun DocumentPagesScreen(
 
     var errorMessage by remember { mutableStateOf<String?>(null) }
     // Auto-launch the scanner once on first entry (empty page list) — "opens the camera directly".
-    var autoLaunched by remember { mutableStateOf(false) }
+    // Saved across config changes so rotating while the scanner is open doesn't relaunch it.
+    var autoLaunched by rememberSaveable { mutableStateOf(false) }
 
     val scanLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult(),
@@ -138,9 +141,14 @@ fun DocumentPagesScreen(
         if (granted) launchScanner() else cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
-    if (!autoLaunched && pages.isEmpty()) {
-        autoLaunched = true
-        requestScan()
+    // Must run in an effect, never inline during composition: the launchers above are only registered
+    // once the composition commits, so launching one from the composition pass throws
+    // "Launcher has not been initialized" (hit on the permission-not-yet-granted path).
+    LaunchedEffect(Unit) {
+        if (!autoLaunched && pages.isEmpty()) {
+            autoLaunched = true
+            requestScan()
+        }
     }
 
     val subject = if (isReceipt) "receipt" else "document"
