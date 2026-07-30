@@ -12,6 +12,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,6 +23,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import `in`.firm.consultancy.bayaan.cardfit.domain.Defaults
 import `in`.firm.consultancy.bayaan.cardfit.domain.DimensionUnit
+import `in`.firm.consultancy.bayaan.cardfit.domain.formatInUnit
 import `in`.firm.consultancy.bayaan.cardfit.ui.theme.ErrorRed
 import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Ink
 import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextHeading
@@ -31,35 +33,43 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextMuted
  * Custom card-size entry with a cm/inch unit selector. All math is in millimetres; the UI converts
  * at the boundary (1 cm = 10 mm, 1 inch = 25.4 mm). Validated against [Defaults.CUSTOM_MIN_MM]..
  * [Defaults.CUSTOM_MAX_MM]. Shared by the card-type picker and the Configure size override.
+ *
+ * [unit] is hoisted rather than owned here: the dialog is composed conditionally, so local state
+ * died on every dismiss and the choice reset to cm. The caller supplies the persisted preference and
+ * [onUnitChange] writes it back, so the selection is shared with every other size input and survives
+ * both dismissal and process death.
  */
 @Composable
 fun CustomSizeDialog(
+    unit: DimensionUnit,
+    onUnitChange: (DimensionUnit) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: (widthMm: Double, heightMm: Double) -> Unit,
     initialWidthMm: Double = 85.6,
     initialHeightMm: Double = 54.0,
 ) {
-    var unit by remember { mutableStateOf(DimensionUnit.CM) }
-    var widthText by remember { mutableStateOf(formatNumber(unit.fromMm(initialWidthMm))) }
-    var heightText by remember { mutableStateOf(formatNumber(unit.fromMm(initialHeightMm))) }
+    var widthText by remember { mutableStateOf(formatInUnit(unit.fromMm(initialWidthMm))) }
+    var heightText by remember { mutableStateOf(formatInUnit(unit.fromMm(initialHeightMm))) }
 
-    val width = widthText.toDoubleOrNull()
-    val height = heightText.toDoubleOrNull()
-    val widthMm = width?.let { unit.toMm(it) }
-    val heightMm = height?.let { unit.toMm(it) }
+    // Re-express what the user already typed when the unit changes. The previous unit has to be
+    // tracked explicitly now that [unit] arrives from outside — the effect fires after the change.
+    var previousUnit by remember { mutableStateOf(unit) }
+    LaunchedEffect(unit) {
+        if (unit != previousUnit) {
+            widthText.toDoubleOrNull()?.let { widthText = formatInUnit(unit.fromMm(previousUnit.toMm(it))) }
+            heightText.toDoubleOrNull()?.let { heightText = formatInUnit(unit.fromMm(previousUnit.toMm(it))) }
+            previousUnit = unit
+        }
+    }
+
+    val widthMm = widthText.toDoubleOrNull()?.let { unit.toMm(it) }
+    val heightMm = heightText.toDoubleOrNull()?.let { unit.toMm(it) }
 
     fun inBounds(mm: Double?): Boolean =
         mm != null && mm >= Defaults.CUSTOM_MIN_MM && mm <= Defaults.CUSTOM_MAX_MM
     val valid = inBounds(widthMm) && inBounds(heightMm)
     val anyOutOfBounds = (widthText.isNotBlank() && !inBounds(widthMm)) ||
         (heightText.isNotBlank() && !inBounds(heightMm))
-
-    fun switchUnit(target: DimensionUnit) {
-        if (target == unit) return
-        width?.let { widthText = formatNumber(target.fromMm(unit.toMm(it))) }
-        height?.let { heightText = formatNumber(target.fromMm(unit.toMm(it))) }
-        unit = target
-    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -77,7 +87,7 @@ fun CustomSizeDialog(
                         SelectableCard(
                             label = u.label,
                             selected = unit == u,
-                            onClick = { switchUnit(u) },
+                            onClick = { onUnitChange(u) },
                         )
                     }
                 }
@@ -101,8 +111,8 @@ fun CustomSizeDialog(
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Allowed: ${formatNumber(unit.fromMm(Defaults.CUSTOM_MIN_MM))}–" +
-                        "${formatNumber(unit.fromMm(Defaults.CUSTOM_MAX_MM))} ${unit.label}.",
+                    "Allowed: ${formatInUnit(unit.fromMm(Defaults.CUSTOM_MIN_MM))}–" +
+                        "${formatInUnit(unit.fromMm(Defaults.CUSTOM_MAX_MM))} ${unit.label}.",
                     style = MaterialTheme.typography.bodySmall,
                     color = if (anyOutOfBounds) ErrorRed else TextMuted,
                 )
@@ -115,10 +125,4 @@ fun CustomSizeDialog(
         },
         dismissButton = { GhostButton(onClick = onDismiss) { Text("Cancel") } },
     )
-}
-
-/** Round to 2 decimals and drop a trailing ".0" for tidy display. */
-internal fun formatNumber(value: Double): String {
-    val rounded = Math.round(value * 100.0) / 100.0
-    return if (rounded % 1.0 == 0.0) rounded.toLong().toString() else rounded.toString()
 }

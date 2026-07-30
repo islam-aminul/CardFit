@@ -42,7 +42,11 @@ class ExporterTest {
         assertEquals(2, files.size)
         assertEquals("aminul-islam-pan-a4-print-260608-1430.pdf", files[0].fileName)
         assertEquals("aminul-islam-pan-a4-upload-260608-1430.jpeg", files[1].fileName)
-        assertEquals("content://saved/aminul-islam-pan-a4-print-260608-1430.pdf", files[0].savedLocation)
+        assertEquals("Download/CardFit/aminul-islam-pan-a4-print-260608-1430.pdf", files[0].savedLocation)
+        // The URI + MIME type ride along so the UI can offer Open/Print/Share on the saved file.
+        assertEquals("content://saved/aminul-islam-pan-a4-print-260608-1430.pdf", files[0].uri)
+        assertEquals("application/pdf", files[0].mimeType)
+        assertEquals("image/jpeg", files[1].mimeType)
         assertEquals(2, saver.saved.size)
         assertEquals("application/pdf", saver.saved[0].mimeType)
         assertEquals("image/jpeg", saver.saved[1].mimeType)

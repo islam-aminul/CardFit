@@ -37,12 +37,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import `in`.firm.consultancy.bayaan.cardfit.data.scanner.MlKitDocumentScanner
+import `in`.firm.consultancy.bayaan.cardfit.domain.DimensionUnit
 import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoEditParams
+import `in`.firm.consultancy.bayaan.cardfit.domain.formatLength
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.CardType
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.DocumentPage
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.SettingsViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanCard
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButtonSmall
@@ -76,7 +80,9 @@ fun DocumentPagesScreen(
     onEditPage: (Int) -> Unit,
     onPickReceiptWidth: (Int) -> Unit,
     onBack: () -> Unit,
+    settingsViewModel: SettingsViewModel = viewModel(),
 ) {
+    val unit by settingsViewModel.unit.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val activity = LocalActivity.current
     val scope = rememberCoroutineScope()
@@ -188,6 +194,7 @@ fun DocumentPagesScreen(
                     index = index,
                     page = page,
                     isReceipt = isReceipt,
+                    unit = unit,
                     isFirst = index == 0,
                     isLast = index == pages.lastIndex,
                     onEdit = { onEditPage(index) },
@@ -213,6 +220,7 @@ private fun DocumentPageRow(
     index: Int,
     page: DocumentPage,
     isReceipt: Boolean,
+    unit: DimensionUnit,
     isFirst: Boolean,
     isLast: Boolean,
     onEdit: () -> Unit,
@@ -260,7 +268,7 @@ private fun DocumentPageRow(
                     if (isReceipt) {
                         val w = page.widthMm
                         GhostButtonSmall(onClick = onSetWidth) {
-                            Text(if (w != null) "${trimWidth(w)} mm" else "Set width")
+                            Text(if (w != null) formatLength(w, unit) else "Set width")
                         }
                     }
                 }
@@ -274,6 +282,3 @@ private fun DocumentPageRow(
         }
     }
 }
-
-private fun trimWidth(value: Double): String =
-    if (value % 1.0 == 0.0) value.toInt().toString() else value.toString()

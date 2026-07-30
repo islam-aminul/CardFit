@@ -34,7 +34,7 @@ class AndroidFileSaver(private val context: Context) : FileSaver {
         }
     }
 
-    override suspend fun save(fileName: String, mimeType: String, bytes: ByteArray): String =
+    override suspend fun save(fileName: String, mimeType: String, bytes: ByteArray): SavedFile =
         withContext(Dispatchers.IO) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 saveViaMediaStore(fileName, mimeType, bytes)
@@ -52,7 +52,7 @@ class AndroidFileSaver(private val context: Context) : FileSaver {
         }
 
     @RequiresApi(Build.VERSION_CODES.Q)
-    private fun saveViaMediaStore(fileName: String, mimeType: String, bytes: ByteArray): String {
+    private fun saveViaMediaStore(fileName: String, mimeType: String, bytes: ByteArray): SavedFile {
         val resolver = context.contentResolver
         val collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI
         val values = ContentValues().apply {
@@ -68,16 +68,22 @@ class AndroidFileSaver(private val context: Context) : FileSaver {
         values.clear()
         values.put(MediaStore.Downloads.IS_PENDING, 0)
         resolver.update(uri, values, null, null)
-        return "${Environment.DIRECTORY_DOWNLOADS}/$APP_SUBDIR/$fileName"
+        // Keep the MediaStore URI: it is what lets the UI open or print the file afterwards.
+        return SavedFile("${Environment.DIRECTORY_DOWNLOADS}/$APP_SUBDIR/$fileName", uri.toString())
     }
 
     @Suppress("DEPRECATION")
-    private fun saveLegacy(fileName: String, mimeType: String, bytes: ByteArray): String {
+    private fun saveLegacy(fileName: String, mimeType: String, bytes: ByteArray): SavedFile {
         val dir = File(legacyDownloadsDir(), APP_SUBDIR).apply { if (!exists()) mkdirs() }
         val file = File(dir, fileName)
         file.outputStream().use { it.write(bytes) }
         MediaScannerConnection.scanFile(context, arrayOf(file.absolutePath), arrayOf(mimeType), null)
-        return file.absolutePath
+        // A raw file:// URI would trip FileUriExposedException on ACTION_VIEW, so hand out a
+        // FileProvider URI instead; if the path isn't covered by file_paths.xml, drop the actions.
+        val uri = runCatching {
+            FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file).toString()
+        }.getOrNull()
+        return SavedFile(file.absolutePath, uri)
     }
 
     @Suppress("DEPRECATION")

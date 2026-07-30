@@ -134,6 +134,33 @@ fun GhostButton(
     )
 }
 
+/** Compact filled pill — the emphasised counterpart to [GhostButtonSmall] in an inline action row. */
+@Composable
+fun PrimaryButtonSmall(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    content: @Composable RowScope.() -> Unit,
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        shape = PillShape,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Midnight800,
+            contentColor = Color.White,
+            disabledContainerColor = Midnight800.copy(alpha = 0.4f),
+            disabledContentColor = Color.White.copy(alpha = 0.8f),
+        ),
+        contentPadding = PaddingValues(horizontal = 15.dp, vertical = 7.dp),
+        modifier = modifier.defaultMinSize(minWidth = 1.dp, minHeight = 32.dp),
+    ) {
+        androidx.compose.material3.ProvideTextStyle(MaterialTheme.typography.labelMedium) {
+            content()
+        }
+    }
+}
+
 /** Compact ghost pill for inline row actions (e.g. Delete on a task row). */
 @Composable
 fun GhostButtonSmall(

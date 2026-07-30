@@ -12,12 +12,18 @@ import `in`.firm.consultancy.bayaan.cardfit.domain.model.ScanSession
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** One saved file in an export. [detail] is an optional human note (e.g. the photo count for a print grid). */
+/**
+ * One saved file in an export. [detail] is an optional human note (e.g. the photo count for a print
+ * grid). [uri] and [mimeType] drive the post-save Open/Print/Share actions — [uri] is null when the
+ * saver couldn't produce a content URI, in which case those actions are hidden.
+ */
 data class ExportedFile(
     val fileName: String,
     val savedLocation: String?,
     val warning: String?,
     val detail: String? = null,
+    val uri: String? = null,
+    val mimeType: String? = null,
 )
 
 /** One file prepared for sharing (FileProvider content-URI string + MIME type). */
@@ -55,8 +61,14 @@ class Exporter(
                 timestamp = clock(),
                 exists = fileSaver::exists,
             )
-            val location = fileSaver.save(fileName, mimeType, output.bytes)
-            ExportedFile(fileName, location, output.sizeWarning)
+            val saved = fileSaver.save(fileName, mimeType, output.bytes)
+            ExportedFile(
+                fileName = fileName,
+                savedLocation = saved.displayLocation,
+                warning = output.sizeWarning,
+                uri = saved.uri,
+                mimeType = mimeType,
+            )
         }
     }
 

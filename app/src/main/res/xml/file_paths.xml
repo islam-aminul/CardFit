@@ -4,4 +4,10 @@
     <cache-path name="shared" path="shared/" />
     <!-- Camera-capture targets live in cacheDir/camera, written by the camera app via a grant. -->
     <cache-path name="camera" path="camera/" />
+    <!--
+      API <= 28 only: saved outputs go to public Downloads/CardFit rather than MediaStore. Exposing
+      them here lets the post-save Open/Print actions hand out a content:// URI; a raw file:// URI
+      would throw FileUriExposedException. On API 29+ the MediaStore URI is used instead.
+    -->
+    <external-path name="downloads" path="Download/CardFit/" />
 </paths>

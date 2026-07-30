@@ -94,10 +94,10 @@ class FakeFileSaver : FileSaver {
 
     override fun exists(fileName: String): Boolean = fileName in names
 
-    override suspend fun save(fileName: String, mimeType: String, bytes: ByteArray): String {
+    override suspend fun save(fileName: String, mimeType: String, bytes: ByteArray): SavedFile {
         saved += Saved(fileName, mimeType, bytes.size)
         names += fileName
-        return "content://saved/$fileName"
+        return SavedFile("Download/CardFit/$fileName", "content://saved/$fileName")
     }
 
     override suspend fun cacheForShare(fileName: String, mimeType: String, bytes: ByteArray): String {

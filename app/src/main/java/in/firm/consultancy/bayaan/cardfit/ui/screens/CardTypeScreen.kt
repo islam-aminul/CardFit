@@ -4,12 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,9 +22,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import `in`.firm.consultancy.bayaan.cardfit.domain.CardExportSettings
+import `in`.firm.consultancy.bayaan.cardfit.domain.DimensionUnit
+import `in`.firm.consultancy.bayaan.cardfit.domain.formatSize
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.CardType
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.ExportSettingsViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.SettingsViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanCard
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.CardOutputArtwork
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.CustomSizeDialog
@@ -51,11 +52,13 @@ fun CardTypeScreen(
     onBack: () -> Unit,
     onDocumentSelected: (CardType) -> Unit = {},
     exportSettingsViewModel: ExportSettingsViewModel = viewModel(),
+    settingsViewModel: SettingsViewModel = viewModel(),
 ) {
     var showCustomDialog by remember { mutableStateOf(false) }
     // Last-used custom dimensions, remembered across sessions (prefills the dialog).
     val persistedCustom by exportSettingsViewModel.cardSettings(CardType.CUSTOM)
         .collectAsStateWithLifecycle(initialValue = null)
+    val unit by settingsViewModel.unit.collectAsStateWithLifecycle()
 
     val pick: (CardType) -> Unit = { type ->
         when (type) {
@@ -74,13 +77,15 @@ fun CardTypeScreen(
 
     ScreenScaffold(title = "Choose a card or document", onBack = onBack) {
         SectionLabel("Cards")
-        cardSection.forEach { type -> CardTypeRow(type = type, onClick = { pick(type) }) }
+        cardSection.forEach { type -> CardTypeRow(type = type, unit = unit, onClick = { pick(type) }) }
         SectionLabel("Documents", modifier = Modifier.padding(top = 8.dp))
-        documentSection.forEach { type -> CardTypeRow(type = type, onClick = { pick(type) }) }
+        documentSection.forEach { type -> CardTypeRow(type = type, unit = unit, onClick = { pick(type) }) }
     }
 
     if (showCustomDialog) {
         CustomSizeDialog(
+            unit = unit,
+            onUnitChange = settingsViewModel::setUnit,
             onDismiss = { showCustomDialog = false },
             onConfirm = { widthMm, heightMm ->
                 viewModel.selectCardType(CardType.CUSTOM, customWidthMm = widthMm, customHeightMm = heightMm)
@@ -111,6 +116,7 @@ private val documentSection = listOf(CardType.FULL_PAGE_DOCUMENT, CardType.RECEI
 @Composable
 private fun CardTypeRow(
     type: CardType,
+    unit: DimensionUnit,
     onClick: () -> Unit,
 ) {
     BayaanCard(
@@ -121,15 +127,17 @@ private fun CardTypeRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp),
+                // Min, not fixed: a fixed 50dp left only 28dp under the title, so the subtitle's
+                // second line could never render and every longer description was ellipsised.
+                .heightIn(min = 58.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             CardOutputArtwork(
                 type = type,
-                modifier = Modifier
-                    .width(44.dp)
-                    .fillMaxHeight(),
+                // Explicit height, not fillMaxHeight: the row is now min-height inside a scrolling
+                // column, so its max height is unbounded and fillMaxHeight would collapse to zero.
+                modifier = Modifier.size(width = 44.dp, height = 50.dp),
             )
             Column(
                 modifier = Modifier.weight(1f),
@@ -143,7 +151,7 @@ private fun CardTypeRow(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = subtitleFor(type),
+                    text = subtitleFor(type, unit),
                     style = MaterialTheme.typography.bodySmall,
                     color = TextMuted,
                     maxLines = 2,
@@ -154,15 +162,14 @@ private fun CardTypeRow(
     }
 }
 
-private fun subtitleFor(type: CardType): String = when (type) {
-    CardType.PAN, CardType.AADHAAR, CardType.VOTER_ID ->
-        "${trimMm(type.widthMm)} × ${trimMm(type.heightMm)} mm · both sides on one page"
+private fun subtitleFor(type: CardType, unit: DimensionUnit): String = when (type) {
+    CardType.PAN, CardType.AADHAAR, CardType.VOTER_ID -> {
+        val w = type.widthMm
+        val h = type.heightMm
+        val size = if (w != null && h != null) formatSize(w, h, unit) else "?"
+        "$size · both sides on one page"
+    }
     CardType.FULL_PAGE_DOCUMENT -> "Admit card, certificate, deeds — fits the page"
     CardType.CUSTOM -> "Your dimensions, true size"
     CardType.RECEIPT -> "Bills, labels, prescriptions — you set the width"
-}
-
-private fun trimMm(value: Double?): String {
-    if (value == null) return "?"
-    return if (value % 1.0 == 0.0) value.toInt().toString() else value.toString()
 }

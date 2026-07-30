@@ -34,7 +34,7 @@ import java.io.File
 class MlKitDocumentScanner(private val appContext: Context) : Scanner {
 
     private val options: GmsDocumentScannerOptions = GmsDocumentScannerOptions.Builder()
-        .setGalleryImportAllowed(false)
+        .setGalleryImportAllowed(true) // import an existing photo instead of capturing; needs no storage permission
         .setPageLimit(1) // one page per side; we capture front and back separately
         .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_JPEG)
         .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_FULL) // full edit UI incl. manual crop

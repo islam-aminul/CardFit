@@ -48,8 +48,10 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanTextField
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.HelpText
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.PrimaryButton
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.ExportResultSheet
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.launchShare
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.SectionLabel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.TealCallout
 import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Ink
@@ -78,11 +80,13 @@ fun TaskDetailScreen(
 
     LaunchedEffect(pendingShare) {
         val items = pendingShare ?: return@LaunchedEffect
-        launchTaskShare(context, items)
+        launchShare(context, items)
         viewModel.shareHandled()
     }
 
     var editingEntry by remember { mutableStateOf<DocumentEntry?>(null) }
+    // Reported by an Open/Print launcher that found no handling app.
+    var actionError by remember { mutableStateOf<String?>(null) }
 
     ScreenScaffold(
         title = "Application set",
@@ -148,7 +152,18 @@ fun TaskDetailScreen(
             }
         }
 
-        TaskExportStatus(exportState)
+        TaskExportProgress(exportState)
+        actionError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+    }
+
+    // Same result surface as the other two export screens; this screen's own export buttons are
+    // unchanged, so the sheet needs no next-step footer.
+    (exportState as? TaskExportState.Saved)?.let { saved ->
+        ExportResultSheet(
+            files = saved.files,
+            onDismiss = { viewModel.clearExportResult() },
+            onActionError = { actionError = it },
+        )
     }
 
     editingEntry?.let { entry ->
@@ -268,46 +283,15 @@ private fun EntryEditDialog(
     )
 }
 
+/** In-page progress/error only — the success case is the [ExportResultSheet]. */
 @Composable
-private fun TaskExportStatus(state: TaskExportState) {
+private fun TaskExportProgress(state: TaskExportState) {
     when (state) {
-        TaskExportState.Idle -> Unit
         TaskExportState.Working -> {
             CircularProgressIndicator()
             Text("Working…")
         }
-        is TaskExportState.Saved -> TealCallout(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                "Saved ${state.files.size} file(s):",
-                style = MaterialTheme.typography.labelLarge,
-                color = Teal700,
-            )
-            state.files.forEach { file ->
-                Text("• ${file.fileName}", style = MaterialTheme.typography.bodySmall, color = Teal700)
-                file.warning?.let {
-                    Text("  $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-                }
-            }
-        }
         is TaskExportState.Failed -> Text(state.message, color = MaterialTheme.colorScheme.error)
+        else -> Unit
     }
-}
-
-private fun launchTaskShare(context: Context, items: List<ShareItem>) {
-    if (items.isEmpty()) return
-    val uris = ArrayList(items.map { it.uri.toUri() })
-    val intent = if (uris.size == 1) {
-        Intent(Intent.ACTION_SEND).apply {
-            type = items.first().mimeType
-            putExtra(Intent.EXTRA_STREAM, uris.first())
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-    } else {
-        Intent(Intent.ACTION_SEND_MULTIPLE).apply {
-            type = "*/*"
-            putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-    }
-    context.startActivity(Intent.createChooser(intent, "Share via"))
 }

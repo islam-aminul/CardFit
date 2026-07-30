@@ -1,6 +1,7 @@
 package `in`.firm.consultancy.bayaan.cardfit.data
 
 import `in`.firm.consultancy.bayaan.cardfit.domain.CardExportSettings
+import `in`.firm.consultancy.bayaan.cardfit.domain.DimensionUnit
 import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoExportSettings
 import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoSize
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.CardType
@@ -52,6 +53,13 @@ interface PdfRenderer : Renderer
 interface JpegRenderer : Renderer
 
 /** Persists generated files via MediaStore (Downloads on API 29+) and prepares share copies. */
+/**
+ * A file written to Downloads: [displayLocation] is the human-readable path shown to the user, [uri]
+ * is a content URI the system can act on (open/print). [uri] is null when no shareable URI could be
+ * derived, in which case the post-save actions are hidden rather than offered and then failing.
+ */
+data class SavedFile(val displayLocation: String, val uri: String?)
+
 interface FileSaver {
     /**
      * Whether a file with [fileName] already exists in the Downloads collection (collision check).
@@ -60,8 +68,8 @@ interface FileSaver {
      */
     fun exists(fileName: String): Boolean
 
-    /** Saves [bytes] as [fileName] with [mimeType] to Downloads; returns a human-readable location. */
-    suspend fun save(fileName: String, mimeType: String, bytes: ByteArray): String
+    /** Saves [bytes] as [fileName] with [mimeType] to Downloads. */
+    suspend fun save(fileName: String, mimeType: String, bytes: ByteArray): SavedFile
 
     /**
      * Writes [bytes] to a private cache file and returns a FileProvider content-URI string suitable
@@ -78,6 +86,7 @@ data class UserPrefs(
     val defaultMaxFileSizeKb: Int? = null,
     val lastName: String = "",
     val searchableText: Boolean = false, // Phase 11: persisted searchable-PDF preference (default OFF — privacy by default)
+    val unit: DimensionUnit = DimensionUnit.CM, // shared by every size input and dimension readout
 )
 
 interface Prefs {

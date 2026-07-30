@@ -45,8 +45,14 @@ class TaskExporter(
         entriesWithImages(task).map { entry ->
             val output = renderEntryUpload(task, entry)
             val fileName = individualName(task, entry)
-            val location = fileSaver.save(fileName, MimeTypes.JPEG, output.bytes)
-            ExportedFile(fileName, location, output.sizeWarning)
+            val saved = fileSaver.save(fileName, MimeTypes.JPEG, output.bytes)
+            ExportedFile(
+                fileName = fileName,
+                savedLocation = saved.displayLocation,
+                warning = output.sizeWarning,
+                uri = saved.uri,
+                mimeType = MimeTypes.JPEG,
+            )
         }
     }
 
@@ -61,8 +67,14 @@ class TaskExporter(
     suspend fun saveCombined(task: Task, mode: OutputMode): ExportedFile = withContext(Dispatchers.Default) {
         val output = combinedRenderer.render(task, mode, task.defaultMaxFileSizeKb)
         val fileName = combinedName(task, mode)
-        val location = fileSaver.save(fileName, MimeTypes.PDF, output.bytes)
-        ExportedFile(fileName, location, output.sizeWarning)
+        val saved = fileSaver.save(fileName, MimeTypes.PDF, output.bytes)
+        ExportedFile(
+            fileName = fileName,
+            savedLocation = saved.displayLocation,
+            warning = output.sizeWarning,
+            uri = saved.uri,
+            mimeType = MimeTypes.PDF,
+        )
     }
 
     suspend fun shareCombined(task: Task, mode: OutputMode): ShareItem = withContext(Dispatchers.Default) {

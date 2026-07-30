@@ -53,8 +53,11 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanCard
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.OutputChip
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.PrimaryButton
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.ExportResultSheet
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.HelpText
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.launchShare
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.SectionLabel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.SelectableCard
 import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextHeading
@@ -83,24 +86,14 @@ fun PreviewScreen(
     val previewBytes by exportViewModel.previewBytes.collectAsStateWithLifecycle()
     val previewFailed by exportViewModel.previewFailed.collectAsStateWithLifecycle()
     val uiState by exportViewModel.uiState.collectAsStateWithLifecycle()
-    val pendingShare by exportViewModel.pendingShare.collectAsStateWithLifecycle()
 
     val session = state.session
     val configs = viewModel.renderConfigs()
 
     val scrollState = rememberScrollState()
-    // Becomes true after a successful Save or Share, to reveal + scroll to New Scan / Home.
-    var finishActionsVisible by remember { mutableStateOf(false) }
-    // On a successful save: reveal the finish actions first, let the bottom bar grow/relayout (two
-    // frames), then scroll the saved-file info into view.
-    LaunchedEffect(uiState) {
-        if (uiState is ExportUiState.Saved) {
-            finishActionsVisible = true
-            withFrameNanos {}
-            withFrameNanos {}
-            scrollState.animateScrollTo(scrollState.maxValue)
-        }
-    }
+    // Reported by an Open/Print launcher that found no handling app. Kept out of ExportUiState so a
+    // missing viewer can't wipe the result the user is still looking at.
+    var actionError by remember { mutableStateOf<String?>(null) }
 
     // Persist setting changes made on this screen (orientation/size) to the type's blob.
     PersistCardSettingsEffect(viewModel, exportSettingsViewModel)
@@ -120,14 +113,6 @@ fun PreviewScreen(
         if (session != null && configs.isNotEmpty()) {
             exportViewModel.generatePreview(session, configs)
         }
-    }
-
-    // Launch the share sheet once files are prepared, then surface the finish actions.
-    LaunchedEffect(pendingShare) {
-        val items = pendingShare ?: return@LaunchedEffect
-        launchShare(context, items)
-        exportViewModel.shareHandled()
-        finishActionsVisible = true
     }
 
     fun doSave() {
@@ -164,15 +149,23 @@ fun PreviewScreen(
     fun startFresh() { resetAll(); onStartFresh() }
     fun newScan() { resetAll(); onNewScan() }
 
+    // The result and its next-step actions live in a sheet, so the bar stays one button tall.
+    (uiState as? ExportUiState.Saved)?.let { saved ->
+        ExportResultSheet(
+            files = saved.files,
+            onDismiss = { exportViewModel.clearResult() },
+            onActionError = { actionError = it },
+        ) {
+            PrimaryButton(onClick = { newScan() }, modifier = Modifier.fillMaxWidth()) { Text("New scan") }
+            GhostButton(onClick = { startFresh() }, modifier = Modifier.fillMaxWidth()) { Text("Home") }
+        }
+    }
+
     ScreenScaffold(
         title = "Preview & export",
         scrollState = scrollState,
         bottomBar = {
             ScaffoldBottomBar {
-                if (finishActionsVisible) {
-                    PrimaryButton(onClick = { newScan() }, modifier = Modifier.fillMaxWidth()) { Text("New Scan") }
-                    GhostButton(onClick = { startFresh() }, modifier = Modifier.fillMaxWidth()) { Text("Home") }
-                }
                 GhostButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
             }
         },
@@ -267,82 +260,41 @@ fun PreviewScreen(
             }
         }
 
+        // One primary action. Export always writes to Downloads; opening, printing and sharing then
+        // act on the real saved file, from the result sheet.
         val exportEnabled = configs.isNotEmpty() && uiState !is ExportUiState.Working
-        // Emphasized (filled) until a successful save/share, then de-emphasized (outlined).
-        ActionButton(
-            filled = !finishActionsVisible,
+        PrimaryButton(
             onClick = ::onSaveClick,
             enabled = exportEnabled,
-            text = "Save to Downloads",
-        )
-        ActionButton(
-            filled = !finishActionsVisible,
-            onClick = { exportViewModel.share(session, state.name, configs) },
-            enabled = exportEnabled,
-            text = "Share",
-        )
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text("Export") }
+        if (configs.isNotEmpty()) {
+            val count = if (configs.size == 1) "1 file" else "${configs.size} files"
+            HelpText("$count → Downloads/CardFit")
+        }
 
         GhostButton(onClick = onEditConfig, modifier = Modifier.fillMaxWidth()) {
             Text("Change output settings")
         }
 
-        ExportStatus(uiState)
+        ExportProgress(uiState)
+        actionError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
     }
 }
 
-/** A full-width primary action that is filled (emphasized) or outlined (de-emphasized) per [filled]. */
+/** In-page progress/error only — the success case is the [ExportResultSheet]. */
 @Composable
-private fun ActionButton(filled: Boolean, onClick: () -> Unit, enabled: Boolean, text: String) {
-    if (filled) {
-        PrimaryButton(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(text) }
-    } else {
-        GhostButton(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(text) }
-    }
-}
-
-@Composable
-private fun ExportStatus(uiState: ExportUiState) {
+private fun ExportProgress(uiState: ExportUiState) {
     when (uiState) {
-        ExportUiState.Idle -> Unit
         ExportUiState.Working -> {
             CircularProgressIndicator()
             Text("Working…")
-        }
-        is ExportUiState.Saved -> TealCallout(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                "Saved ${uiState.files.size} file(s):",
-                style = MaterialTheme.typography.labelLarge,
-                color = Teal700,
-            )
-            uiState.files.forEach { file ->
-                Text("• ${file.fileName}", style = MaterialTheme.typography.bodySmall, color = Teal700)
-                file.warning?.let {
-                    Text("  $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-                }
-            }
         }
         is ExportUiState.Failed -> Text(
             text = uiState.message,
             color = MaterialTheme.colorScheme.error,
         )
+        else -> Unit
     }
 }
 
-private fun launchShare(context: android.content.Context, items: List<ShareItem>) {
-    if (items.isEmpty()) return
-    val uris = ArrayList(items.map { it.uri.toUri() })
-    val intent = if (uris.size == 1) {
-        Intent(Intent.ACTION_SEND).apply {
-            type = items.first().mimeType
-            putExtra(Intent.EXTRA_STREAM, uris.first())
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-    } else {
-        Intent(Intent.ACTION_SEND_MULTIPLE).apply {
-            type = "*/*"
-            putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-    }
-    context.startActivity(Intent.createChooser(intent, "Share via"))
-}

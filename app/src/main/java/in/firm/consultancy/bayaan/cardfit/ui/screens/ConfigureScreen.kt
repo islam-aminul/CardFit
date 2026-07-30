@@ -55,7 +55,9 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.components.outputChipLabel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.SelectableCard
-import `in`.firm.consultancy.bayaan.cardfit.ui.components.formatNumber
+import `in`.firm.consultancy.bayaan.cardfit.domain.DimensionUnit
+import `in`.firm.consultancy.bayaan.cardfit.domain.formatInUnit
+import `in`.firm.consultancy.bayaan.cardfit.domain.formatSize
 import `in`.firm.consultancy.bayaan.cardfit.ui.theme.Ink
 import `in`.firm.consultancy.bayaan.cardfit.ui.theme.TextMuted
 
@@ -81,6 +83,9 @@ fun ConfigureScreen(
 
     var maxSizeText by remember { mutableStateOf(state.maxFileSizeKb?.toString().orEmpty()) }
     var showSizeDialog by remember { mutableStateOf(false) }
+
+    // Shared cm/inch preference — bound directly (no seeding handshake: it has no session semantics).
+    val unit by settingsViewModel.unit.collectAsStateWithLifecycle()
 
     // Seed the in-flow searchable flag once from the persisted DataStore preference.
     val persistedSearchable by settingsViewModel.searchableText.collectAsStateWithLifecycle()
@@ -299,6 +304,7 @@ fun ConfigureScreen(
             SectionLabel("Card size")
             CardSizeSection(
                 state = state,
+                unit = unit,
                 onOverride = viewModel::setSizeOverride,
                 onCustom = { showSizeDialog = true },
             )
@@ -306,6 +312,8 @@ fun ConfigureScreen(
             if (showSizeDialog) {
                 val session = state.session
                 CustomSizeDialog(
+                    unit = unit,
+                    onUnitChange = settingsViewModel::setUnit,
                     onDismiss = { showSizeDialog = false },
                     onConfirm = { widthMm, heightMm ->
                         viewModel.setCustomSize(widthMm, heightMm)
@@ -364,6 +372,7 @@ private fun ToggleRow(
 @Composable
 private fun CardSizeSection(
     state: AppState,
+    unit: DimensionUnit,
     onOverride: (SizeOverride) -> Unit,
     onCustom: () -> Unit,
 ) {
@@ -379,8 +388,7 @@ private fun CardSizeSection(
 
     when {
         session?.cardType == CardType.CUSTOM -> HelpText(
-            "Custom: ${formatNumber(session.customWidthMm ?: 85.6)} × " +
-                "${formatNumber(session.customHeightMm ?: 54.0)} mm.",
+            "Custom: ${formatSize(session.customWidthMm ?: 85.6, session.customHeightMm ?: 54.0, unit)}.",
         )
         classification != null && session != null && front != null -> {
             val resolved = CardClassifier.resolveSizingMode(
@@ -391,10 +399,11 @@ private fun CardSizeSection(
             )
             HelpText(
                 "Detected: ${if (classification.format == CardFormat.CR80) "CR-80" else "Non-standard"}, " +
-                    "${classification.orientation.name.lowercase()} (ratio ${formatNumber(classification.ratio)})",
+                    // A dimensionless aspect ratio — never unit-converted.
+                    "${classification.orientation.name.lowercase()} (ratio ${formatInUnit(classification.ratio)})",
             )
             HelpText(
-                "Sizing: ${sizingSummary(resolved, classification.orientation, session.customWidthMm, session.customHeightMm)}",
+                "Sizing: ${sizingSummary(resolved, classification.orientation, session.customWidthMm, session.customHeightMm, unit)}",
             )
         }
         else -> HelpText("Scan the front to detect the card size.")
@@ -435,13 +444,14 @@ private fun sizingSummary(
     orientation: Orientation,
     customWidthMm: Double?,
     customHeightMm: Double?,
+    unit: DimensionUnit,
 ): String = when (mode) {
     SizingMode.CR80 -> {
         val (w, h) = CardClassifier.cr80SizeMm(orientation)
-        "${formatNumber(w)} × ${formatNumber(h)} mm (CR-80)"
+        "${formatSize(w, h, unit)} (CR-80)"
     }
     SizingMode.CUSTOM ->
-        "${formatNumber(customWidthMm ?: 85.6)} × ${formatNumber(customHeightMm ?: 54.0)} mm (custom)"
+        "${formatSize(customWidthMm ?: 85.6, customHeightMm ?: 54.0, unit)} (custom)"
     SizingMode.NON_STANDARD ->
         "scaled to fit — full page for print, cropped to content for upload"
 }

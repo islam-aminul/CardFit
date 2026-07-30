@@ -14,6 +14,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,11 +26,17 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import `in`.firm.consultancy.bayaan.cardfit.domain.DimensionUnit
 import `in`.firm.consultancy.bayaan.cardfit.domain.ReceiptWidth
+import `in`.firm.consultancy.bayaan.cardfit.domain.formatInUnit
+import `in`.firm.consultancy.bayaan.cardfit.domain.formatLength
+import `in`.firm.consultancy.bayaan.cardfit.domain.formatSize
+import `in`.firm.consultancy.bayaan.cardfit.domain.formatValue
 import `in`.firm.consultancy.bayaan.cardfit.domain.receiptRealSizeMm
 import `in`.firm.consultancy.bayaan.cardfit.ui.AppViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.SettingsViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanTextField
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.HelpText
@@ -55,6 +62,7 @@ fun ReceiptWidthScreen(
     pageIndex: Int,
     onDone: () -> Unit,
     onBack: () -> Unit,
+    settingsViewModel: SettingsViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val page = state.session?.documentPages?.getOrNull(pageIndex)
@@ -63,12 +71,24 @@ fun ReceiptWidthScreen(
     var selectedWidthMm by remember(pageIndex) {
         mutableStateOf(page?.widthMm ?: state.lastReceiptWidthMm)
     }
-    var unit by remember { mutableStateOf(DimensionUnit.CM) }
+    // Shared with the custom-size dialog and persisted, so the choice survives leaving this screen.
+    val unit by settingsViewModel.unit.collectAsStateWithLifecycle()
     var customMode by remember(pageIndex) {
         mutableStateOf(selectedWidthMm != null && ReceiptWidth.entries.none { it.widthMm == selectedWidthMm })
     }
     var customText by remember(pageIndex) {
-        mutableStateOf(if (customMode && selectedWidthMm != null) fmt(unit.fromMm(selectedWidthMm!!)) else "")
+        mutableStateOf(
+            if (customMode && selectedWidthMm != null) formatInUnit(unit.fromMm(selectedWidthMm!!)) else "",
+        )
+    }
+
+    // Re-express the typed width when the (now external) unit changes.
+    var previousUnit by remember { mutableStateOf(unit) }
+    LaunchedEffect(unit) {
+        if (unit != previousUnit) {
+            customText.toDoubleOrNull()?.let { customText = formatInUnit(unit.fromMm(previousUnit.toMm(it))) }
+            previousUnit = unit
+        }
     }
 
     // Rotation-aware pixel dims: a 90°/270° edit swaps width and height.
@@ -114,13 +134,7 @@ fun ReceiptWidthScreen(
                     SelectableCard(
                         label = u.label,
                         selected = unit == u,
-                        onClick = {
-                            if (u != unit) {
-                                // Re-express the custom text in the new unit.
-                                customText.toDoubleOrNull()?.let { customText = fmt(u.fromMm(unit.toMm(it))) }
-                                unit = u
-                            }
-                        },
+                        onClick = { settingsViewModel.setUnit(u) },
                     )
                 }
             }
@@ -152,7 +166,7 @@ fun ReceiptWidthScreen(
                 onValueChange = { customText = it.filter { c -> c.isDigit() || c == '.' } },
                 label = "Custom width (${unit.label})",
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                help = "Allowed: ${fmt(unit.fromMm(20.0))}–${fmt(unit.fromMm(300.0))} ${unit.label}.",
+                help = "Allowed: ${formatValue(20.0, unit)}–${formatValue(300.0, unit)} ${unit.label}.",
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -168,7 +182,7 @@ fun ReceiptWidthScreen(
             ) {
                 SectionLabel("On an A4 sheet")
                 Text(
-                    "${fmt(unit.fromMm(realW))} × ${fmt(unit.fromMm(realH))} ${unit.label}",
+                    formatSize(realW, realH, unit),
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextHeading,
                 )
@@ -229,10 +243,5 @@ private fun presetLabel(preset: ReceiptWidth, unit: DimensionUnit): String {
         ReceiptWidth.LETTER_216 -> "Letter"
         ReceiptWidth.CUSTOM -> "Custom"
     }
-    return "$kind ${fmt(unit.fromMm(w))} ${unit.label}"
-}
-
-private fun fmt(value: Double): String {
-    val r = Math.round(value * 100.0) / 100.0
-    return if (r % 1.0 == 0.0) r.toInt().toString() else r.toString()
+    return "$kind ${formatLength(w, unit)}"
 }

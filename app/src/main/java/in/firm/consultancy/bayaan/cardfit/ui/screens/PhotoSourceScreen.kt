@@ -89,9 +89,15 @@ fun PhotoSourceScreen(
         }
         GhostButton(
             onClick = {
-                galleryLauncher.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                )
+                // The photo picker needs no storage permission, but a device with neither the
+                // system picker nor a documents provider has nothing to resolve — surface that
+                // instead of failing silently.
+                errorMessage = null
+                runCatching {
+                    galleryLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                    )
+                }.onFailure { errorMessage = "No gallery app is available on this device." }
             },
             modifier = Modifier.fillMaxWidth(),
         ) { Text("Choose from gallery") }

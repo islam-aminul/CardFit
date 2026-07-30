@@ -51,7 +51,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoSize
+import androidx.lifecycle.viewmodel.compose.viewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.PhotoViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.SettingsViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanTopBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.CustomSizeDialog
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
@@ -84,7 +86,9 @@ fun PhotoEditScreen(
     viewModel: PhotoViewModel,
     onNext: () -> Unit,
     onBack: () -> Unit,
+    settingsViewModel: SettingsViewModel = viewModel(),
 ) {
+    val unit by settingsViewModel.unit.collectAsStateWithLifecycle()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val preview by viewModel.preview.collectAsStateWithLifecycle()
     val comparePreview by viewModel.comparePreview.collectAsStateWithLifecycle()
@@ -217,6 +221,8 @@ fun PhotoEditScreen(
 
     if (showCustom) {
         CustomSizeDialog(
+            unit = unit,
+            onUnitChange = settingsViewModel::setUnit,
             onDismiss = { showCustom = false },
             onConfirm = { widthMm, heightMm ->
                 viewModel.setCustomSizeMm(widthMm, heightMm)

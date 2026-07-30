@@ -55,8 +55,9 @@ class FakesTest {
     fun fileSaver_tracksExistenceAndSaves() = runTest {
         val saver = FakeFileSaver()
         assertFalse(saver.exists("a.pdf"))
-        val uri = saver.save("a.pdf", MimeTypes.PDF, ByteArray(10))
-        assertEquals("content://saved/a.pdf", uri)
+        val saved = saver.save("a.pdf", MimeTypes.PDF, ByteArray(10))
+        assertEquals("Download/CardFit/a.pdf", saved.displayLocation)
+        assertEquals("content://saved/a.pdf", saved.uri)
         assertTrue(saver.exists("a.pdf"))
         assertEquals(1, saver.saved.size)
         assertEquals(10, saver.saved.first().size)

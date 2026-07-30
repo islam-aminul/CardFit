@@ -49,8 +49,14 @@ class PhotoExporter(
             context, editedUri, size.widthMm, size.heightMm, dpi, maxFileSizeKb,
         )
         val fileName = photoName(name, OutputMode.UPLOAD, OutputFormat.JPEG)
-        val location = fileSaver.save(fileName, MimeTypes.JPEG, output.bytes)
-        ExportedFile(fileName, location, output.sizeWarning)
+        val saved = fileSaver.save(fileName, MimeTypes.JPEG, output.bytes)
+        ExportedFile(
+            fileName = fileName,
+            savedLocation = saved.displayLocation,
+            warning = output.sizeWarning,
+            uri = saved.uri,
+            mimeType = MimeTypes.JPEG,
+        )
     }
 
     suspend fun savePrint(
@@ -65,9 +71,16 @@ class PhotoExporter(
             context, editedUri, size.widthMm, size.heightMm, grid, finalCount, cutMarks,
         )
         val fileName = photoName(name, OutputMode.PRINT, OutputFormat.PDF)
-        val location = fileSaver.save(fileName, MimeTypes.PDF, output.bytes)
+        val saved = fileSaver.save(fileName, MimeTypes.PDF, output.bytes)
         val photos = if (finalCount == 1) "1 photo" else "$finalCount photos"
-        ExportedFile(fileName, location, output.sizeWarning, detail = "$photos on this sheet")
+        ExportedFile(
+            fileName = fileName,
+            savedLocation = saved.displayLocation,
+            warning = output.sizeWarning,
+            detail = "$photos on this sheet",
+            uri = saved.uri,
+            mimeType = MimeTypes.PDF,
+        )
     }
 
     suspend fun shareUpload(

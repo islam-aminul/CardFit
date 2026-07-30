@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -46,12 +48,15 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import `in`.firm.consultancy.bayaan.cardfit.data.export.ShareItem
 import `in`.firm.consultancy.bayaan.cardfit.domain.CopiesResult
 import `in`.firm.consultancy.bayaan.cardfit.domain.PhotoPaper
+import `in`.firm.consultancy.bayaan.cardfit.domain.formatSize
 import `in`.firm.consultancy.bayaan.cardfit.domain.model.OutputMode
 import `in`.firm.consultancy.bayaan.cardfit.ui.PhotoExportState
 import `in`.firm.consultancy.bayaan.cardfit.ui.PhotoViewModel
+import `in`.firm.consultancy.bayaan.cardfit.ui.SettingsViewModel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.BayaanTextField
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.HelpText
@@ -60,8 +65,12 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.components.PaperArt
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.PhotoPrintArt
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.PhotoUploadArt
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.PrimaryButton
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.ExportResultSheet
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.PhotoSheetPreview
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.SinglePhotoPreview
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.launchShare
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.SectionLabel
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.TealCallout
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.bayaanSwitchColors
@@ -84,31 +93,19 @@ fun PhotoExportScreen(
     onBack: () -> Unit,
     onNewPhoto: () -> Unit,
     onStartFresh: () -> Unit,
+    settingsViewModel: SettingsViewModel = viewModel(),
 ) {
     val context = LocalContext.current
+    val unit by settingsViewModel.unit.collectAsStateWithLifecycle()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val exportState by viewModel.exportState.collectAsStateWithLifecycle()
-    val pendingShare by viewModel.pendingShare.collectAsStateWithLifecycle()
+    // The edited bitmap, reused to paint the sheet/photo previews below.
+    val preview by viewModel.preview.collectAsStateWithLifecycle()
+    val previewImage = preview?.asImageBitmap()
 
     val scrollState = rememberScrollState()
-    var finishVisible by remember { mutableStateOf(false) }
-
-    // On a successful save: reveal the finish actions first, let the bottom bar grow/relayout (two
-    // frames), then scroll the saved-file info into view.
-    LaunchedEffect(exportState) {
-        if (exportState is PhotoExportState.Saved) {
-            finishVisible = true
-            withFrameNanos {}
-            withFrameNanos {}
-            scrollState.animateScrollTo(scrollState.maxValue)
-        }
-    }
-    LaunchedEffect(pendingShare) {
-        val items = pendingShare ?: return@LaunchedEffect
-        launchPhotoShare(context, items)
-        viewModel.shareHandled()
-        finishVisible = true
-    }
+    // Reported by an Open/Print launcher that found no handling app.
+    var actionError by remember { mutableStateOf<String?>(null) }
 
     val uploadOn = OutputMode.UPLOAD in state.modes
     val printOn = OutputMode.PRINT in state.modes
@@ -120,7 +117,13 @@ fun PhotoExportScreen(
 
     val storagePermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
-    ) { granted -> if (granted) doSave() }
+    ) { granted ->
+        if (granted) {
+            doSave()
+        } else {
+            actionError = "Storage permission is required to save to Downloads on this Android version."
+        }
+    }
 
     fun onSaveClick() {
         viewModel.clearExportResult()
@@ -143,15 +146,22 @@ fun PhotoExportScreen(
         onNewPhoto()
     }
 
+    (exportState as? PhotoExportState.Saved)?.let { saved ->
+        ExportResultSheet(
+            files = saved.files,
+            onDismiss = { viewModel.clearExportResult() },
+            onActionError = { actionError = it },
+        ) {
+            PrimaryButton(onClick = { newPhoto() }, modifier = Modifier.fillMaxWidth()) { Text("New photo") }
+            GhostButton(onClick = { startFresh() }, modifier = Modifier.fillMaxWidth()) { Text("Home") }
+        }
+    }
+
     ScreenScaffold(
         title = "Export photo",
         scrollState = scrollState,
         bottomBar = {
             ScaffoldBottomBar {
-                if (finishVisible) {
-                    PrimaryButton(onClick = { newPhoto() }, modifier = Modifier.fillMaxWidth()) { Text("New photo") }
-                    GhostButton(onClick = { startFresh() }, modifier = Modifier.fillMaxWidth()) { Text("Home") }
-                }
                 GhostButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
             }
         },
@@ -191,10 +201,20 @@ fun PhotoExportScreen(
         if (uploadOn) {
             HorizontalDivider()
             SectionLabel("Upload (JPEG)")
+            state.resolvedSize?.let { rs ->
+                Box(modifier = Modifier.fillMaxWidth().height(160.dp)) {
+                    SinglePhotoPreview(
+                        widthMm = rs.widthMm,
+                        heightMm = rs.heightMm,
+                        photo = previewImage,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            }
             MaxKbField(state.uploadMaxKb, viewModel::setUploadMaxKb)
             state.resolvedSize?.let { rs ->
                 HelpText(
-                    "Single photo, ${trim(rs.widthMm)}×${trim(rs.heightMm)} mm at ${state.uploadDpi} dpi.",
+                    "Single photo, ${formatSize(rs.widthMm, rs.heightMm, unit)} at ${state.uploadDpi} dpi.",
                 )
             }
         }
@@ -203,6 +223,19 @@ fun PhotoExportScreen(
         if (printOn) {
             HorizontalDivider()
             SectionLabel("Print (single-page PDF)")
+            // The actual sheet, so paper / copies / cut marks are visible choices rather than guesses.
+            val sheetGrid = state.grid()
+            if (sheetGrid != null && sheetGrid.fits) {
+                Box(modifier = Modifier.fillMaxWidth().height(260.dp)) {
+                    PhotoSheetPreview(
+                        grid = sheetGrid,
+                        count = (copies as? CopiesResult.Ok)?.finalCount ?: state.requestedCopies,
+                        cutMarks = state.cutMarks,
+                        photo = previewImage,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            }
             Text("Paper", style = MaterialTheme.typography.bodyMedium, color = Ink)
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -257,31 +290,20 @@ fun PhotoExportScreen(
 
         HorizontalDivider()
 
-        // Emphasized (filled) until a successful save/share, then de-emphasized (outlined).
-        ActionButton(
-            filled = !finishVisible,
+        // One primary action. Export always writes to Downloads; open/print/share then act on the
+        // real saved file from the result sheet.
+        PrimaryButton(
             onClick = ::onSaveClick,
             enabled = canExport,
-            text = "Save to Downloads",
-        )
-        ActionButton(
-            filled = !finishVisible,
-            onClick = { viewModel.share() },
-            enabled = canExport,
-            text = "Share",
-        )
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text("Export") }
+        if (state.modes.isNotEmpty()) {
+            val count = if (state.modes.size == 1) "1 file" else "${state.modes.size} files"
+            HelpText("$count → Downloads/CardFit")
+        }
 
-        PhotoExportStatus(exportState)
-    }
-}
-
-/** A full-width primary action that is filled (emphasized) or outlined (de-emphasized) per [filled]. */
-@Composable
-private fun ActionButton(filled: Boolean, onClick: () -> Unit, enabled: Boolean, text: String) {
-    if (filled) {
-        PrimaryButton(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(text) }
-    } else {
-        GhostButton(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(text) }
+        PhotoExportProgress(exportState)
+        actionError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
     }
 }
 
@@ -375,51 +397,15 @@ private fun CopiesNotice(copies: CopiesResult?) {
     }
 }
 
+/** In-page progress/error only — the success case is the [ExportResultSheet]. */
 @Composable
-private fun PhotoExportStatus(state: PhotoExportState) {
+private fun PhotoExportProgress(state: PhotoExportState) {
     when (state) {
-        PhotoExportState.Idle -> Unit
         PhotoExportState.Working -> {
             CircularProgressIndicator()
             Text("Working…")
         }
-        is PhotoExportState.Saved -> TealCallout(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                "Saved ${state.files.size} file(s):",
-                style = MaterialTheme.typography.labelLarge,
-                color = Teal700,
-            )
-            state.files.forEach { file ->
-                Text("• ${file.fileName}", style = MaterialTheme.typography.bodySmall, color = Teal700)
-                file.detail?.let {
-                    Text("  $it", style = MaterialTheme.typography.bodySmall, color = TextMuted)
-                }
-                file.warning?.let {
-                    Text("  $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-                }
-            }
-        }
         is PhotoExportState.Failed -> Text(state.message, color = MaterialTheme.colorScheme.error)
+        else -> Unit
     }
-}
-
-private fun trim(v: Double): String = if (v % 1.0 == 0.0) v.toInt().toString() else v.toString()
-
-private fun launchPhotoShare(context: Context, items: List<ShareItem>) {
-    if (items.isEmpty()) return
-    val uris = ArrayList(items.map { it.uri.toUri() })
-    val intent = if (uris.size == 1) {
-        Intent(Intent.ACTION_SEND).apply {
-            type = items.first().mimeType
-            putExtra(Intent.EXTRA_STREAM, uris.first())
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-    } else {
-        Intent(Intent.ACTION_SEND_MULTIPLE).apply {
-            type = "*/*"
-            putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-    }
-    context.startActivity(Intent.createChooser(intent, "Share via"))
 }
