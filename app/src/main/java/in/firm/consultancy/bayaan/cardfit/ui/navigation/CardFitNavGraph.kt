@@ -2,7 +2,9 @@ package `in`.firm.consultancy.bayaan.cardfit.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -233,7 +235,10 @@ fun CardFitNavGraph(
                     navController.popBackStack(Routes.TASK_DETAIL, inclusive = false)
                 }
             }
-            val isDocument = appViewModel.state.value.session?.cardType?.fitMode != FitMode.ACTUAL_SIZE
+            // Collected, not read off .value: reading the StateFlow directly during composition
+            // doesn't subscribe, so this branch would keep the stale card type after a change.
+            val appState by appViewModel.state.collectAsStateWithLifecycle()
+            val isDocument = appState.session?.cardType?.fitMode != FitMode.ACTUAL_SIZE
             if (isDocument) {
                 DocumentPagesScreen(
                     viewModel = appViewModel,

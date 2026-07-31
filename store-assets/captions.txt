@@ -1,0 +1,23 @@
+01_home.jpg
+"One app for every document you need to prepare."
+
+02_layout_preview.jpg
+"Both sides, one page, true physical size."
+
+03_scan_card.jpg
+"Scan the front and back — corners adjust automatically."
+
+04_choose_card.jpg
+"Supports PAN, Aadhaar, Voter ID, and more — or set your own size."
+
+05_configure_output.jpg
+"Print at true size, or compress under any upload limit."
+
+06_edit_photo.jpg
+"Crop, enhance, and remove the background — right on your phone."
+
+07_photo_print_grid.jpg
+"Passport photos, arranged and ready to print."
+
+08_application_sets.jpg
+"Organize a full application's documents in one place."

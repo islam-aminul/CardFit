@@ -12,7 +12,11 @@ local.properties
 *.apk
 *.aab
 
-# Signing secrets — never commit
+# Signing secrets — never commit.
+# The *.bak / *.old patterns matter: a plain "*.jks" does not match "upload-keystore.jks.bak-…",
+# so a rotated key's backup would otherwise be committable.
 *.jks
+*.jks.*
 *.keystore
+*.keystore.*
 keystore.properties
