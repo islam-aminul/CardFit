@@ -189,7 +189,7 @@ SMS/call log, no accessibility, no foreground service.
 | Ads | No ads |
 | Content rating | Utility, no objectionable content — expect Everyone / PEGI 3 |
 | Target audience | 18 and over (the privacy policy states the app is for adults) |
-| App category | Tools (alternative: Productivity) |
+| App category | **Productivity** — the shelf document scanners sit on (CamScanner, Adobe Scan, Microsoft Lens). Tools is file managers, cleaners and keyboards |
 | News app | No |
 | COVID-19 contact tracing / status | No |
 | Financial features | No |
