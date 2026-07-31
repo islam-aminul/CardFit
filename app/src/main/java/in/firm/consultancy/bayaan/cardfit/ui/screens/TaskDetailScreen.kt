@@ -19,7 +19,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -49,6 +49,7 @@ import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.HelpText
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.PrimaryButton
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ExportResultSheet
+import `in`.firm.consultancy.bayaan.cardfit.ui.components.GhostButtonSmall
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScaffoldBottomBar
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.ScreenScaffold
 import `in`.firm.consultancy.bayaan.cardfit.ui.components.launchShare
@@ -188,35 +189,50 @@ private fun EntryRow(
     onEdit: () -> Unit,
 ) {
     BayaanCard(contentPadding = PaddingValues(12.dp), modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Box(modifier = Modifier.size(56.dp).clip(RoundedCornerShape(6.dp))) {
-                AsyncImage(
-                    model = viewModel.entryThumbUri(entry),
-                    contentDescription = "Document thumbnail",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                )
+        // Two rows, not one: four TextButtons carry a 64dp minimum width each, so laying them out
+        // beside the text left the weighted Column zero width on a 360dp screen and the name wrapped
+        // one character per line. Same shape as DocumentPagesScreen's page row.
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Box(modifier = Modifier.size(56.dp).clip(RoundedCornerShape(6.dp))) {
+                    AsyncImage(
+                        model = viewModel.entryThumbUri(entry),
+                        contentDescription = "Document thumbnail",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                    )
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        entry.personName.ifBlank { "(no name)" },
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = TextHeading,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        typeLabel(entry),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextMuted,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    entry.personName.ifBlank { "(no name)" },
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = TextHeading,
-                )
-                Text(
-                    typeLabel(entry),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextMuted,
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                GhostButtonSmall(onClick = { viewModel.moveEntry(entry.id, -1) }, enabled = !isFirst) { Text("↑") }
+                GhostButtonSmall(onClick = { viewModel.moveEntry(entry.id, +1) }, enabled = !isLast) { Text("↓") }
+                GhostButtonSmall(onClick = onEdit) { Text("Edit") }
+                GhostButtonSmall(onClick = { viewModel.deleteEntry(entry.id) }) { Text("✕") }
             }
-            TextButton(onClick = { viewModel.moveEntry(entry.id, -1) }, enabled = !isFirst) { Text("↑") }
-            TextButton(onClick = { viewModel.moveEntry(entry.id, +1) }, enabled = !isLast) { Text("↓") }
-            TextButton(onClick = onEdit) { Text("Edit") }
-            TextButton(onClick = { viewModel.deleteEntry(entry.id) }) { Text("✕") }
         }
     }
 }
