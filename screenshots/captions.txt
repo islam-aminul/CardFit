@@ -8,7 +8,7 @@
 "Scan the front and back — corners adjust automatically."
 
 04_choose_card.jpg
-"Supports PAN, Aadhaar, Voter ID, and more — or set your own size."
+"Preset sizes for common ID cards — or set your own."
 
 05_configure_output.jpg
 "Print at true size, or compress under any upload limit."
